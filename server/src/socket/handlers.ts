@@ -148,6 +148,13 @@ export function registerSocketHandlers(io: Server) {
       }
     });
 
+    socket.on(SOCKET_EVENTS.NEXT_ROUND, (payload: { roomId: string }) => {
+      const room = rooms.get(payload?.roomId);
+      if (room) {
+        room.handleNextRound();
+      }
+    });
+
     socket.on(SOCKET_EVENTS.RECONNECT_ATTEMPT, (payload) => {
       try {
         const data = ReconnectSchema.parse(payload);

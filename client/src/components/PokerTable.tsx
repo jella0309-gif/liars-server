@@ -8,50 +8,69 @@ export const PokerTable: React.FC = () => {
   const gameState = useGameStore((state) => state.gameState);
   const tableLog = useGameStore((state) => state.tableLog);
   const showdownResults = useGameStore((state) => state.showdownResults);
+  const isRoundOver = useGameStore((state) => state.isRoundOver);
 
   const stageName = gameState?.stageName || 'PRE-FLOP';
   const communityCards = gameState?.communityCards || [];
+
+  const getStageDescription = (stage: string) => {
+    switch (stage) {
+      case 'PRE-FLOP':
+        return 'PRE-FLOP (Vòng bài tẩy)';
+      case 'FLOP':
+        return 'FLOP (3 lá bài chung)';
+      case 'TURN':
+        return 'TURN (4 lá bài chung)';
+      case 'RIVER':
+        return 'RIVER (5 lá bài chung)';
+      case 'SHOWDOWN':
+        return 'SHOWDOWN (Ngửa bài & Phân định)';
+      default:
+        return stage;
+    }
+  };
 
   return (
     <div className="table-stage">
       <div className="poker-table">
         <div className="table-center">
-          <div className="phase-badge">{stageName}</div>
-          <div className="comm-cards">
-            {Array.from({ length: 5 }).map((_, i) => {
-              if (i < communityCards.length) {
-                return <PlayingCard key={i} card={communityCards[i]} />;
-              }
-              return (
-                <div key={i} className="card back" style={{ opacity: 0.3 }}>
-                  ?
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ fontSize: 'clamp(0.72rem, 1.8vw, 0.85rem)', color: '#94a3b8' }}>
-            {tableLog}
+          <div className="phase-badge">{getStageDescription(stageName)}</div>
+
+          <div className="comm-cards-wrapper">
+            <div className="comm-cards-label">BÀI CHUNG TRÊN BÀN</div>
+            <div className="comm-cards">
+              {Array.from({ length: 5 }).map((_, i) => {
+                if (i < communityCards.length) {
+                  return <PlayingCard key={i} card={communityCards[i]} />;
+                }
+                return (
+                  <div key={i} className="card back comm-card-empty">
+                    ?
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {showdownResults && (
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(220, 38, 38, 0.25))',
-              border: '1.5px solid var(--gold)',
-              borderRadius: '10px',
-              padding: '4px 12px',
-              marginTop: '6px',
-              color: '#fef08a',
-              fontWeight: 'bold',
-              fontSize: 'clamp(0.72rem, 1.8vw, 0.85rem)',
-              boxShadow: '0 0 14px rgba(245, 158, 11, 0.4)',
-              textAlign: 'center'
-            }}>
-              👀 KẾT QUẢ SHOWDOWN — Đang xem bài của mọi người...
+          <div className="table-log-box">
+            <span className="table-log-icon">📢</span>
+            <span className="table-log-text">{tableLog}</span>
+          </div>
+
+          {showdownResults && !isRoundOver && (
+            <div className="table-showdown-banner">
+              👀 <strong>SHOWDOWN:</strong> Quan sát bài và điểm số các người chơi...
+            </div>
+          )}
+
+          {isRoundOver && (
+            <div className="table-roundover-banner pulse">
+              🏁 <strong>VÁN ĐÃ KẾT THÚC:</strong> Bấm [TIẾP TỤC VÁN TIẾP THEO] bên dưới!
             </div>
           )}
         </div>
 
-        {/* 4 Seats */}
+        {/* 4 Seats around table */}
         <Seat seatIndex={0} />
         <Seat seatIndex={1} />
         <Seat seatIndex={2} />

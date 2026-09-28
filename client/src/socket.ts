@@ -47,3 +47,7 @@ export function emitPlayAgain(roomId: string) {
   socket.emit(SOCKET_EVENTS.PLAY_AGAIN, { roomId });
 }
 
+export function emitNextRound(roomId: string) {
+  socket.emit(SOCKET_EVENTS.NEXT_ROUND, { roomId });
+}
+

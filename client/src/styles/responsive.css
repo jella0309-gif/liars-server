@@ -1,7 +1,337 @@
-@media (max-width: 600px) {
-  .seat-2 { left: 4px; top: 38%; }
-  .seat-3 { right: 4px; top: 38%; }
+/* ==========================================================================
+   RESPONSIVE DESIGN RULES FOR ALL SCREENS (MOBILE, TABLET, DESKTOP)
+   ========================================================================== */
+
+/* 1. Large Screens & Desktop (1025px+) */
+@media (min-width: 1025px) {
+  .poker-table {
+    max-width: 950px;
+    max-height: 540px;
+  }
+
+  .player-controls {
+    gap: 16px;
+  }
+
+  .btn-act {
+    max-width: 190px;
+    min-height: 48px;
+  }
+}
+
+/* 2. Tablets & Small Laptops (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .poker-table {
+    max-width: 90%;
+    max-height: 500px;
+  }
+
+  .seat-2 { left: 8px; }
+  .seat-3 { right: 8px; }
+  .seat-1 { top: -16px; }
+  .seat-0 { bottom: -16px; }
+
+  .seat {
+    min-width: 120px;
+  }
+}
+
+/* 3. Phablets & Mobile Landscape (481px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  header {
+    padding: 4px 10px;
+  }
+
+  .poker-table {
+    width: 96%;
+    height: 94%;
+    max-height: 460px;
+    border-radius: 60px;
+  }
+
+  .seat-2 { left: 4px; top: 48%; }
+  .seat-3 { right: 4px; top: 48%; }
   .seat-1 { top: -14px; }
   .seat-0 { bottom: -14px; }
-  .seat { min-width: 100px; padding: 3px 6px; }
+
+  .seat {
+    min-width: 105px;
+    padding: 4px 8px;
+  }
+
+  .btn-act {
+    max-width: 150px;
+    min-height: 42px;
+  }
+}
+
+/* 4. Standard Mobile Portrait (381px - 480px) */
+@media (max-width: 480px) {
+  header {
+    padding: 4px 8px;
+    gap: 4px;
+  }
+
+  .title {
+    font-size: 0.85rem;
+  }
+
+  .header-controls {
+    gap: 6px;
+  }
+
+  .vol-control {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+
+  .vol-control input[type=range] {
+    width: 42px;
+  }
+
+  .table-stage {
+    padding: 4px;
+  }
+
+  .poker-table {
+    width: 98%;
+    height: 96%;
+    max-height: 56vh;
+    border-radius: 45px;
+    border-width: 8px;
+    outline-width: 2px;
+  }
+
+  .table-center {
+    width: 92%;
+    max-width: 280px;
+    gap: 4px;
+  }
+
+  .phase-badge {
+    padding: 2px 8px;
+    font-size: 0.65rem;
+  }
+
+  .comm-cards-label {
+    font-size: 0.58rem;
+  }
+
+  .comm-cards {
+    min-height: 40px;
+    gap: 3px;
+  }
+
+  .table-log-box {
+    padding: 3px 8px;
+    font-size: 0.68rem;
+  }
+
+  /* Seats placement on mobile */
+  .seat-1 { 
+    top: -12px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+  }
+
+  .seat-0 { 
+    bottom: -12px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+  }
+
+  .seat-2 { 
+    left: 2px; 
+    top: 48%; 
+    transform: translateY(-50%); 
+  }
+
+  .seat-3 { 
+    right: 2px; 
+    top: 48%; 
+    transform: translateY(-50%); 
+  }
+
+  .seat {
+    min-width: 95px;
+    max-width: 115px;
+    padding: 3px 6px;
+    border-radius: 10px;
+    gap: 2px;
+  }
+
+  .seat-name {
+    max-width: 70px;
+    font-size: 0.72rem;
+  }
+
+  .seat-avatar {
+    font-size: 1.1rem;
+  }
+
+  .bullet-odds-tag {
+    font-size: 0.65rem;
+  }
+
+  .bullet-dot {
+    font-size: 0.62rem;
+  }
+
+  .seat-status-dead,
+  .seat-status-folded {
+    font-size: 0.65rem;
+    padding: 1px 4px;
+  }
+
+  .hand-eval-box {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+
+  .rank-number {
+    font-size: 0.62rem;
+    padding: 1px 6px;
+  }
+
+  /* Controls on mobile */
+  .player-controls {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .btn-act {
+    padding: 5px 4px;
+    min-height: 40px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+  }
+
+  .btn-act span.sub {
+    font-size: 0.58rem;
+  }
+
+  .round-over-bar,
+  .match-over-bar {
+    padding: 8px 10px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .status-announcement {
+    text-align: center;
+    align-items: center;
+  }
+
+  .btn-next-round {
+    width: 100%;
+    max-width: 280px;
+    padding: 10px 16px;
+    font-size: 0.88rem;
+  }
+}
+
+/* 5. Very Small Mobile Devices (≤ 380px, e.g. iPhone SE, Folded screens) */
+@media (max-width: 380px) {
+  .header-controls .vol-control:nth-child(2) {
+    display: none; /* Hide SFX on ultra-small screens to save space */
+  }
+
+  .poker-table {
+    border-radius: 35px;
+    border-width: 6px;
+    max-height: 52vh;
+  }
+
+  .seat {
+    min-width: 86px;
+    max-width: 102px;
+    padding: 2px 4px;
+  }
+
+  .seat-name {
+    max-width: 60px;
+    font-size: 0.68rem;
+  }
+
+  .seat-avatar {
+    font-size: 0.95rem;
+  }
+
+  .card {
+    width: 28px;
+    height: 42px;
+  }
+
+  .card-suit {
+    font-size: 0.9rem;
+  }
+
+  .player-controls {
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .btn-act {
+    padding: 4px 2px;
+    min-height: 38px;
+    font-size: 0.66rem;
+  }
+
+  .btn-act span.sub {
+    font-size: 0.54rem;
+  }
+}
+
+/* 6. Landscape Orientation on Mobile (height ≤ 500px) */
+@media (max-height: 500px) and (orientation: landscape) {
+  header {
+    padding: 2px 8px;
+  }
+
+  .table-stage {
+    padding: 2px;
+  }
+
+  .poker-table {
+    height: 98%;
+    max-height: 280px;
+    border-radius: 50px;
+    border-width: 6px;
+  }
+
+  .seat-1 { top: -14px; }
+  .seat-0 { bottom: -14px; }
+  .seat-2 { left: 4px; }
+  .seat-3 { right: 4px; }
+
+  .seat {
+    padding: 2px 6px;
+    min-width: 95px;
+  }
+
+  .card {
+    width: 26px;
+    height: 38px;
+  }
+
+  .player-controls-container {
+    padding: 0;
+  }
+
+  .turn-banner {
+    padding: 2px;
+    font-size: 0.68rem;
+  }
+
+  .player-controls {
+    padding: 3px 6px;
+    gap: 6px;
+  }
+
+  .btn-act {
+    min-height: 34px;
+    padding: 2px 6px;
+  }
 }

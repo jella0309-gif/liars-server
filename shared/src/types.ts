@@ -119,6 +119,7 @@ export type GameEvent =
   | { type: 'god_save'; seatIndex: number; name: string }
   | { type: 'match_over'; winnerSeatIndex: number; winnerName: string }
   | { type: 'round_start' }
+  | { type: 'round_over'; message: string }
   | { type: 'swap_available'; drawnCards: Card[] }
   | { type: 'swap_used'; seatIndex: number }
   | { type: 'all_allin_fast_forward' }

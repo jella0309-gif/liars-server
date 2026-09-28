@@ -16,6 +16,7 @@ export class GameRoom {
   private io: Server;
   private engine: GameEngine;
   private gameStarted: boolean = false;
+  private isRoundOverState: boolean = false;
   
   constructor(id: string, maxPlayers: number, io: Server) {
     this.id = id;
@@ -116,10 +117,16 @@ export class GameRoom {
           winnerSeatIndex: winner.seatIndex,
           winnerName: winner.name
         });
+        this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, {
+          type: 'match_over',
+          winnerSeatIndex: winner.seatIndex,
+          winnerName: winner.name
+        });
       }
       return;
     }
 
+    this.isRoundOverState = false;
     this.engine.initRound();
     this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, { type: 'round_start' });
     this.broadcastGameState();
@@ -147,6 +154,7 @@ export class GameRoom {
   }
 
   public handleAction(seatIndex: number, action: PlayerActionType) {
+    if (this.isRoundOverState || this.engine.isMatchOver()) return;
     const events = this.engine.handleAction(seatIndex, action);
     this.dispatchEvents(events);
   }
@@ -208,12 +216,43 @@ export class GameRoom {
     });
 
     setTimeout(() => {
-      this.startRound();
-    }, delay + TIMING.NEXT_ROUND_DELAY * 1000);
+      this.isRoundOverState = true;
+      if (this.engine.isMatchOver()) {
+        const winner = this.engine.getWinner();
+        if (winner) {
+          this.io.to(this.id).emit(SOCKET_EVENTS.MATCH_OVER, {
+            winnerSeatIndex: winner.seatIndex,
+            winnerName: winner.name
+          });
+          this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, {
+            type: 'match_over',
+            winnerSeatIndex: winner.seatIndex,
+            winnerName: winner.name
+          });
+        }
+      } else {
+        // Round ended, do not auto-restart! Let the user decide to click next round!
+        this.io.to(this.id).emit(SOCKET_EVENTS.ROUND_OVER, {
+          message: 'Ván bài đã kết thúc! Bấm [TIẾP TỤC VÁN MỚI] để bắt đầu.'
+        });
+        this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, {
+          type: 'round_over',
+          message: 'Ván bài đã kết thúc! Bấm [TIẾP TỤC VÁN MỚI] để bắt đầu.'
+        });
+      }
+      this.broadcastGameState();
+    }, delay + 1000);
+  }
+
+  public handleNextRound(): void {
+    if (!this.isRoundOverState || this.engine.isMatchOver()) return;
+    logger.info(`Room ${this.id} user requested next round...`);
+    this.startRound();
   }
 
   public restartMatch(): void {
     logger.info(`Room ${this.id} restarting match for play again...`);
+    this.isRoundOverState = false;
     this.gameStarted = true;
     this.players.forEach(p => {
       p.isDead = false;
@@ -233,6 +272,7 @@ export class GameRoom {
   }
 
   public handleSwapRequest(seatIndex: number): void {
+    if (this.isRoundOverState || this.engine.isMatchOver()) return;
     const res = this.engine.handleSwapRequest(seatIndex);
     if (res) {
       const player = this.players.find(p => p.seatIndex === seatIndex);

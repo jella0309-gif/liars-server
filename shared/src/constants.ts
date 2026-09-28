@@ -61,6 +61,7 @@ export const SOCKET_EVENTS = {
   JOIN_ROOM: 'join_room',
   PLAYER_ACTION: 'player_action',
   PLAY_AGAIN: 'play_again',
+  NEXT_ROUND: 'next_round',
   RECONNECT_ATTEMPT: 'reconnect_attempt',
 
   // Server → Client
@@ -71,6 +72,7 @@ export const SOCKET_EVENTS = {
   GAME_STATE: 'game_state',
   GAME_EVENT: 'game_event',
   ROULETTE_RESULT: 'roulette_result',
+  ROUND_OVER: 'round_over',
   MATCH_OVER: 'match_over',
   PLAYER_DISCONNECTED: 'player_disconnected',
   ERROR: 'game_error',

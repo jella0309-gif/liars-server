@@ -31,16 +31,22 @@ export const Seat: React.FC<SeatProps> = ({ seatIndex }) => {
   const folded = meView?.folded || oppView?.folded || false;
   const isAllIn = meView?.isAllIn || oppView?.isAllIn || false;
 
-  const isCurrentTurn = gameState?.currentTurnSeat === seatIndex && !gameState?.isProcessingRoulette;
+  const isCurrentTurn = gameState?.currentTurnSeat === seatIndex && !gameState?.isProcessingRoulette && !showdownResults;
 
   // Status classes
   let seatClass = `seat seat-${seatIndex}`;
+  if (isMe) seatClass += ' seat-is-me';
   if (isDead) seatClass += ' dead';
   else if (folded) seatClass += ' folded';
   else if (isCurrentTurn) seatClass += ' active-turn';
 
-  // Bullets count
+  // Bullets count and danger level
   const effectiveBullets = isAllIn ? 6 : Math.min(bullets, 6);
+  const bulletOdds = Math.round((effectiveBullets / 6) * 100);
+  let bulletThreatClass = 'threat-safe';
+  if (effectiveBullets >= 6) bulletThreatClass = 'threat-critical';
+  else if (effectiveBullets >= 4) bulletThreatClass = 'threat-high';
+  else if (effectiveBullets >= 2) bulletThreatClass = 'threat-warn';
 
   // Cards
   let cardsToRender: Card[] = [];
@@ -70,48 +76,76 @@ export const Seat: React.FC<SeatProps> = ({ seatIndex }) => {
         </div>
       )}
 
-      <div className="seat-avatar">{avatar}</div>
-      <div className="seat-name">{name}</div>
+      {/* Top badges for special state */}
+      {isCurrentTurn && (
+        <div className="seat-turn-tag">
+          👉 ĐANG CHƠI
+        </div>
+      )}
 
-      {!isDead && (
-        <div className="seat-bullets">
-          {Array.from({ length: effectiveBullets }).map((_, i) => (
-            <span key={i} className="bullet-dot">
-              ●
-            </span>
-          ))}
-          <span style={{ fontSize: '0.72rem', color: 'var(--bullet)', marginLeft: '2px' }}>
-            ({effectiveBullets}/6)
+      <div className="seat-header-row">
+        <div className="seat-avatar">{avatar}</div>
+        <div className="seat-name-wrap">
+          <div className="seat-name">
+            {name} {isMe && <span className="you-badge">(BẠN)</span>}
+          </div>
+          {isAllIn && !isDead && <span className="badge-allin">🔥 ALL-IN</span>}
+        </div>
+      </div>
+
+      {/* Player alive/dead/folded status indicators */}
+      {isDead ? (
+        <div className="seat-status-dead">☠ ĐÃ BỊ HẠ GỤC</div>
+      ) : folded ? (
+        <div className="seat-status-folded">🏳 ĐÃ BỎ BÀI</div>
+      ) : (
+        <div className={`seat-bullets ${bulletThreatClass}`}>
+          <span className="bullet-icon">🔫</span>
+          <div className="bullet-dots-row">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <span
+                key={i}
+                className={`bullet-dot ${i < effectiveBullets ? 'filled' : 'empty'}`}
+              >
+                ●
+              </span>
+            ))}
+          </div>
+          <span className="bullet-odds-tag">
+            {effectiveBullets}/6 ({bulletOdds}%)
           </span>
         </div>
       )}
 
       {isCurrentTurn && (
         <div className="seat-timer-bar" style={{ display: 'block' }}>
-          <div className="seat-timer-fill" style={{ width: '100%' }}></div>
+          <div className="seat-timer-fill"></div>
         </div>
       )}
 
-      <div className="comm-cards">
-        {!isDead &&
-          cardsToRender.map((c, i) => (
+      {/* Cards container */}
+      {!isDead && cardsToRender.length > 0 && (
+        <div className="seat-cards-container">
+          {cardsToRender.map((c, i) => (
             <PlayingCard key={i} card={c} hidden={hideCards} />
           ))}
-      </div>
+        </div>
+      )}
 
+      {/* Showdown evaluation & rank */}
       {showdownData && (
-        <>
+        <div className="showdown-info-container">
           <div className="hand-eval-box" style={{ display: 'flex' }}>
             <span>🃏 {showdownData.handName}</span>
           </div>
           <div className="rank-badge" style={{ display: 'flex' }}>
             {showdownData.rank === 1 ? (
-              <span className="rank-number r-1">#1 WINNER 🏆</span>
+              <span className="rank-number r-1">🏆 #1 THẮNG</span>
             ) : (
-              <span className="rank-number r-lost">LOST</span>
+              <span className="rank-number r-lost">☠ BÓP CÒ</span>
             )}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

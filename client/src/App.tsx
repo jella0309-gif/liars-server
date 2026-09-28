@@ -22,6 +22,7 @@ export const App: React.FC = () => {
   const setWinner = useGameStore((state) => state.setWinner);
   const setSwapPool = useGameStore((state) => state.setSwapPool);
   const setShowdownResults = useGameStore((state) => state.setShowdownResults);
+  const setRoundOver = useGameStore((state) => state.setRoundOver);
 
   useEffect(() => {
     // Global user click unlock audio
@@ -53,6 +54,19 @@ export const App: React.FC = () => {
       setGameState(state);
     });
 
+    // Top-level Match Over
+    socket.on(SOCKET_EVENTS.MATCH_OVER, (payload: { winnerSeatIndex: number; winnerName: string }) => {
+      setWinner(payload.winnerName);
+      setRoundOver(true);
+      speakActionVoice(`${payload.winnerName} won!`);
+    });
+
+    // Top-level Round Over
+    socket.on(SOCKET_EVENTS.ROUND_OVER, (payload: { message: string }) => {
+      setRoundOver(true, payload.message);
+      setTableLog(payload.message);
+    });
+
     // Game Events
     socket.on(SOCKET_EVENTS.GAME_EVENT, (event: GameEvent) => {
       switch (event.type) {
@@ -73,7 +87,13 @@ export const App: React.FC = () => {
 
         case 'match_over':
           setWinner(event.winnerName);
+          setRoundOver(true);
           speakActionVoice(`${event.winnerName} won!`);
+          break;
+
+        case 'round_over':
+          setRoundOver(true, event.message);
+          setTableLog(event.message);
           break;
 
         case 'swap_available':
@@ -85,8 +105,11 @@ export const App: React.FC = () => {
           break;
 
         case 'round_start':
+          setWinner(null);
+          setRoundOver(false);
           setShowdownResults(null);
           setSwapPool(null);
+          setRouletteResult(null);
           setTableLog('Ván bài mới bắt đầu! Hãy quan sát bài...');
           break;
       }
@@ -107,6 +130,8 @@ export const App: React.FC = () => {
       socket.off(SOCKET_EVENTS.JOINED_SUCCESS);
       socket.off(SOCKET_EVENTS.ROOM_UPDATE);
       socket.off(SOCKET_EVENTS.GAME_STATE);
+      socket.off(SOCKET_EVENTS.MATCH_OVER);
+      socket.off(SOCKET_EVENTS.ROUND_OVER);
       socket.off(SOCKET_EVENTS.GAME_EVENT);
       socket.off(SOCKET_EVENTS.ROOM_NOT_FOUND);
       socket.off(SOCKET_EVENTS.ROOM_FULL);
@@ -121,7 +146,8 @@ export const App: React.FC = () => {
     setRouletteResult,
     setWinner,
     setSwapPool,
-    setShowdownResults
+    setShowdownResults,
+    setRoundOver
   ]);
 
   return (
