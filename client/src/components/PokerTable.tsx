@@ -1,6 +1,7 @@
 import React from 'react';
 import { Seat } from './Seat';
 import { PlayingCard } from './PlayingCard';
+import { RouletteModal } from './RouletteModal';
 import { useGameStore } from '../store/gameStore';
 
 export const PokerTable: React.FC = () => {
@@ -55,6 +56,9 @@ export const PokerTable: React.FC = () => {
         <Seat seatIndex={1} />
         <Seat seatIndex={2} />
         <Seat seatIndex={3} />
+
+        {/* Russian Roulette Spinner beside shooter seat */}
+        <RouletteModal />
       </div>
     </div>
   );

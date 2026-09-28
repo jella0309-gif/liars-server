@@ -6,7 +6,6 @@ import { PokerTable } from './components/PokerTable';
 import { PlayerControls } from './components/PlayerControls';
 import { Lobby } from './components/Lobby';
 import { SwapCardPanel } from './components/SwapCardPanel';
-import { RouletteModal } from './components/RouletteModal';
 import { GodSaveOverlay } from './components/GodSaveOverlay';
 import { WinnerOverlay } from './components/WinnerOverlay';
 import { unlockAudioContext, speakActionVoice, playActionSound } from './utils/audio';
@@ -141,7 +140,6 @@ export const App: React.FC = () => {
       {/* Modals & Overlays */}
       <Lobby />
       <SwapCardPanel />
-      <RouletteModal />
       <GodSaveOverlay />
       <WinnerOverlay />
     </div>
