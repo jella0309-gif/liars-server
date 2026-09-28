@@ -34,14 +34,18 @@ export const RouletteModal: React.FC = () => {
       if (currentLoaded >= bullets) {
         clearInterval(loadInterval);
 
-        // Step 2: Spin cylinder after loading
+        // Step 2: Spin cylinder after loading bullets
         setTimeout(() => {
           setSubText('Đang quay ổ đạn...');
-          const targetDeg = ((6 - stopIndex) % 6) * 60;
+          const targetDeg = ((6 - (stopIndex % 6)) % 6) * 60;
           const totalDegree = 360 * 4 + targetDeg;
 
-          setHasTransition(true);
-          setRotationDeg(totalDegree);
+          requestAnimationFrame(() => {
+            setHasTransition(true);
+            requestAnimationFrame(() => {
+              setRotationDeg(totalDegree);
+            });
+          });
 
           // Step 3: Reveal result after spin finishes (2.2s)
           setTimeout(() => {
@@ -78,7 +82,10 @@ export const RouletteModal: React.FC = () => {
       }
     }, 200);
 
-    return () => clearInterval(loadInterval);
+    return () => {
+      clearInterval(loadInterval);
+      document.body.classList.remove('shake');
+    };
   }, [rouletteResult, setRouletteResult, setGodSave]);
 
   if (!rouletteResult) return null;
