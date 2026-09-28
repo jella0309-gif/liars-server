@@ -8,19 +8,31 @@ const io = new Server(server, {
   cors: { origin: "*" }
 });
 
+// Thêm route này để khi bạn vào web kiểm tra sẽ thấy chữ "Server OK" ngay
+app.get('/', (req, res) => {
+  res.send('Server Liars Bar is Running OK!');
+});
+
 const rooms = {};
 
 io.on('connection', (socket) => {
+  console.log('Nguoi choi ket noi:', socket.id);
+
+  // Xử lý tạo phòng
   socket.on('create_room', ({ roomId, playerName, avatar, maxPlayers }) => {
     socket.join(roomId);
     rooms[roomId] = {
       maxPlayers: parseInt(maxPlayers) || 2,
       players: [{ id: socket.id, seat: 0, name: playerName, avatar: avatar || '🤠' }]
     };
+    
+    // GỬI PHẢN HỒI NGAY CHO HOST ĐỂ ĐÓNG BẢNG CHỜ
     socket.emit('joined_success', { seat: 0, roomId, maxPlayers: rooms[roomId].maxPlayers });
     io.to(roomId).emit('room_update', rooms[roomId]);
+    console.log(`Phong ${roomId} duoc tao voi ${maxPlayers} nguoi.`);
   });
 
+  // Xử lý vào phòng
   socket.on('join_room', ({ roomId, playerName, avatar }) => {
     const room = rooms[roomId];
     if (!room) {
@@ -65,4 +77,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server chạy trên port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
