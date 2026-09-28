@@ -5,10 +5,12 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
 });
 
-// Thêm route này để khi bạn vào web kiểm tra sẽ thấy chữ "Server OK" ngay
 app.get('/', (req, res) => {
   res.send('Server Liars Bar is Running OK!');
 });
@@ -16,9 +18,9 @@ app.get('/', (req, res) => {
 const rooms = {};
 
 io.on('connection', (socket) => {
-  console.log('Nguoi choi ket noi:', socket.id);
+  console.log('User connected:', socket.id);
 
-  // Xử lý tạo phòng
+  // XỬ LÝ TẠO PHÒNG (BẮT BUỘC PHẢI CÓ ĐOẠN NÀY)
   socket.on('create_room', ({ roomId, playerName, avatar, maxPlayers }) => {
     socket.join(roomId);
     rooms[roomId] = {
@@ -26,13 +28,13 @@ io.on('connection', (socket) => {
       players: [{ id: socket.id, seat: 0, name: playerName, avatar: avatar || '🤠' }]
     };
     
-    // GỬI PHẢN HỒI NGAY CHO HOST ĐỂ ĐÓNG BẢNG CHỜ
+    // Gửi phản hồi thành công ngay lập tức để đóng màn hình chờ trên web
     socket.emit('joined_success', { seat: 0, roomId, maxPlayers: rooms[roomId].maxPlayers });
     io.to(roomId).emit('room_update', rooms[roomId]);
-    console.log(`Phong ${roomId} duoc tao voi ${maxPlayers} nguoi.`);
+    console.log(`Room created: ${roomId} with max ${maxPlayers} players`);
   });
 
-  // Xử lý vào phòng
+  // XỬ LÝ VÀO PHÒNG
   socket.on('join_room', ({ roomId, playerName, avatar }) => {
     const room = rooms[roomId];
     if (!room) {
