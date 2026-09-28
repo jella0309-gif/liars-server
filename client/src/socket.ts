@@ -42,3 +42,8 @@ export function emitSwapConfirm(roomId: string, handCardIndex: number, drawnCard
   const payload: SwapCardPayload = { handCardIndex, drawnCardIndex };
   socket.emit('swap_confirm', { roomId, ...payload });
 }
+
+export function emitPlayAgain(roomId: string) {
+  socket.emit(SOCKET_EVENTS.PLAY_AGAIN, { roomId });
+}
+

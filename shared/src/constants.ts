@@ -16,13 +16,14 @@ export const STAGES = ['PRE-FLOP', 'FLOP', 'TURN', 'RIVER', 'SHOWDOWN'] as const
 
 /** Timing constants (in seconds) */
 export const TIMING = {
-  TURN_TIME_LIMIT: 20,
-  SWAP_TIME_LIMIT: 13,
+  TURN_TIME_LIMIT: 30, // 30s thinking time for actions
+  SWAP_TIME_LIMIT: 23, // 23s thinking time for card swap
   COUNTDOWN_BEFORE_START: 3,
   ROULETTE_ANIMATION_DURATION: 4.5,
   GOD_SAVE_DISPLAY_DURATION: 3.5,
   STAGE_TRANSITION_DELAY: 1.0,
   ACTION_BUBBLE_DURATION: 1.4,
+  SHOWDOWN_INSPECT_DURATION: 7.0, // 7s for players to inspect all hands before shooting
   NEXT_ROUND_DELAY: 2.5,
 } as const;
 
@@ -59,6 +60,7 @@ export const SOCKET_EVENTS = {
   CREATE_ROOM: 'create_room',
   JOIN_ROOM: 'join_room',
   PLAYER_ACTION: 'player_action',
+  PLAY_AGAIN: 'play_again',
   RECONNECT_ATTEMPT: 'reconnect_attempt',
 
   // Server → Client

@@ -183,16 +183,20 @@ export class GameRoom {
   }
 
   private handleShowdownResolution(results: ShowdownResult[]) {
-    // Determine losers and let them pull the trigger.
-    // Simplifying: we'll run a loop with delays.
+    // Determine losers and let them pull the trigger
     const losers = results.filter(r => r.rank > 1);
-    const aliveLosers = losers.map(l => this.players.find(p => p.seatIndex === l.seatIndex)).filter(p => p && !p.isDead && !p.folded);
+    const aliveLosers = losers.map(l => this.players.find(p => p.seatIndex === l.seatIndex)).filter((p): p is ServerPlayer => !!p && !p.isDead && !p.folded);
     
-    let delay = 3000; // time to show cards
-    aliveLosers.forEach((loser, i) => {
+    // Task 4: Give players full inspection duration (7s) to see everyone's cards before shooting
+    let delay = TIMING.SHOWDOWN_INSPECT_DURATION * 1000;
+    aliveLosers.forEach((loser) => {
       setTimeout(() => {
         if (loser) {
           const r = this.engine.dispatchRoulette(loser);
+          this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, { 
+            type: 'log', 
+            message: `☠ Đến lượt [${loser.name}] bóp cò Russian Roulette!` 
+          });
           this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, { type: 'roulette', result: r });
           if (r.isGodSave) {
             this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, { type: 'god_save', seatIndex: r.seatIndex, name: r.name });
@@ -206,6 +210,26 @@ export class GameRoom {
     setTimeout(() => {
       this.startRound();
     }, delay + TIMING.NEXT_ROUND_DELAY * 1000);
+  }
+
+  public restartMatch(): void {
+    logger.info(`Room ${this.id} restarting match for play again...`);
+    this.gameStarted = true;
+    this.players.forEach(p => {
+      p.isDead = false;
+      p.bullets = 1;
+      p.cards = [];
+      p.folded = false;
+      p.isAllIn = false;
+      p.hasUsedSwap = false;
+    });
+    this.engine = new GameEngine(this.players, this.maxPlayers);
+    this.broadcastRoomUpdate();
+    this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, { type: 'round_start' });
+    this.broadcastGameState();
+    setTimeout(() => {
+      this.startRound();
+    }, 1500);
   }
 
   public handleSwapRequest(seatIndex: number): void {
