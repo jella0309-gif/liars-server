@@ -1,0 +1,23 @@
+.card { 
+  width: clamp(32px, 7vw, 44px); 
+  height: clamp(46px, 10vw, 62px); 
+  background: var(--card-bg); 
+  border-radius: 5px; 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: space-between; 
+  padding: 2px 4px; 
+  font-weight: 900; 
+  font-size: clamp(0.75rem, 2vw, 0.95rem); 
+  box-shadow: 0 3px 8px rgba(0,0,0,0.5); 
+  cursor: default; 
+  transition: 0.2s; 
+}
+.card.red { color: #dc2626; }
+.card.black { color: #0f172a; }
+.card-suit { align-self: center; font-size: clamp(0.95rem, 2.5vw, 1.25rem); margin-top: -3px; }
+.card.back { background: var(--card-back); border: 1.5px solid #3f3f46; color: #71717a; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; }
+
+.card.selectable { cursor: pointer; }
+.card.selectable:hover { transform: translateY(-3px); }
+.card.selected-gold { outline: 3px solid var(--gold); box-shadow: 0 0 14px rgba(245, 158, 11, 0.9); transform: translateY(-4px); }

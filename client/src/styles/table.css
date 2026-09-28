@@ -1,0 +1,47 @@
+.table-stage { 
+  flex: 1; 
+  position: relative; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  padding: clamp(8px, 2vh, 16px); 
+  overflow: hidden; 
+}
+.poker-table { 
+  position: relative; 
+  width: 100%; 
+  max-width: 900px; 
+  height: 96%; 
+  max-height: 520px; 
+  background: radial-gradient(circle, #153826 0%, var(--felt) 80%); 
+  border: clamp(8px, 1.8vw, 14px) solid var(--wood); 
+  outline: clamp(2px, 0.6vw, 4px) solid var(--felt-border); 
+  border-radius: clamp(50px, 14vw, 120px); 
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.9), 0 15px 35px rgba(0,0,0,0.9); 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+}
+
+.table-center { 
+  position: absolute; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: clamp(4px, 1vh, 8px); 
+  z-index: 2; 
+  text-align: center; 
+  width: 90%; 
+  max-width: 320px; 
+}
+.phase-badge { 
+  background: rgba(0,0,0,0.7); 
+  padding: 3px clamp(8px, 2vw, 14px); 
+  border-radius: 20px; 
+  font-size: clamp(0.68rem, 2vw, 0.8rem); 
+  font-weight: bold; 
+  color: var(--gold); 
+  border: 1px solid rgba(245,158,11,0.4); 
+  text-transform: uppercase; 
+}
+.comm-cards { display: flex; gap: clamp(3px, 1vw, 6px); min-height: 48px; }
