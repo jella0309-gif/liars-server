@@ -141,6 +141,13 @@ export function registerSocketHandlers(io: Server) {
       }
     });
 
+    socket.on(SOCKET_EVENTS.PLAY_AGAIN, (payload: { roomId: string }) => {
+      const room = rooms.get(payload?.roomId);
+      if (room) {
+        room.restartMatch();
+      }
+    });
+
     socket.on(SOCKET_EVENTS.RECONNECT_ATTEMPT, (payload) => {
       try {
         const data = ReconnectSchema.parse(payload);

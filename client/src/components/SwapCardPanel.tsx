@@ -3,6 +3,7 @@ import { PlayingCard } from './PlayingCard';
 import { useGameStore } from '../store/gameStore';
 import { emitSwapConfirm } from '../socket';
 import { unlockAudioContext } from '../utils/audio';
+import { TIMING } from '@liars-bar/shared';
 
 export const SwapCardPanel: React.FC = () => {
   const swapPoolCards = useGameStore((state) => state.swapPoolCards);
@@ -12,14 +13,14 @@ export const SwapCardPanel: React.FC = () => {
 
   const [handIndex, setHandIndex] = useState<number | null>(null);
   const [drawnIndex, setDrawnIndex] = useState<number | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(13);
+  const [secondsLeft, setSecondsLeft] = useState<number>(TIMING.SWAP_TIME_LIMIT);
 
   // Reset when opened
   useEffect(() => {
     if (swapPoolCards) {
       setHandIndex(null);
       setDrawnIndex(null);
-      setSecondsLeft(13);
+      setSecondsLeft(TIMING.SWAP_TIME_LIMIT);
 
       const timer = setInterval(() => {
         setSecondsLeft((prev) => {
