@@ -17,41 +17,27 @@ export const WinnerOverlay: React.FC = () => {
   };
 
   return (
-    <div className="winner-overlay" style={{ display: 'flex' }}>
+    <div className="winner-overlay">
       <div className="winner-box">
-        <div className="winner-text">🏆 {winnerName.toUpperCase()} CHIẾN THẮNG!</div>
-        <div className="winner-sub">Người sống sót duy nhất tại Liar's Bar</div>
+        <div className="winner-trophy-icon">🏆</div>
+        <div className="winner-text">{winnerName.toUpperCase()} CHIẾN THẮNG!</div>
+        <div className="winner-sub">
+          Đã sống sót qua tất cả vòng Russian Roulette tại Liar's Bar!
+        </div>
 
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '16px' }}>
+        <div className="winner-actions">
           <button
             type="button"
-            className="btn-top"
+            className="btn-modal-playagain pulse"
             onClick={handlePlayAgain}
-            style={{
-              padding: '10px 20px',
-              fontSize: '0.95rem',
-              background: 'linear-gradient(135deg, #059669, #047857)',
-              color: '#fff',
-              border: '1.5px solid #34d399',
-              boxShadow: '0 0 12px rgba(16, 185, 129, 0.4)',
-              cursor: 'pointer'
-            }}
           >
-            🔄 CHƠI TIẾP VÁN MỚI
+            🔄 CHƠI LẠI TRẬN MỚI
           </button>
 
           <button
             type="button"
-            className="btn-top"
+            className="btn-modal-leave"
             onClick={() => location.reload()}
-            style={{
-              padding: '10px 18px',
-              fontSize: '0.95rem',
-              background: '#1e293b',
-              color: '#94a3b8',
-              border: '1px solid #475569',
-              cursor: 'pointer'
-            }}
           >
             🚪 RỜI PHÒNG
           </button>

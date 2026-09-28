@@ -96,7 +96,7 @@ export const RouletteModal: React.FC = () => {
 
       <div
         ref={modalRef}
-        className="center-roulette-modal"
+        className={`center-roulette-modal roulette-seat-${rouletteResult.seatIndex}`}
         style={{ display: 'flex' }}
       >
         <div className="roulette-player-tag">

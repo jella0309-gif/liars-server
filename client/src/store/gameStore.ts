@@ -33,6 +33,8 @@ interface GameStore {
   winnerName: string | null;
   swapPoolCards: Card[] | null;
   showdownResults: ShowdownResult[] | null;
+  isRoundOver: boolean;
+  roundOverMessage: string | null;
 
   // Actions
   setConnected: (connected: boolean) => void;
@@ -46,6 +48,7 @@ interface GameStore {
   setWinner: (name: string | null) => void;
   setSwapPool: (cards: Card[] | null) => void;
   setShowdownResults: (results: ShowdownResult[] | null) => void;
+  setRoundOver: (isRoundOver: boolean, message?: string | null) => void;
   setLobbyOpen: (open: boolean) => void;
 }
 
@@ -65,6 +68,8 @@ export const useGameStore = create<GameStore>((set) => ({
   winnerName: null,
   swapPoolCards: null,
   showdownResults: null,
+  isRoundOver: false,
+  roundOverMessage: null,
 
   setConnected: (isConnected) => set({ isConnected }),
 
@@ -72,6 +77,12 @@ export const useGameStore = create<GameStore>((set) => ({
     currentRoomId,
     mySeatIndex,
     isLobbyOpen: false,
+    isRoundOver: false,
+    roundOverMessage: null,
+    winnerName: null,
+    showdownResults: null,
+    rouletteResult: null,
+    swapPoolCards: null,
     tableLog: `Đã vào phòng [${currentRoomId}]! Chờ bắt đầu...`
   }),
 
@@ -97,6 +108,8 @@ export const useGameStore = create<GameStore>((set) => ({
   setSwapPool: (swapPoolCards) => set({ swapPoolCards }),
 
   setShowdownResults: (showdownResults) => set({ showdownResults }),
+
+  setRoundOver: (isRoundOver, roundOverMessage = null) => set({ isRoundOver, roundOverMessage }),
 
   setLobbyOpen: (isLobbyOpen) => set({ isLobbyOpen })
 }));
