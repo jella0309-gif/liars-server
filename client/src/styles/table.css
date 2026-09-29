@@ -736,3 +736,192 @@
     right: 28px;
   }
 }
+
+/* ---------- Environment pass: the reference poker table ----------
+   Same geometry (centre, size, z-order) as before; only materials change.
+   Layers, outside in: brass hairline, dark lip, thick mahogany rail (the
+   near edge is thicker), aged-brass inner trim, dark padded lip, worn
+   burgundy felt lit from the overhead lamp. */
+@media (min-width: 1051px) {
+  .game-table-scene .felt-surface {
+    border: 15px solid transparent;
+    border-top-width: 12px;
+    border-bottom-width: 26px;
+    background:
+      radial-gradient(ellipse at 50% 30%, #742733 0%, #5e1c23 28%, #4a151b 56%, #38111a 80%, #2b0c11 100%) padding-box,
+      repeating-linear-gradient(94deg, #0000 0 5px, #ffffff07 5px 6px, #0000 6px 11px) border-box,
+      linear-gradient(180deg, #d0783a 0%, #8a4420 6%, #5a2812 20%, #3a190e 48%, #4a2110 78%, #24100a 100%) border-box;
+    box-shadow:
+      0 0 0 1px #d19a4a5c,
+      0 0 0 3px #17090580,
+      0 16px 0 -2px #1c0c07,
+      0 24px 0 -5px #120705,
+      0 46px 70px -14px #000c,
+      0 -14px 44px -16px #e79b4630,
+      inset 0 0 0 2px #ba7a3260,
+      inset 0 0 0 5px #24100a,
+      inset 0 34px 70px -30px #ffb95e26,
+      inset 0 -46px 90px -34px #10040590,
+      inset 0 0 100px #1a060a90;
+  }
+  /* Felt weave + a few worn patches, very low contrast. */
+  .game-table-scene .felt-surface::before {
+    inset: 0;
+    border-radius: inherit;
+    background:
+      radial-gradient(ellipse 22% 18% at 30% 62%, #ffffff0a, transparent 70%),
+      radial-gradient(ellipse 18% 14% at 72% 40%, #ffffff08, transparent 70%),
+      radial-gradient(ellipse 30% 20% at 55% 78%, #00000018, transparent 70%),
+      repeating-linear-gradient(45deg, #0000 0 1px, #ffffff0d 1px 2px),
+      repeating-linear-gradient(-45deg, #0000 0 1px, #00000012 1px 2px);
+    opacity: 0.22;
+    mix-blend-mode: normal;
+  }
+  /* Inner decorative hairline, as on the reference. */
+  .game-table-scene .felt-surface::after {
+    inset: 14px;
+    border: 1px solid #d19a4a1f;
+    border-radius: inherit;
+    box-shadow: inset 0 0 40px #00000030;
+  }
+  .game-table-scene .table-stitch {
+    inset: 22px;
+    border: 1px dashed #d19a4a14;
+  }
+  .game-table-scene .felt-emblem {
+    font-size: 90px;
+    color: #ffc9b80a;
+    text-shadow: 0 1px 0 #00000030;
+  }
+  /* Lamp pool on the far felt and a darker room edge, so the cards read as
+     laid on a lit surface. */
+  .game-table-scene .poker-table::after {
+    background:
+      radial-gradient(ellipse 40% 26% at 50% 4%, #ffb95e12, transparent 70%),
+      radial-gradient(120% 105% at 50% 45%, transparent 56%, #12080588 100%);
+  }
+  /* Stage tracker sits right under the lamp: give it a scrim for legibility. */
+  .game-table-scene .stage-track {
+    padding: 4px 14px;
+    border-radius: 20px;
+    background: #0b060480;
+  }
+}
+
+/* ---------- Showdown results card ----------
+   Centred on the felt, above HUDs and cards (z 65) and below the dock (70).
+   Reads the same showdown data the seats use; dismissable. */
+.game-table-scene .showdown-summary {
+  position: absolute;
+  z-index: 65;
+  left: 50%;
+  top: var(--sd-y, 50%);
+  translate: -50% -50%;
+  width: min(92%, 440px);
+  padding: 10px 14px 12px;
+  border: 1px solid #d19a4a66;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #1c110cf2, #120a08f6);
+  box-shadow: 0 14px 40px #000b, inset 0 1px #ffb95e22;
+  color: #e9d7bb;
+  animation: enter-up 0.35s ease both;
+}
+.showdown-summary header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.showdown-summary .sd-close {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #82573575;
+  border-radius: 4px;
+  background: #140e0b66;
+  color: #d2b283;
+}
+.showdown-summary .sd-board {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #b98b5530;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #bea486;
+}
+.showdown-summary .sd-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 5px;
+}
+.showdown-summary .sd-rows li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #ffffff05;
+  font-size: 13px;
+}
+.showdown-summary li.winner {
+  background: linear-gradient(90deg, #4a2a1055, #2a180c55);
+  box-shadow: inset 0 0 0 1px #d19a4a55;
+  color: #ffe2a8;
+}
+.showdown-summary li.folded {
+  opacity: 0.55;
+}
+.showdown-summary .sd-rank {
+  display: inline-grid;
+  place-items: center;
+  font-size: 11px;
+  color: #d19a4a;
+}
+.showdown-summary .sd-name {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.showdown-summary .sd-name small {
+  font-size: 7px;
+  letter-spacing: 1px;
+  color: #d19a4a;
+}
+.showdown-summary .sd-cards {
+  display: inline-flex;
+  gap: 3px;
+}
+.showdown-summary .sd-cards i {
+  display: inline-block;
+  min-width: 22px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: linear-gradient(130deg, #fcf2d9, #e7dab9);
+  color: #292e27;
+  font: 700 11px/1.1 Georgia, serif;
+  text-align: center;
+}
+.showdown-summary .sd-cards i.red {
+  color: #a23b2e;
+}
+.showdown-summary .sd-hand {
+  font-size: 14px;
+  white-space: nowrap;
+}
+.showdown-summary li.winner .sd-hand {
+  font-size: 15px;
+  text-shadow: 0 0 10px #e9a54f55;
+}

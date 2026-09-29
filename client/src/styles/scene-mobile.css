@@ -1302,3 +1302,157 @@
 .game-table-scene .opponent-seat.offline .character-art {
   filter: saturate(0.4) brightness(0.7);
 }
+
+/* ---------- Environment pass (tablet / mobile): same room, cheaper ----------
+   A narrower centre crop of the bar band, no smoke or embers, a lighter table
+   shadow stack; geometry is unchanged. */
+@media (max-width: 1050px) {
+  .in-game .tavern-scene {
+    background:
+      linear-gradient(180deg, #0000 0%, #0000 22%, #0b0605d9 34%, #090604 100%),
+      url('/art/bar-backdrop-mobile.webp') center 56px / 100% auto no-repeat,
+      radial-gradient(ellipse at 50% 20%, #2a1510, #0f0806 55%, #090604 100%);
+    transform: none;
+    transition: none;
+  }
+  .in-game .tavern-shade {
+    background: linear-gradient(180deg, #06030230 0%, #08050450 30%, #0906059a 62%, #070403c4 100%);
+  }
+  .in-game .tavern-smoke,
+  .in-game .tavern-embers {
+    display: none;
+  }
+  .in-game .tavern-lamplight {
+    left: 15%;
+    top: -4%;
+    width: 70%;
+    height: 40%;
+    animation: none;
+    background: radial-gradient(ellipse 50% 60% at 50% 20%, #e79b4626, transparent 68%);
+  }
+  .in-game .tavern-neon-glow {
+    animation: none;
+    background: radial-gradient(ellipse 60% 50% at 60% 35%, #ef3b2d24, transparent 70%);
+  }
+  .game-table-scene .felt-surface {
+    border: 11px solid transparent;
+    border-top-width: 9px;
+    border-bottom-width: 18px;
+    background:
+      radial-gradient(ellipse at 50% 30%, #742733 0%, #5e1c23 28%, #4a151b 56%, #38111a 80%, #2b0c11 100%) padding-box,
+      linear-gradient(180deg, #d0783a 0%, #8a4420 6%, #5a2812 20%, #3a190e 48%, #4a2110 78%, #24100a 100%) border-box;
+    box-shadow:
+      0 0 0 1px #d19a4a5c,
+      0 10px 0 -2px #1c0c07,
+      0 26px 36px -10px #000b,
+      inset 0 0 0 2px #ba7a3260,
+      inset 0 0 0 4px #24100a,
+      inset 0 24px 50px -26px #ffb95e22,
+      inset 0 -30px 60px -26px #10040590,
+      inset 0 0 50px #1a060a80;
+  }
+  .game-table-scene .felt-surface::before {
+    inset: 0;
+    border-radius: inherit;
+    background:
+      repeating-linear-gradient(45deg, #0000 0 1px, #ffffff0c 1px 2px),
+      repeating-linear-gradient(-45deg, #0000 0 1px, #00000010 1px 2px);
+    opacity: 0.2;
+    mix-blend-mode: normal;
+  }
+  .game-table-scene .felt-surface::after {
+    inset: 10px;
+    border: 1px solid #d19a4a1f;
+    border-radius: inherit;
+  }
+  .game-table-scene .table-stitch {
+    display: none;
+  }
+  .game-table-scene .felt-emblem {
+    color: #ffc9b80a;
+  }
+  .game-table-scene .stage-track {
+    padding: 3px 10px;
+    border-radius: 16px;
+    background: #0b060480;
+  }
+  .game-table-scene .character-figure::before {
+    background:
+      radial-gradient(45% 36% at 50% 16%, #e79b4626, transparent 72%),
+      radial-gradient(ellipse at 50% 62%, #a7642420, #07040340 48%, transparent 70%);
+  }
+}
+@media (max-width: 1050px) and (max-height: 500px) {
+  .in-game .tavern-scene {
+    background-position: center 44px;
+  }
+}
+/* Tablets keep a simplified chair back; phones skip it for readability. */
+@media (min-width: 600px) and (max-width: 1050px) {
+  .game-table-scene .opponent-seat .character-figure::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 12%;
+    right: 12%;
+    top: 24%;
+    bottom: -6%;
+    border: 2px dotted #ba7a3255;
+    border-bottom: 0;
+    border-radius: 42% 42% 6px 6px / 34% 34% 6px 6px;
+    background: linear-gradient(180deg, #5a161d 0%, #3d0f14 55%, #240a0d 100%);
+    box-shadow: inset 0 -16px 24px #00000060, 0 6px 18px #00000080;
+    opacity: 0.9;
+    pointer-events: none;
+  }
+}
+
+/* Showdown results card on small screens: sits over the board, clear of the
+   local hand and the dock; compact rows that still read at arm's length. */
+@media (max-width: 1050px) {
+  .game-table-scene .showdown-summary {
+    --sd-y: 46%;
+    width: min(94%, 420px);
+    padding: 8px 10px 10px;
+  }
+  .showdown-summary .sd-rows li {
+    gap: 8px;
+    padding: 5px 6px;
+    font-size: 12px;
+  }
+  .showdown-summary .sd-hand {
+    font-size: 13px;
+  }
+  .showdown-summary li.winner .sd-hand {
+    font-size: 14px;
+  }
+}
+@media (max-width: 599px) {
+  .game-table-scene .showdown-summary {
+    --sd-y: 44%;
+  }
+  .showdown-summary .sd-board {
+    margin: 6px 0 4px;
+    padding-bottom: 6px;
+  }
+  .showdown-summary .sd-rows li {
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    grid-template-areas: 'rank name hand' 'rank cards cards';
+    row-gap: 2px;
+  }
+  .showdown-summary .sd-rank { grid-area: rank; }
+  .showdown-summary .sd-name { grid-area: name; }
+  .showdown-summary .sd-cards { grid-area: cards; }
+  .showdown-summary .sd-hand { grid-area: hand; font-size: 12px; }
+  .showdown-summary .sd-cards i { min-width: 20px; font-size: 10px; }
+}
+@media (max-width: 1050px) and (max-height: 500px) {
+  .game-table-scene .showdown-summary {
+    --sd-y: 52%;
+    width: min(70%, 420px);
+    padding: 6px 10px 8px;
+  }
+  .showdown-summary .sd-board { margin: 4px 0; padding-bottom: 4px; }
+  .showdown-summary .sd-rows { gap: 3px; }
+  .showdown-summary .sd-rows li { padding: 3px 6px; font-size: 11px; }
+}

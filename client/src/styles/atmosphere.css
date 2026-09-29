@@ -145,3 +145,44 @@
     opacity: 0;
   }
 }
+
+/* ---------- Environment pass: the reference bar room behind the table ----------
+   The room band is cut from docs/design/game-table-background-reference.png
+   (everything above the painted table) with a baked alpha fade, placed just
+   below the header so the lamp stays visible; the floor below it is a dark
+   gradient the CSS table sits on. */
+.in-game .tavern-scene {
+  background:
+    linear-gradient(180deg, #0000 0%, #0000 40%, #0b0605d9 52%, #090604 100%),
+    url('/art/bar-backdrop.webp') center 78px / 100% auto no-repeat,
+    radial-gradient(ellipse at 50% 28%, #2a1510, #0f0806 55%, #090604 100%);
+}
+.in-game .tavern-shade {
+  background:
+    linear-gradient(180deg, #06030230 0%, #08050440 30%, #09060588 62%, #070403b8 100%),
+    radial-gradient(ellipse 70% 60% at 50% 42%, transparent 50%, #05030380 100%);
+}
+/* One dominant overhead lamp: warm cone from the top centre toward the table. */
+.in-game .tavern-lamplight {
+  left: 24%;
+  top: -6%;
+  width: 52%;
+  height: 70%;
+  background:
+    radial-gradient(ellipse 30% 22% at 50% 8%, #ffb95e30, transparent 70%),
+    radial-gradient(ellipse 50% 55% at 50% 30%, #e79b4626, transparent 68%);
+}
+/* Red neon fill from the upper right, reflected on the wall. */
+.in-game .tavern-neon-glow {
+  top: 7%;
+  right: 3%;
+  width: 34%;
+  height: 30%;
+  background:
+    radial-gradient(ellipse 45% 40% at 60% 35%, #ef3b2d2e, transparent 70%),
+    radial-gradient(ellipse 80% 60% at 60% 60%, #c8221f14, transparent 72%);
+}
+.in-game .tavern-smoke {
+  opacity: 0.45;
+  background: radial-gradient(ellipse, #e4bd8b0a, transparent 63%);
+}

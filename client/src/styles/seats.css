@@ -1044,3 +1044,54 @@
     padding: 7px 8px;
   }
 }
+
+/* ---------- Environment pass: seating the characters in the room ----------
+   Presentation only; anchors, sizes and state logic are untouched. */
+@media (min-width: 1051px) {
+  /* Warm top light from the lamp; red bounce for the seats nearer the neon. */
+  .game-table-scene .character-figure::before {
+    background:
+      radial-gradient(45% 36% at 50% 16%, #e79b462e, transparent 72%),
+      radial-gradient(ellipse at 50% 62%, #a7642420, #07040352 48%, transparent 70%);
+  }
+  .game-table-scene .pos-right .character-figure::before,
+  .game-table-scene .pos-top-right .character-figure::before {
+    background:
+      radial-gradient(45% 36% at 58% 16%, #ef3b2d22, transparent 72%),
+      radial-gradient(ellipse at 50% 62%, #a7642420, #07040352 48%, transparent 70%);
+  }
+  /* Burgundy club-chair back behind each opponent: tufted leather with brass
+     studs, mostly hidden by the character, edges showing at the shoulders. */
+  .game-table-scene .opponent-seat .character-figure::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 10%;
+    right: 10%;
+    top: 22%;
+    bottom: -6%;
+    border: 3px dotted #ba7a3266;
+    border-bottom: 0;
+    border-radius: 42% 42% 6px 6px / 34% 34% 6px 6px;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 30%, #6a1a22, transparent 75%),
+      repeating-radial-gradient(circle at 50% 40%, #00000018 0 14px, #0000 14px 28px),
+      linear-gradient(180deg, #5a161d 0%, #3d0f14 55%, #240a0d 100%);
+    box-shadow: inset 0 6px 14px #ffffff10, inset 0 -20px 30px #00000060, 0 8px 24px #00000080;
+    opacity: 0.92;
+    pointer-events: none;
+  }
+  /* Contact shadow: the torso meets the rail in shade. */
+  .game-table-scene .opponent-seat .character-figure .character-art.figure-art {
+    -webkit-mask-image: linear-gradient(#000 74%, #00000099 88%, transparent 98%),
+      linear-gradient(to right, transparent 1%, #000 10%, #000 90%, transparent 99%);
+    mask-image: linear-gradient(#000 74%, #00000099 88%, transparent 98%),
+      linear-gradient(to right, transparent 1%, #000 10%, #000 90%, transparent 99%);
+  }
+  /* Local foreground: the near rail casts warmth and shade around the hand. */
+  .game-table-scene .local-seat::after {
+    background:
+      radial-gradient(55% 90% at 50% 100%, #e79b4618, transparent 70%),
+      radial-gradient(70% 60% at 50% 110%, #00000070, transparent 70%);
+  }
+}
