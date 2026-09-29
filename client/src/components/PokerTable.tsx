@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Seat } from './Seat';
 import { CommunityCards } from './CommunityCards';
 import { TableSurface } from './TableSurface';
+import { ShowdownSummary } from './ShowdownSummary';
 import { PlayerControls } from './PlayerControls';
 import { useGameStore } from '../store/gameStore';
 import { useT } from '../i18n';
@@ -137,6 +138,7 @@ export const PokerTable: React.FC = () => {
                 <Seat seatIndex={i} />
               </div>
             ))}
+            <ShowdownSummary />
             <div className="table-edge-label" aria-hidden="true">
               ONE TABLE. DIFFERENT MASKS.
             </div>

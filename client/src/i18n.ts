@@ -247,6 +247,9 @@ const vi = {
   'hand.High Card': 'Mậu thầu',
   'hand.Folded': 'Đã bỏ bài',
   'hand.Invalid': 'Thắng do đối thủ bỏ bài',
+  'sd.title': 'KẾT QUẢ NGỬA BÀI',
+  'sd.board': 'Bài chung',
+  'sd.close': 'Ẩn bảng kết quả',
 };
 
 export type Key = keyof typeof vi;
@@ -480,6 +483,9 @@ const en: Record<Key, string> = {
   'hand.High Card': 'High Card',
   'hand.Folded': 'Folded',
   'hand.Invalid': 'Won by default',
+  'sd.title': 'SHOWDOWN RESULTS',
+  'sd.board': 'Board',
+  'sd.close': 'Hide results',
 };
 
 const dictionaries: Record<Lang, Record<Key, string>> = { vi, en };
