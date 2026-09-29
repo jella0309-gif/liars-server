@@ -43,7 +43,7 @@ export const TIMING = {
   GOD_SAVE_DISPLAY_DURATION: 3.5,
   STAGE_TRANSITION_DELAY: 1.0,
   ACTION_BUBBLE_DURATION: 1.4,
-  SHOWDOWN_INSPECT_DURATION: 7.0, // 7s for players to inspect all hands before shooting
+  SHOWDOWN_INSPECT_DURATION: 12.0, // 12s for players to inspect all hands before shooting
   NEXT_ROUND_DELAY: 2.5,
   RECONNECT_GRACE: 20, // seconds a disconnected player may return before being dropped
 } as const;

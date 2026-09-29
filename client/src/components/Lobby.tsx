@@ -10,6 +10,7 @@ import {
 import { TIMING } from '@liars-bar/shared';
 import { useT } from '../i18n';
 import { Icon } from './Icon';
+import { CharacterFigure } from './CharacterFigure';
 
 export const Lobby: React.FC = () => {
   const { isConnected, isLobbyOpen, errorMessage, setError } = useGameStore();
@@ -73,6 +74,9 @@ export const Lobby: React.FC = () => {
               <em>PLAY YOUR HAND.</em>
             </h1>
             <p>{t('lobby.hero.p')}</p>
+            <div className="hero-figure" aria-hidden="true">
+              <CharacterFigure avatar={selectedAvatar} mood={previewMood} label="" />
+            </div>
           </div>
           <div className="section-heading" id="character-selection">
             <h2>
@@ -276,8 +280,14 @@ export const Lobby: React.FC = () => {
               disabled={!isConnected || pending}
               type="submit"
             >
+              <span className="enter-spade" aria-hidden="true">♠</span>
               <span>
-                {pending ? t('lobby.submit.pending') : t(`lobby.submit.${mode}`)}
+                <span className="enter-long">
+                  {pending ? t('lobby.submit.pending') : t(`lobby.submit.${mode}`)}
+                </span>
+                <span className="enter-short">
+                  {pending ? '…' : t(`lobby.short.${mode}`)}
+                </span>
                 <small>POKER · RUSSIAN ROULETTE</small>
               </span>
               <Icon name="arrow" />
@@ -308,6 +318,15 @@ export const Lobby: React.FC = () => {
         <span>
           {t('lobby.footer')} <b>·</b>{' '}
           {t('lobby.footer.turn', { turn: TIMING.TURN_TIME_LIMIT })}
+        </span>
+        <span className="lobby-credits">
+          <a href="https://www.instagram.com/_trunfun" target="_blank" rel="noopener noreferrer">
+            Trunfun
+          </a>
+          <b>×</b>
+          <a href="https://hdnng.vercel.app" target="_blank" rel="noopener noreferrer">
+            HD
+          </a>
         </span>
       </footer>
     </main>

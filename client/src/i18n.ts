@@ -74,6 +74,9 @@ const vi = {
   'lobby.submit.bot': 'BẮT ĐẦU VÁN BÀI',
   'lobby.submit.host': 'TẠO BÀN CHƠI',
   'lobby.submit.join': 'VÀO PHÒNG',
+  'lobby.short.bot': 'CHƠI NGAY',
+  'lobby.short.host': 'TẠO BÀN',
+  'lobby.short.join': 'VÀO PHÒNG',
   'lobby.online': 'Máy chủ sẵn sàng · Kết nối trực tuyến',
   'lobby.connecting': 'Đang kết nối máy chủ…',
   'lobby.quote': '“Ở đây, bài xấu chưa đáng sợ.\nHết may mắn mới đáng sợ.”',
@@ -247,6 +250,9 @@ const vi = {
   'hand.High Card': 'Mậu thầu',
   'hand.Folded': 'Đã bỏ bài',
   'hand.Invalid': 'Thắng do đối thủ bỏ bài',
+  'sd.title': 'KẾT QUẢ NGỬA BÀI',
+  'sd.board': 'Bài chung',
+  'sd.close': 'Ẩn bảng kết quả',
 };
 
 export type Key = keyof typeof vi;
@@ -317,6 +323,9 @@ const en: Record<Key, string> = {
   'lobby.submit.bot': 'START THE GAME',
   'lobby.submit.host': 'CREATE TABLE',
   'lobby.submit.join': 'JOIN ROOM',
+  'lobby.short.bot': 'PLAY',
+  'lobby.short.host': 'CREATE',
+  'lobby.short.join': 'JOIN',
   'lobby.online': 'Server ready · Connected',
   'lobby.connecting': 'Connecting to server…',
   'lobby.quote': '“Here, a bad hand is not what scares you.\nRunning out of luck is.”',
@@ -480,6 +489,9 @@ const en: Record<Key, string> = {
   'hand.High Card': 'High Card',
   'hand.Folded': 'Folded',
   'hand.Invalid': 'Won by default',
+  'sd.title': 'SHOWDOWN RESULTS',
+  'sd.board': 'Board',
+  'sd.close': 'Hide results',
 };
 
 const dictionaries: Record<Lang, Record<Key, string>> = { vi, en };
