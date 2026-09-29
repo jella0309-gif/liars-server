@@ -104,7 +104,7 @@ export class GameEngine {
 
       // Next turn handled after roulette animation typically, but returning events here
     } else if (action === 'call') {
-      player.bullets = Math.min(REVOLVER.CHAMBER_COUNT, player.bullets + 1);
+      player.bullets = Math.min(REVOLVER.CALL_BULLET_CAP, player.bullets + 1);
       this.roundActionsCount++;
       events.push(...this.nextTurn());
     } else if (action === 'allin') {
@@ -115,6 +115,38 @@ export class GameEngine {
     }
 
     return events;
+  }
+
+  /** A player left for good: eliminate them and keep the round moving. */
+  public dropPlayer(seatIndex: number): GameEvent[] {
+    const player = this.players.find((p) => p.seatIndex === seatIndex);
+    if (!player || player.isDead) return [];
+    this.swapDrawnCards.delete(seatIndex);
+    if (this.swappedThisTurnSeat === seatIndex) this.swappedThisTurnSeat = null;
+    player.matchRank = this.getAlivePlayers().length;
+    player.isDead = true;
+    player.folded = true;
+    player.isAllIn = false;
+    const survivors = this.getAlivePlayers();
+    if (survivors.length === 1 && survivors[0].matchRank === null) {
+      survivors[0].matchRank = 1;
+    }
+    // Mid-roulette or after showdown the room orchestration carries on.
+    if (this.isProcessingRoulette || this.currentTurnSeat === -1) return [];
+    if (this.currentTurnSeat === seatIndex) {
+      this.clearTurnTimer();
+      return this.nextTurn();
+    }
+    const aliveNonFolded = this.getAlivePlayers().filter((p) => !p.folded);
+    if (aliveNonFolded.length <= 1) {
+      this.clearTurnTimer();
+      return this.handleShowdown();
+    }
+    return [];
+  }
+
+  public getCurrentTurnSeat(): number {
+    return this.currentTurnSeat;
   }
 
   public nextTurnAfterRoulette(): GameEvent[] {

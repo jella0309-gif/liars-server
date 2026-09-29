@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GameEngine } from './GameEngine.js';
-import { AVATARS, type ServerPlayer } from '@liars-bar/shared';
+import { AVATARS, TIMING, type ServerPlayer } from '@liars-bar/shared';
 
 function table(count = 2) {
   const players: ServerPlayer[] = Array.from(
@@ -116,9 +116,9 @@ test('turn time reflects the server deadline without resetting after a state upd
   try {
     engine.startTurnTimer(0, () => {});
     now += 12000;
-    assert.equal(engine.getStateForPlayer(0).turnTimeRemaining, 18);
+    assert.equal(engine.getStateForPlayer(0).turnTimeRemaining, TIMING.TURN_TIME_LIMIT - 12);
     now += 2000;
-    assert.equal(engine.getStateForPlayer(0).turnTimeRemaining, 16);
+    assert.equal(engine.getStateForPlayer(0).turnTimeRemaining, TIMING.TURN_TIME_LIMIT - 14);
   } finally {
     engine.clearTurnTimer();
   }

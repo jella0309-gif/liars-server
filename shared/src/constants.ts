@@ -36,7 +36,7 @@ export const STAGES = [
 
 /** Timing constants (in seconds) */
 export const TIMING = {
-  TURN_TIME_LIMIT: 30, // 30s thinking time for actions
+  TURN_TIME_LIMIT: 60, // 60s thinking time for actions
   SWAP_TIME_LIMIT: 23, // 23s thinking time for card swap
   COUNTDOWN_BEFORE_START: 3,
   ROULETTE_ANIMATION_DURATION: 4.5,
@@ -45,13 +45,18 @@ export const TIMING = {
   ACTION_BUBBLE_DURATION: 1.4,
   SHOWDOWN_INSPECT_DURATION: 7.0, // 7s for players to inspect all hands before shooting
   NEXT_ROUND_DELAY: 2.5,
+  RECONNECT_GRACE: 20, // seconds a disconnected player may return before being dropped
 } as const;
 
 /** Revolver configuration */
 export const REVOLVER = {
   CHAMBER_COUNT: 6,
   INITIAL_BULLETS: 1,
-  GOD_SAVE_CHANCE: 0.02,
+  /** Calling never loads past this many chambers: a loser who only called
+   * faces at most a 4-in-6 shot. Only all-in fills the cylinder. */
+  CALL_BULLET_CAP: 4,
+  /** Chance a full cylinder still misfires (all-in only). */
+  GOD_SAVE_CHANCE: 0.1,
 } as const;
 
 /** Room configuration limits */
