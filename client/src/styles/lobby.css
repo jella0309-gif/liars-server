@@ -555,3 +555,27 @@
 .enter-short {
   display: none;
 }
+
+/* Credits: same footer voice, gold hairline links. */
+.lobby-credits {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+.lobby-credits a {
+  color: #d5b876;
+  text-decoration: none;
+  letter-spacing: 1.6px;
+  border-bottom: 1px solid #d5b87655;
+  padding-bottom: 1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.lobby-credits a:hover,
+.lobby-credits a:focus-visible {
+  color: #ffe2b2;
+  border-color: #ffe2b2;
+}
+.lobby-credits b {
+  margin: 0 6px;
+}

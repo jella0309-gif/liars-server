@@ -319,6 +319,15 @@ export const Lobby: React.FC = () => {
           {t('lobby.footer')} <b>·</b>{' '}
           {t('lobby.footer.turn', { turn: TIMING.TURN_TIME_LIMIT })}
         </span>
+        <span className="lobby-credits">
+          <a href="https://www.instagram.com/_trunfun" target="_blank" rel="noopener noreferrer">
+            Trunfun
+          </a>
+          <b>×</b>
+          <a href="https://hdnng.vercel.app" target="_blank" rel="noopener noreferrer">
+            HD
+          </a>
+        </span>
       </footer>
     </main>
   );
