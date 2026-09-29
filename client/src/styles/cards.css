@@ -24,6 +24,8 @@
   transform-style: preserve-3d;
 }
 .card-motion.face-up {
+  /* Resting pose is face-up so reduced motion can skip the flip entirely. */
+  transform: rotateY(180deg);
   animation: flip-card 0.65s cubic-bezier(0.2, 0.6, 0.3, 1) both;
   animation-delay: var(--deal-delay, 0ms);
 }
@@ -150,12 +152,17 @@
   font-size: 12px;
   z-index: 1;
 }
+/* Phase 7: reveals read as lift → flip → settle (perspective stays local
+   to each .card wrapper). */
 @keyframes flip-card {
-  from {
-    transform: rotateY(0deg);
+  0% {
+    transform: translateY(0) rotateY(0deg);
   }
-  to {
-    transform: rotateY(180deg);
+  45% {
+    transform: translateY(-7px) rotateY(90deg);
+  }
+  100% {
+    transform: translateY(0) rotateY(180deg);
   }
 }
 @keyframes deal-card {
@@ -166,5 +173,57 @@
   to {
     opacity: 1;
     transform: translate(0, 0) rotate(0) scale(1);
+  }
+}
+/* Community cards travel in from the dealer side and settle in the slot. */
+.comm-cards .card {
+  animation-name: deal-community;
+  animation-duration: 0.42s;
+}
+@keyframes deal-community {
+  from {
+    opacity: 0;
+    transform: translate(-30px, -16px) rotate(-6deg) scale(0.94);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0) scale(1);
+  }
+}
+/* Winning hand at showdown: one-time warm emphasis, no loop. Winner state
+   comes from Seat's existing derivation, never from the card itself. */
+.seat-winner .seat-cards-container .card {
+  translate: 0 -4px;
+  filter: drop-shadow(0 0 8px #d5b87648);
+}
+.seat-winner .seat-cards-container .card .card-front {
+  border-color: #e6c084;
+  box-shadow: 0 3px 12px #d9a24a38;
+}
+/* Reduced motion: no travel, no 3D flip; cards fade in already face-up in
+   their final positions. */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .comm-cards .card {
+    animation: card-appear 0.18s ease both;
+    animation-delay: 0ms;
+  }
+  .card-motion.face-up {
+    animation: none;
+  }
+  .card.selectable,
+  .card.selected-gold {
+    animation: none;
+  }
+}
+@keyframes card-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
