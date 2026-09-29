@@ -152,18 +152,18 @@ export const PlayerControls: React.FC = () => {
           )}
           <button
             className="btn-act btn-allin"
-            disabled={
-              disabled || (!gameState.hasAnyAllIn && gameState.stage === 0)
-            }
+            disabled={disabled || !gameState.canAllIn}
             onClick={() => act('allin')}
           >
             <strong>Tất tay</strong>
             <small>
-              {gameState.hasAnyAllIn
-                ? 'Theo tất tay · 6/6 viên'
-                : gameState.stage === 0
-                  ? 'Từ vòng Flop'
-                  : '6/6 viên · All-in'}
+              {!gameState.canAllIn && me.hasUsedSwap && gameState.stage > 0
+                ? 'Không thể tất tay sau khi đổi bài'
+                : gameState.hasAnyAllIn
+                  ? 'Theo tất tay · 6/6 viên'
+                  : gameState.stage === 0
+                    ? 'Từ vòng Flop'
+                    : '6/6 viên · All-in'}
             </small>
           </button>
         </div>

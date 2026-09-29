@@ -1,11 +1,16 @@
 export type SeatPosition =
-  'bottom' | 'top' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  | 'bottom'
+  | 'top'
+  | 'top-left'
+  | 'top-right'
+  | 'left'
+  | 'right';
 
 /** Relative clockwise order keeps the local player nearest the controls. */
 const POSITIONS: Record<number, readonly SeatPosition[]> = {
   2: ['bottom', 'top'],
   3: ['bottom', 'top-left', 'top-right'],
-  4: ['bottom-left', 'top-left', 'top-right', 'bottom-right'],
+  4: ['bottom', 'left', 'top', 'right'],
 };
 
 export function seatPosition(

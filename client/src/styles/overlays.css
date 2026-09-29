@@ -227,6 +227,48 @@
   font-style: italic;
   font-family: var(--font-display);
 }
+.match-standings {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+.match-standings li {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #76563d66;
+  border-radius: 4px;
+  background: #130c08a8;
+  color: #bea78d;
+}
+.match-standings li.rank-1 {
+  border-color: #d7ae5a99;
+  color: #f4d494;
+  background: #5b3b1d42;
+}
+.match-standings li.rank-2 {
+  border-color: #9e9b9480;
+}
+.match-standings li.rank-3 {
+  border-color: #9e644180;
+}
+.match-standings b {
+  font-size: 7px;
+  letter-spacing: 0.6px;
+}
+.match-standings strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  color: inherit;
+}
 .god-save-toast {
   position: fixed;
   z-index: 80;
