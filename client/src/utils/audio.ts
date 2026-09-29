@@ -175,39 +175,30 @@ export function setSfxVolume(vol: number) {
   }
 }
 
+let bgmAudio: HTMLAudioElement | null = null;
+
 export function setBgmVolume(vol: number) {
   bgmVolume = vol / 100;
-  if (ambientGain && audioCtx && isLofiOn)
-    ambientGain.gain.setTargetAtTime(
-      bgmVolume * bgmVolume * 0.1,
-      audioCtx.currentTime,
-      0.3
-    );
+  if (bgmAudio) {
+    bgmAudio.volume = bgmVolume;
+  }
 }
 
 export function toggleBgm(): boolean {
   unlockAudioContext();
-  if (!audioCtx) return false;
-  if (!ambientGain) {
-    ambientGain = audioCtx.createGain();
-    ambientGain.gain.value = 0;
-    ambientGain.connect(audioCtx.destination);
-    // A quiet, local ambient chord: no external audio download or autoplay dependency.
-    [130.81, 155.56, 196, 233.08].forEach((frequency, i) => {
-      const voice = audioCtx!.createOscillator();
-      voice.type = 'sine';
-      voice.frequency.value = frequency;
-      voice.detune.value = i % 2 ? 3 : -3;
-      voice.connect(ambientGain!);
-      voice.start();
-      ambientVoices.push(voice);
-    });
+  if (!bgmAudio) {
+    bgmAudio = new Audio('/bgm.mp3');
+    bgmAudio.loop = true;
+    bgmAudio.volume = bgmVolume;
   }
+
   isLofiOn = !isLofiOn;
-  ambientGain.gain.setTargetAtTime(
-    isLofiOn ? bgmVolume * bgmVolume * 0.1 : 0,
-    audioCtx.currentTime,
-    0.5
-  );
+
+  if (isLofiOn) {
+    bgmAudio.play().catch(() => {});
+  } else {
+    bgmAudio.pause();
+  }
+
   return isLofiOn;
 }
