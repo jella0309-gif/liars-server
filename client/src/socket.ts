@@ -1,13 +1,19 @@
 import { io, Socket } from 'socket.io-client';
-import { SOCKET_EVENTS, type CreateRoomPayload, type JoinRoomPayload, type PlayerActionPayload, type SwapCardPayload } from '@liars-bar/shared';
+import {
+  SOCKET_EVENTS,
+  type CreateRoomPayload,
+  type JoinRoomPayload,
+  type PlayerActionPayload,
+  type SwapCardPayload,
+} from '@liars-bar/shared';
 
-const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.DEV ? 'http://localhost:3000' : '');
+const serverUrl = import.meta.env.VITE_SERVER_URL || '';
 
 export const socket: Socket = io(serverUrl, {
   transports: ['websocket', 'polling'],
   reconnection: true,
   reconnectionAttempts: 10,
-  timeout: 20000
+  timeout: 20000,
 });
 
 export let currentRoomId = '';
@@ -21,7 +27,9 @@ export function setMySeatIndex(index: number) {
   mySeatIndex = index;
 }
 
-export function emitCreateRoom(payload: CreateRoomPayload & { addBots?: boolean }) {
+export function emitCreateRoom(
+  payload: CreateRoomPayload & { addBots?: boolean }
+) {
   socket.emit(SOCKET_EVENTS.CREATE_ROOM, payload);
 }
 
@@ -38,7 +46,11 @@ export function emitSwapRequest(roomId: string) {
   socket.emit('swap_request', { roomId });
 }
 
-export function emitSwapConfirm(roomId: string, handCardIndex: number, drawnCardIndex: number) {
+export function emitSwapConfirm(
+  roomId: string,
+  handCardIndex: number,
+  drawnCardIndex: number
+) {
   const payload: SwapCardPayload = { handCardIndex, drawnCardIndex };
   socket.emit('swap_confirm', { roomId, ...payload });
 }
@@ -50,4 +62,3 @@ export function emitPlayAgain(roomId: string) {
 export function emitNextRound(roomId: string) {
   socket.emit(SOCKET_EVENTS.NEXT_ROUND, { roomId });
 }
-

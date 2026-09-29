@@ -6,10 +6,16 @@ let audioCtx: AudioContext | null = null;
 let sfxMasterGain: GainNode | null = null;
 let sfxVolume = 0.8;
 let isLofiOn = false;
+let ambientGain: GainNode | null = null;
+let bgmVolume = 0.2;
+const ambientVoices: OscillatorNode[] = [];
 
 export function unlockAudioContext() {
   if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
     audioCtx = new AudioContextClass();
     sfxMasterGain = audioCtx.createGain();
     sfxMasterGain.gain.setValueAtTime(sfxVolume, audioCtx.currentTime);
@@ -30,7 +36,10 @@ export function playActionSound(type?: string) {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = type === 'allin' ? 'sawtooth' : 'sine';
-    osc.frequency.setValueAtTime(type === 'allin' ? 220 : 440, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(
+      type === 'allin' ? 220 : 440,
+      audioCtx.currentTime
+    );
     gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
     osc.connect(gain);
@@ -50,7 +59,10 @@ export function playEmptyClick() {
     const gain = audioCtx.createGain();
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(1400, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.04);
+    osc.frequency.exponentialRampToValueAtTime(
+      300,
+      audioCtx.currentTime + 0.04
+    );
     gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
     osc.connect(gain);
@@ -72,13 +84,20 @@ export function playGunshot() {
     osc.frequency.setValueAtTime(150, audioCtx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + 0.35);
     oscGain.gain.setValueAtTime(0.9, audioCtx.currentTime);
-    oscGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+    oscGain.gain.exponentialRampToValueAtTime(
+      0.01,
+      audioCtx.currentTime + 0.35
+    );
     osc.connect(oscGain);
     oscGain.connect(sfxMasterGain);
     osc.start();
     osc.stop(audioCtx.currentTime + 0.38);
 
-    const buffer = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.4), audioCtx.sampleRate);
+    const buffer = audioCtx.createBuffer(
+      1,
+      Math.floor(audioCtx.sampleRate * 0.4),
+      audioCtx.sampleRate
+    );
     const data = buffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
     const noise = audioCtx.createBufferSource();
@@ -87,11 +106,17 @@ export function playGunshot() {
     const filter = audioCtx.createBiquadFilter();
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(650, audioCtx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.35);
+    filter.frequency.exponentialRampToValueAtTime(
+      100,
+      audioCtx.currentTime + 0.35
+    );
 
     const noiseGain = audioCtx.createGain();
     noiseGain.gain.setValueAtTime(0.8, audioCtx.currentTime);
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+    noiseGain.gain.exponentialRampToValueAtTime(
+      0.01,
+      audioCtx.currentTime + 0.35
+    );
 
     noise.connect(filter);
     filter.connect(noiseGain);
@@ -109,7 +134,7 @@ export function playGodSaveSound() {
   const ctx = audioCtx;
   const master = sfxMasterGain;
   try {
-    const freqs = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+    const freqs = [523.25, 659.25, 783.99, 1046.5, 1318.51];
     freqs.forEach((f, idx) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -136,7 +161,7 @@ export function speakActionVoice(text: string) {
     utter.lang = 'en-US';
     utter.rate = 1.15;
     utter.pitch = 0.95;
-    utter.volume = Math.max(0.3, sfxVolume);
+    utter.volume = sfxVolume;
     window.speechSynthesis.speak(utter);
   } catch {
     // Ignore
@@ -151,21 +176,38 @@ export function setSfxVolume(vol: number) {
 }
 
 export function setBgmVolume(vol: number) {
-  const audio = document.getElementById('lofiBgm') as HTMLAudioElement | null;
-  if (audio) {
-    audio.volume = Math.pow(vol / 100, 2);
-  }
+  bgmVolume = vol / 100;
+  if (ambientGain && audioCtx && isLofiOn)
+    ambientGain.gain.setTargetAtTime(
+      bgmVolume * bgmVolume * 0.1,
+      audioCtx.currentTime,
+      0.3
+    );
 }
 
 export function toggleBgm(): boolean {
   unlockAudioContext();
-  const audio = document.getElementById('lofiBgm') as HTMLAudioElement | null;
-  if (!audio) return false;
-  if (!isLofiOn) {
-    audio.play().then(() => { isLofiOn = true; }).catch(() => {});
-  } else {
-    audio.pause();
-    isLofiOn = false;
+  if (!audioCtx) return false;
+  if (!ambientGain) {
+    ambientGain = audioCtx.createGain();
+    ambientGain.gain.value = 0;
+    ambientGain.connect(audioCtx.destination);
+    // A quiet, local ambient chord: no external audio download or autoplay dependency.
+    [130.81, 155.56, 196, 233.08].forEach((frequency, i) => {
+      const voice = audioCtx!.createOscillator();
+      voice.type = 'sine';
+      voice.frequency.value = frequency;
+      voice.detune.value = i % 2 ? 3 : -3;
+      voice.connect(ambientGain!);
+      voice.start();
+      ambientVoices.push(voice);
+    });
   }
+  isLofiOn = !isLofiOn;
+  ambientGain.gain.setTargetAtTime(
+    isLofiOn ? bgmVolume * bgmVolume * 0.1 : 0,
+    audioCtx.currentTime,
+    0.5
+  );
   return isLofiOn;
 }
