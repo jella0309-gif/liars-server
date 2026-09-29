@@ -1,0 +1,1203 @@
+/* Phase 9: dedicated tablet / mobile gameplay composition.
+   Scoped to the gameplay scene (.game-table-scene) and the in-game header;
+   the lobby and the desktop scene (>= 1051px, defined in table.css /
+   seats.css / panels.css) are untouched. Nothing here scales the scene as a
+   whole: every element is recomposed from tier variables.
+
+   Tiers:
+     <= 1050px            tablet landscape base (all shared composition rules)
+     <= 767px             tablet portrait / large mobile
+     <= 599px             mobile
+     <= 1050px & <= 500px tall   narrow landscape
+   Z-order inside the scene: atmosphere 5-12 < figure 20 < rail 30 <
+   board/cards 40 < local 50 < HUD 60 < dock 70 < history 80. */
+
+@media (max-width: 1050px) {
+  /* ---------- compact gameplay header ---------- */
+  .in-game .site-header {
+    --header-h: 56px;
+    height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) max(14px, env(safe-area-inset-right, 0px)) 0
+      max(14px, env(safe-area-inset-left, 0px));
+    gap: 10px;
+    /* The base header transitions `all`; a height transition on the lobby →
+       game switch can stall under reduced motion and leave a 12px gap. */
+    transition: none;
+  }
+  .in-game .brand {
+    font-size: 22px;
+    gap: 8px;
+  }
+  .in-game .brand-emblem {
+    width: 30px;
+    height: 34px;
+    font-size: 25px;
+    border-radius: 6px 6px 10px 10px;
+  }
+  .in-game .brand small {
+    display: none;
+  }
+  .in-game .header-nav {
+    display: none;
+  }
+  .in-game .header-controls {
+    gap: 8px;
+  }
+  .in-game .header-controls .icon-button {
+    width: 38px;
+    height: 38px;
+  }
+  .in-game .help-button {
+    width: 38px;
+    height: 38px;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #82573575;
+    border-radius: 4px;
+    background: #140e0b66;
+  }
+  .in-game .help-button span {
+    display: none;
+  }
+
+  /* ---------- scene shell ---------- */
+  .in-game {
+    padding-bottom: 0;
+  }
+  .in-game .game-table-scene {
+    --header-h: 56px;
+    --gutter: max(12px, env(safe-area-inset-left, 0px));
+    --gutter-r: max(12px, env(safe-area-inset-right, 0px));
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --dock-h: 74px; /* single-row dock; portrait tiers raise this */
+    position: relative;
+    width: 100%;
+    max-width: none;
+    height: calc(100dvh - var(--header-h) - env(safe-area-inset-top, 0px));
+    min-height: 560px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .game-table-scene .game-layout,
+  .game-table-scene .game-arena,
+  .game-table-scene .poker-table {
+    position: absolute;
+    inset: 0;
+    display: block;
+    height: 100%;
+    min-width: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .game-table-scene .table-edge-label,
+  .game-table-scene .stage-announcement,
+  .game-table-scene .game-toolbar .eyebrow,
+  .game-table-scene .table-capacity {
+    display: none;
+  }
+
+  /* Toolbar collapses to a slim strip: round on the left, room on the right. */
+  .game-table-scene .game-toolbar {
+    position: absolute;
+    z-index: 60;
+    inset: 8px var(--gutter-r) auto var(--gutter);
+    margin: 0;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .game-table-scene .game-toolbar h1 {
+    font-size: 0; /* Keep only the round chip; the title is implied by the scene. */
+    margin: 0;
+    text-shadow: none;
+  }
+  .game-table-scene .game-toolbar h1 > span {
+    display: inline-block;
+    margin: 0;
+    padding: 6px 9px;
+    border: 1px solid #a078495e;
+    border-radius: 4px;
+    background: #1c120ccc;
+    font-size: 9px;
+    letter-spacing: 1.2px;
+  }
+  .game-table-scene .room-code-button {
+    pointer-events: auto;
+    padding: 6px 9px;
+    gap: 8px;
+    font-size: 8px;
+  }
+  .game-table-scene .room-code-button b {
+    font-size: 11px;
+  }
+  .game-table-scene .copy-fallback {
+    position: absolute;
+    z-index: 60;
+    top: 44px;
+    right: var(--gutter-r);
+    left: var(--gutter);
+    font-size: 10px;
+  }
+  .game-table-scene .stage-track {
+    position: absolute;
+    z-index: 60;
+    top: 44px;
+    left: 50%;
+    translate: -50% 0;
+    gap: 10px;
+    padding: 0;
+    border: 0;
+    background: none;
+    white-space: nowrap;
+  }
+  .game-table-scene .stage-track > span {
+    font-size: 7px;
+    gap: 5px;
+  }
+  .game-table-scene .stage-track i {
+    width: 15px;
+    height: 15px;
+    font-size: 7px;
+  }
+
+  /* ---------- table ---------- */
+  .game-table-scene .felt-surface {
+    z-index: 30;
+    inset: auto;
+    left: 50%;
+    top: var(--felt-y, 56%);
+    translate: -50% -50%;
+    width: var(--felt-w, 90%);
+    max-width: none;
+    height: var(--felt-h, 46dvh);
+    border: 12px solid #372117;
+    border-radius: var(--felt-radius, 50%);
+    background: radial-gradient(ellipse at 50% 35%, #4b2628, #291516 75%);
+    box-shadow: 0 9px 0 #160e0a, 0 18px 26px #0008,
+      inset 0 0 0 2px #ad7b443d, inset 0 0 40px #100509,
+      inset 0 20px 34px -20px #e0904a2b;
+    pointer-events: none;
+  }
+  .game-table-scene .felt-surface::after {
+    inset: -9px;
+    border-color: #a4754552;
+  }
+  .game-table-scene .felt-emblem {
+    font-size: var(--emblem-size, 90px);
+    color: #d8b18c06;
+  }
+  .game-table-scene .table-center {
+    z-index: 40;
+    top: var(--board-y, 55%);
+    width: var(--board-w, min(92%, 420px));
+  }
+  .game-table-scene .board-label {
+    margin: 0 0 8px;
+    font-size: 6px;
+  }
+  .game-table-scene .board-label > span {
+    width: 22px;
+  }
+  .game-table-scene .comm-cards {
+    gap: var(--board-gap, 6px);
+  }
+  .game-table-scene .community-slot {
+    width: var(--board-card, 52px);
+    height: calc(var(--board-card, 52px) * 1.43);
+  }
+  .game-table-scene .comm-cards .card {
+    --card-width: var(--board-card, 52px);
+  }
+  .game-table-scene .card-placeholder {
+    gap: 6px;
+  }
+  .game-table-scene .card-placeholder small {
+    font-size: 5px;
+  }
+  .game-table-scene .table-log {
+    margin-top: 8px;
+    font-size: 10px;
+    line-height: 1.35;
+    max-width: 100%;
+  }
+  .game-table-scene .waiting-table {
+    max-width: 260px;
+  }
+  .game-table-scene .waiting-table h2 {
+    font-size: 19px;
+  }
+
+  /* Atmosphere: cheaper on small screens (no smoke drift, lighter shadows). */
+  .game-table-scene .poker-table::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background: radial-gradient(45% 26% at 50% -2%, #d9874022, transparent 70%),
+      radial-gradient(60% 34% at 50% 6%, #8c3a2012, transparent 78%);
+  }
+  .game-table-scene .poker-table::after {
+    content: '';
+    position: absolute;
+    inset: -2%;
+    z-index: 12;
+    pointer-events: none;
+    background: radial-gradient(120% 105% at 50% 45%, transparent 58%, #12080566 100%);
+  }
+  .game-table-scene .game-arena::before {
+    display: none;
+  }
+
+  /* ---------- seats: same anchor model as desktop, tier-sized ---------- */
+  .game-table-scene .seat-position {
+    z-index: auto;
+    translate: none;
+    width: var(--seat-w, 150px);
+    height: 1px;
+    margin-left: calc(var(--seat-w, 150px) / -2);
+    --figure-width: var(--fig-w, 210px);
+    --figure-height: var(--fig-h, 200px);
+    --hud-y: var(--hud-off, 152px);
+    --hud-x: 50%;
+    --cards-y: var(--cards-off, 188px);
+    --cards-x: 50%;
+    --card-angle: 0deg;
+  }
+  .game-table-scene .seat {
+    display: contents;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    animation: none;
+  }
+  .game-table-scene .seat::before,
+  .game-table-scene .seat-action-trail {
+    display: none;
+  }
+  .game-table-scene .empty-seat {
+    position: absolute;
+    z-index: 60;
+    display: flex;
+    left: 0;
+    right: 0;
+    top: var(--hud-y);
+    height: auto;
+    padding: 8px;
+    opacity: 0.65;
+    font-size: 9px;
+  }
+  .game-table-scene .empty-seat small {
+    font-size: 7px;
+  }
+  .game-table-scene .action-bubble {
+    z-index: 60;
+    font-size: 9px;
+  }
+  .game-table-scene .opponent-seat .character-figure {
+    position: absolute;
+    top: 0;
+    left: calc((100% - var(--figure-width)) / 2);
+    width: var(--figure-width);
+    height: var(--figure-height);
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 20;
+  }
+  .game-table-scene .opponent-seat .character-figure:not(.has-art) {
+    -webkit-mask-image: linear-gradient(transparent, #000 8%, #000 85%, transparent);
+    mask-image: linear-gradient(transparent, #000 8%, #000 85%, transparent);
+  }
+  .game-table-scene .character-figure::before {
+    content: '';
+    position: absolute;
+    inset: -10% -8% -4%;
+    background: radial-gradient(45% 38% at 50% 22%, #c4773124, transparent 72%),
+      radial-gradient(ellipse, #a7642420, #07040340 48%, transparent 70%);
+    pointer-events: none;
+  }
+  .game-table-scene .character-figure .character-art {
+    height: 100%;
+    background: transparent;
+  }
+  .game-table-scene .character-figure .character-art:not(.figure-art) {
+    -webkit-mask-image: radial-gradient(ellipse 65% 72% at 50% 40%, #000 40%, #000d 57%, transparent 77%);
+    mask-image: radial-gradient(ellipse 65% 72% at 50% 40%, #000 40%, #000d 57%, transparent 77%);
+  }
+  .game-table-scene .character-figure .character-art svg {
+    animation: none;
+  }
+  .game-table-scene .character-figure .seat-state-label {
+    display: none;
+  }
+  .game-table-scene .character-figure .character-art.figure-art {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 120%;
+    height: 100%;
+    translate: -50% 0;
+    -webkit-mask-image: linear-gradient(#000 80%, transparent 98%),
+      linear-gradient(to right, transparent 1%, #000 10%, #000 90%, transparent 99%);
+    mask-image: linear-gradient(#000 80%, transparent 98%),
+      linear-gradient(to right, transparent 1%, #000 10%, #000 90%, transparent 99%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+  .game-table-scene .opponent-seat .seat-details {
+    display: contents;
+  }
+  .game-table-scene .opponent-seat .player-hud {
+    position: absolute;
+    z-index: 60;
+    top: var(--hud-y);
+    left: var(--hud-x);
+    translate: -50% 0;
+    width: max-content;
+    min-width: 92px;
+    max-width: var(--hud-max, 150px);
+    padding: 5px 10px;
+    border: 1px solid #b98b5540;
+    border-radius: 11px 4px;
+    background: linear-gradient(125deg, #1b100bd6, #190e0cb0);
+    box-shadow: 0 3px 8px #0004;
+    text-align: center;
+  }
+  .game-table-scene .seat-name-row,
+  .game-table-scene .seat-bullets {
+    justify-content: center;
+  }
+  .game-table-scene .opponent-seat .seat-name-row {
+    gap: 4px;
+  }
+  .game-table-scene .opponent-seat .seat-name-row h3 {
+    font-size: 10px;
+    line-height: 1.3;
+    letter-spacing: 0.4px;
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .game-table-scene .opponent-seat .bullet-dots i {
+    width: 5px;
+    height: 6px;
+    border-radius: 1px;
+  }
+  .game-table-scene .opponent-seat .seat-bullets {
+    margin-top: 4px;
+    font-size: 8px;
+  }
+  .game-table-scene .seat-hud-state {
+    display: block;
+    margin-top: 2px;
+    font-size: 7px;
+    color: #e6b783;
+  }
+  .game-table-scene .opponent-seat .seat-timer {
+    margin-top: 4px;
+    margin-right: 20px;
+  }
+  .game-table-scene .opponent-seat .seat-cards-container {
+    position: absolute;
+    z-index: 40;
+    top: var(--cards-y);
+    left: var(--cards-x);
+    translate: -50% 0;
+    transform: rotate(var(--card-angle)) scaleY(0.9);
+    transform-origin: center top;
+    margin: 0;
+    gap: 4px;
+    filter: drop-shadow(0 3px 2px #10040770);
+  }
+  .game-table-scene .opponent-seat .seat-cards-container .card {
+    --card-width: var(--opp-card, 30px);
+  }
+  .game-table-scene .opponent-seat .hand-eval {
+    position: absolute;
+    z-index: 60;
+    top: calc(var(--cards-y) + var(--opp-card, 30px) * 1.43 + 4px);
+    left: var(--cards-x);
+    translate: -50% 0;
+    width: var(--eval-w, 118px);
+    margin: 0;
+    padding: 4px;
+    border-radius: 4px;
+    background: #190e0cb8;
+    font-size: 8px;
+  }
+  .game-table-scene .hand-eval-row {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+  .game-table-scene .hand-eval-row strong {
+    font-size: 9px;
+    white-space: normal;
+  }
+  .game-table-scene .hand-eval .hand-rank {
+    font-size: 6px;
+  }
+  .game-table-scene .hand-eval .hand-result {
+    font-size: 6px;
+  }
+  .game-table-scene .opponent-seat .seat-eliminated {
+    display: none;
+  }
+  .game-table-scene .opponent-seat.active-turn .player-hud {
+    border-color: #e4b16c9c;
+    background: linear-gradient(125deg, #3a2318ea, #21130fc8);
+    box-shadow: 0 0 10px #d98a3020, 0 3px 8px #0004;
+  }
+  .game-table-scene .opponent-seat.active-turn .character-figure {
+    filter: drop-shadow(0 0 4px #e7a55440);
+  }
+  .game-table-scene .opponent-seat.active-turn .character-art {
+    filter: brightness(1.08) saturate(1.04);
+  }
+  .game-table-scene .opponent-seat.dead .character-art {
+    filter: saturate(0.65) brightness(0.84);
+  }
+  .game-table-scene .opponent-seat.dead .player-hud {
+    border-color: #82614c54;
+    background: #160e0cc4;
+  }
+  .game-table-scene .opponent-seat.folded:not(.dead) .character-art {
+    filter: brightness(0.92) saturate(0.92);
+  }
+  .game-table-scene .opponent-seat.folded:not(.dead) .seat-cards-container {
+    opacity: 0.65;
+    filter: saturate(0.5) drop-shadow(0 2px 2px #10040780);
+  }
+  .game-table-scene .opponent-seat.folded:not(.dead) .seat-cards-container::after {
+    content: 'ĐÃ BỎ';
+    position: absolute;
+    inset: 35% -4px auto;
+    padding: 2px;
+    background: #1a100ef0;
+    border-block: 1px solid #b68e6466;
+    color: #e0c4a2;
+    font-size: 6px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  /* Seat anchors (tablet landscape values; portrait tiers override). */
+  .game-table-scene .pos-top {
+    top: 4%;
+    left: 50%;
+  }
+  .game-table-scene .pos-left,
+  .game-table-scene .pos-top-left {
+    top: 15%;
+    left: 15%;
+  }
+  .game-table-scene .pos-right,
+  .game-table-scene .pos-top-right {
+    top: 15%;
+    left: 85%;
+  }
+  .game-table-scene .pos-top-right .seat-cards-container,
+  .game-table-scene .pos-right .seat-cards-container {
+    --card-angle: -8deg;
+  }
+  .game-table-scene .pos-top-left .seat-cards-container,
+  .game-table-scene .pos-left .seat-cards-container {
+    --card-angle: 8deg;
+  }
+
+  /* ---------- local seat ---------- */
+  .game-table-scene .local-seat {
+    top: auto;
+    bottom: calc(var(--dock-h) + var(--safe-b) + var(--local-gap, 10px));
+    left: 50%;
+    width: var(--local-w, 300px);
+    height: auto;
+    margin-left: calc(var(--local-w, 300px) / -2);
+    z-index: 50;
+  }
+  .game-table-scene .local-seat::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    bottom: -24px;
+    width: 120%;
+    height: 90px;
+    translate: -50% 0;
+    pointer-events: none;
+    background: radial-gradient(55% 90% at 50% 100%, #d98a4014, transparent 72%);
+  }
+  .game-table-scene .local-player-area {
+    position: relative;
+    display: grid;
+    grid-template-columns: 30px max-content;
+    justify-content: center;
+    align-items: center;
+    column-gap: 7px;
+    width: 100%;
+  }
+  .game-table-scene .local-player-area .seat-details {
+    display: contents;
+  }
+  .game-table-scene .local-player-area .seat-portrait-wrap {
+    grid-row: 2;
+    height: 30px;
+    width: 30px;
+    border-radius: 50%;
+    z-index: auto;
+    opacity: 0.85;
+  }
+  .game-table-scene .local-player-area .seat-portrait-wrap .character-art {
+    width: 100%;
+    height: 100%;
+    animation: none;
+  }
+  .game-table-scene .local-player-area .seat-state-label {
+    display: none;
+  }
+  .game-table-scene .local-player-area .seat-status {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 4px 9px;
+    border: 1px solid #b98b5540;
+    border-radius: 9px 4px;
+    background: #190e0cb3;
+    box-shadow: 0 2px 6px #0003;
+  }
+  .game-table-scene .local-player-area .seat-name-row h3 {
+    font-size: 10px;
+  }
+  .game-table-scene .local-player-area .seat-bullets {
+    margin-top: 3px;
+    font-size: 8px;
+  }
+  .game-table-scene .local-player-area .bullet-dots i {
+    width: 5px;
+    height: 6px;
+  }
+  .game-table-scene .local-player-area .seat-timer {
+    margin-top: 4px;
+    margin-right: 20px;
+  }
+  .game-table-scene .active-turn .local-player-area .seat-status {
+    border-color: #e4b16c9c;
+  }
+  .game-table-scene .local-player-area .seat-cards-container {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    justify-self: center;
+    margin: 0 0 8px;
+    gap: 0;
+    transition: translate 0.22s ease;
+  }
+  .game-table-scene .local-player-area .card {
+    --card-width: var(--local-card, 64px);
+    filter: drop-shadow(0 6px 7px #00000066);
+  }
+  .game-table-scene .local-player-area .card:first-child {
+    rotate: -4deg;
+    translate: 0 2px;
+  }
+  .game-table-scene .local-player-area .card + .card {
+    margin-left: -14px;
+    rotate: 3.5deg;
+  }
+  .game-table-scene .seat-winner .local-player-area .card:first-child {
+    translate: 0 -1px;
+  }
+  .game-table-scene .seat-winner .local-player-area .card + .card {
+    translate: 0 -4px;
+  }
+  .game-table-scene .local-seat .seat.active-turn .seat-cards-container {
+    translate: 0 -7px;
+  }
+  /* Result / eliminated notes sit above the hand instead of beside it. */
+  .game-table-scene .local-player-area .hand-eval,
+  .game-table-scene .local-player-area .seat-eliminated {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 6px);
+    translate: -50% 0;
+    width: max-content;
+    max-width: min(240px, 90vw);
+    margin: 0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #190e0cd0;
+    text-align: center;
+    font-size: 9px;
+  }
+  .game-table-scene .local-player-area .hand-eval ~ .seat-eliminated {
+    bottom: calc(100% + 44px);
+  }
+
+  /* ---------- action dock ---------- */
+  .game-table-scene .controls-dock {
+    position: absolute;
+    z-index: 70;
+    inset: auto var(--gutter-r) calc(8px + var(--safe-b)) var(--gutter);
+    translate: none;
+    width: auto;
+    max-width: none;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 7px 10px;
+    border: 1px solid #a575413d;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #1b110de6, #140d0af0);
+    box-shadow: 0 6px 16px #0006;
+    backdrop-filter: none; /* Expensive on mobile GPUs. */
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
+  .game-table-scene .controls-dock.your-turn {
+    border-color: #d8a56695;
+    box-shadow: 0 6px 18px #0007, 0 0 16px #d9893018;
+  }
+  .game-table-scene .controls-status {
+    gap: 9px;
+    min-width: 0;
+  }
+  .game-table-scene .controls-status .eyebrow {
+    font-size: 7px;
+    letter-spacing: 1.2px;
+  }
+  .game-table-scene .controls-status p {
+    margin-top: 2px;
+    font-size: 10px;
+    line-height: 1.3;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .game-table-scene .turn-clock {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    transition: width 0.25s, height 0.25s;
+  }
+  .game-table-scene .turn-clock b {
+    font-size: 17px;
+  }
+  .game-table-scene .turn-clock small {
+    font-size: 5px;
+  }
+  .game-table-scene .your-turn .turn-clock {
+    width: 46px;
+    height: 46px;
+    background: #1d120c;
+  }
+  .game-table-scene .your-turn .turn-clock::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: conic-gradient(#eda548 calc(var(--clock, 1) * 1turn), #42291a 0);
+    -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
+    mask: radial-gradient(closest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
+  }
+  .game-table-scene .your-turn .turn-clock.urgent::before {
+    background: conic-gradient(#ed6847 calc(var(--clock, 1) * 1turn), #42291a 0);
+  }
+  .game-table-scene .action-buttons {
+    display: flex;
+    gap: 6px;
+    transition: opacity 0.25s;
+  }
+  .game-table-scene .controls-dock:not(.your-turn) .action-buttons {
+    opacity: 0.72;
+  }
+  .game-table-scene .btn-act {
+    min-width: 0;
+    min-height: 48px;
+    padding: 7px 10px;
+    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+  }
+  .game-table-scene .btn-act strong {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .game-table-scene .btn-act small {
+    margin-top: 3px;
+    font-size: 7px;
+  }
+  .game-table-scene .controls-passive {
+    text-align: right;
+    font-size: 8px;
+  }
+  .game-table-scene .controls-dock .btn-primary {
+    min-height: 48px;
+    padding: 0 18px;
+    white-space: nowrap;
+  }
+
+  /* ---------- history: closed by default, opens as a bottom sheet ---------- */
+  .game-table-scene .table-history {
+    position: absolute;
+    z-index: 80;
+    top: 40px;
+    right: var(--gutter-r);
+    width: auto;
+    font-size: 10px;
+  }
+  .game-table-scene .table-history summary {
+    padding: 7px 10px;
+    font-size: 8px;
+    letter-spacing: 0.8px;
+    list-style: none;
+  }
+  .game-table-scene .table-history summary::-webkit-details-marker {
+    display: none;
+  }
+  .game-table-scene .table-history summary span {
+    margin-left: 6px;
+  }
+  .game-table-scene .table-history[open] summary {
+    position: fixed;
+    z-index: 2;
+    right: var(--gutter-r);
+    bottom: calc(min(46dvh, 360px) + var(--safe-b) - 16px);
+    border-color: #d8a56695;
+  }
+  .game-table-scene .table-history[open] summary::after {
+    content: ' ✕';
+    color: #f1d4aa;
+  }
+  .game-table-scene .table-history .history-list {
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    max-height: min(46dvh, 360px);
+    padding: 16px var(--gutter-r) calc(16px + var(--safe-b)) var(--gutter);
+    border: 0;
+    border-top: 1px solid #b98b5566;
+    border-radius: 14px 14px 0 0;
+    background: #19100efa;
+    box-shadow: 0 -12px 30px #000a;
+    overflow-y: auto;
+  }
+}
+
+/* ============ TABLET PORTRAIT / LARGE MOBILE ============ */
+@media (max-width: 767px) {
+  .in-game .game-table-scene {
+    --dock-h: 128px;
+    --felt-y: 51%;
+    --felt-w: 94%;
+    --felt-h: 46dvh;
+    --felt-radius: 46% / 40%;
+    --board-y: 52%;
+    --board-card: 58px;
+    --board-gap: 7px;
+    --seat-w: 150px;
+    --fig-w: 220px;
+    --fig-h: 210px;
+    --hud-off: 160px;
+    --cards-off: 198px;
+    --opp-card: 34px;
+    --local-w: 320px;
+    --local-card: 76px;
+    --local-gap: 14px;
+  }
+  .game-table-scene .pos-top {
+    top: 5%;
+  }
+  .game-table-scene .pos-left,
+  .game-table-scene .pos-top-left {
+    top: 19%;
+    left: 19%;
+  }
+  .game-table-scene .pos-right,
+  .game-table-scene .pos-top-right {
+    top: 19%;
+    left: 81%;
+  }
+  .game-table-scene .seats-2 .pos-top {
+    top: 8%;
+  }
+  /* Two-row dock: status on top, actions beneath (full width). */
+  .game-table-scene .controls-dock {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .game-table-scene .controls-status {
+    justify-content: flex-start;
+  }
+  .game-table-scene .controls-status p {
+    max-width: none;
+  }
+  .game-table-scene .action-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .game-table-scene .btn-act {
+    text-align: center;
+    padding: 6px 4px;
+  }
+  .game-table-scene .btn-act strong {
+    justify-content: center;
+    font-size: 11px;
+  }
+  .game-table-scene .btn-act small {
+    white-space: normal;
+    line-height: 1.2;
+  }
+  .game-table-scene .controls-dock .btn-primary {
+    width: 100%;
+  }
+  .game-table-scene .controls-passive {
+    text-align: left;
+    padding: 6px 0 2px;
+  }
+}
+
+/* ============ MOBILE ============ */
+@media (max-width: 599px) {
+  .in-game .game-table-scene {
+    --dock-h: 176px; /* status row + 2x2 grid */
+    --felt-y: 54%;
+    --felt-w: 96%;
+    --felt-h: 50dvh;
+    --felt-radius: 48% / 34%;
+    --emblem-size: 70px;
+    --board-y: 49%;
+    --board-w: 94%;
+    --board-card: clamp(42px, 13vw, 52px);
+    --board-gap: 5px;
+    --seat-w: 120px;
+    --fig-w: clamp(140px, 42vw, 175px);
+    --fig-h: clamp(140px, 42vw, 175px);
+    --hud-off: calc(var(--fig-h) - 42px);
+    --cards-off: calc(var(--fig-h) - 4px);
+    --opp-card: 28px;
+    --hud-max: 128px;
+    --eval-w: 104px;
+    --local-w: 280px;
+    --local-card: clamp(58px, 16.5vw, 68px);
+    --local-gap: 6px;
+  }
+  /* Composition: top opponent, then left/right flanking, board below, hand,
+     dock. Side faces sit above the rail; their cards land on the felt above
+     the board. */
+  .game-table-scene .pos-top {
+    top: 1.5%;
+  }
+  .game-table-scene .pos-left,
+  .game-table-scene .pos-top-left {
+    top: 11%;
+    left: 22%;
+  }
+  .game-table-scene .pos-right,
+  .game-table-scene .pos-top-right {
+    top: 11%;
+    left: 78%;
+  }
+  /* Local result chips sit beside the identity pill, never over the board. */
+  .game-table-scene .local-player-area .hand-eval,
+  .game-table-scene .local-player-area .seat-eliminated {
+    left: calc(50% + 64px);
+    bottom: 2px;
+    translate: none;
+    max-width: 120px;
+    padding: 3px 6px;
+    font-size: 8px;
+  }
+  .game-table-scene .local-player-area .hand-eval .hand-result {
+    display: none;
+  }
+  .game-table-scene .local-player-area .hand-eval ~ .seat-eliminated {
+    bottom: 30px;
+  }
+  .game-table-scene .seats-3 .pos-top-left,
+  .game-table-scene .seats-3 .pos-top-right {
+    top: 5%;
+  }
+  .game-table-scene .seats-2 .pos-top {
+    top: 5%;
+  }
+  .game-table-scene .pos-top .seat-cards-container {
+    --cards-y: calc(var(--fig-h) - 4px);
+  }
+  .game-table-scene .opponent-seat .hand-eval {
+    font-size: 7px;
+  }
+  .game-table-scene .stage-track {
+    top: 42px;
+    gap: 6px;
+  }
+  .game-table-scene .stage-track > span {
+    font-size: 0; /* dots only; the current stage name shows in the board label */
+    gap: 0;
+  }
+  .game-table-scene .stage-track > span.current {
+    font-size: 7px;
+    gap: 4px;
+  }
+  .game-table-scene .stage-track i {
+    font-size: 7px;
+  }
+  /* 2x2 dock: [Fold] [Change] / [Call] [All-in]. Call keeps its primary look. */
+  .game-table-scene .action-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .game-table-scene .btn-act {
+    min-height: 50px;
+  }
+  .game-table-scene .btn-act strong {
+    font-size: 12px;
+  }
+  .game-table-scene .btn-act small {
+    font-size: 7px;
+  }
+  .game-table-scene .btn-allin:only-child {
+    grid-column: 1 / -1;
+  }
+  .game-table-scene .turn-clock {
+    width: 36px;
+    height: 36px;
+  }
+  .game-table-scene .your-turn .turn-clock {
+    width: 42px;
+    height: 42px;
+  }
+  .game-table-scene .table-history {
+    top: 40px;
+  }
+  .game-table-scene .table-history summary {
+    font-size: 0;
+    padding: 8px 9px;
+  }
+  .game-table-scene .table-history summary::before {
+    content: '☰';
+    font-size: 12px;
+    color: #f1d4aa;
+  }
+  .game-table-scene .table-history summary span {
+    font-size: 8px;
+    margin-left: 5px;
+  }
+  .game-table-scene .table-history[open] summary::after {
+    font-size: 10px;
+  }
+  .game-table-scene .empty-seat {
+    font-size: 8px;
+    padding: 6px 4px;
+  }
+  .game-table-scene .empty-seat svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ============ NARROW LANDSCAPE (phones rotated) ============ */
+@media (max-width: 1050px) and (max-height: 500px) {
+  .in-game .site-header {
+    --header-h: 44px;
+  }
+  .in-game .brand {
+    font-size: 19px;
+  }
+  .in-game .brand-emblem {
+    width: 26px;
+    height: 29px;
+    font-size: 21px;
+  }
+  .in-game .header-controls .icon-button,
+  .in-game .help-button {
+    width: 32px;
+    height: 32px;
+  }
+  .in-game .game-table-scene {
+    --header-h: 44px;
+    --dock-h: 56px;
+    --felt-y: 58%;
+    --felt-w: 84%;
+    --felt-h: 62%;
+    --felt-radius: 50%;
+    --emblem-size: 60px;
+    --board-y: 58%;
+    --board-w: min(60%, 340px);
+    --board-card: 40px;
+    --board-gap: 5px;
+    --seat-w: 120px;
+    --fig-w: clamp(120px, 20vw, 160px);
+    --fig-h: clamp(110px, 32dvh, 150px);
+    --hud-off: calc(var(--fig-h) - 36px);
+    --cards-off: calc(var(--fig-h) + 2px);
+    --opp-card: 24px;
+    --hud-max: 120px;
+    --eval-w: 100px;
+    --local-w: 200px;
+    --local-card: 52px;
+    --local-gap: 0px;
+    min-height: 0;
+  }
+  /* Opponents spread across the top edge; board dead centre. */
+  .game-table-scene .pos-top {
+    top: 0;
+    left: 50%;
+  }
+  .game-table-scene .pos-left,
+  .game-table-scene .pos-top-left {
+    top: 6%;
+    left: 17%;
+  }
+  .game-table-scene .pos-right,
+  .game-table-scene .pos-top-right {
+    top: 6%;
+    left: 83%;
+  }
+  /* The top seat's card backs sit beside its HUD so the board stays clear. */
+  .game-table-scene .pos-top .seat-cards-container {
+    --cards-y: calc(var(--hud-y) - 2px);
+    --cards-x: calc(50% - 82px);
+    --card-angle: 6deg;
+  }
+  .game-table-scene .pos-top .opponent-seat .hand-eval {
+    top: calc(var(--hud-y) + 40px);
+    left: calc(50% - 82px);
+  }
+  .game-table-scene .stage-track {
+    top: 6px;
+    left: auto;
+    right: calc(var(--gutter-r) + 118px);
+    translate: none;
+    gap: 6px;
+  }
+  .game-table-scene .stage-track > span {
+    font-size: 0;
+  }
+  .game-table-scene .stage-track > span.current {
+    font-size: 7px;
+    gap: 4px;
+  }
+  .game-table-scene .game-toolbar {
+    inset: 6px var(--gutter-r) auto var(--gutter);
+  }
+  .game-table-scene .table-history {
+    top: 6px;
+    right: auto;
+    left: calc(var(--gutter) + 62px);
+  }
+  .game-table-scene .table-history summary {
+    font-size: 0;
+    padding: 6px 8px;
+  }
+  .game-table-scene .table-history summary::before {
+    content: '☰';
+    font-size: 11px;
+    color: #f1d4aa;
+  }
+  .game-table-scene .table-history summary span {
+    font-size: 8px;
+    margin-left: 4px;
+  }
+  .game-table-scene .table-history[open] summary {
+    left: calc(var(--gutter) + 62px);
+    right: auto;
+    top: 6px;
+    bottom: auto;
+  }
+  .game-table-scene .table-history .history-list {
+    max-height: min(70dvh, 260px);
+  }
+  /* Hand bottom-left, dock bottom-right: nothing stacks vertically. */
+  .game-table-scene .local-seat {
+    left: calc(var(--gutter) + 8px);
+    margin-left: 0;
+    bottom: calc(var(--safe-b) + 6px);
+  }
+  .game-table-scene .local-player-area {
+    grid-template-columns: 26px max-content;
+    justify-content: start;
+  }
+  .game-table-scene .local-player-area .seat-portrait-wrap {
+    width: 26px;
+    height: 26px;
+  }
+  .game-table-scene .local-player-area .seat-cards-container {
+    justify-self: start;
+    margin: 0 0 4px 4px;
+  }
+  /* Result chips sit to the right of the hand, clear of the side seat. */
+  .game-table-scene .local-player-area .hand-eval,
+  .game-table-scene .local-player-area .seat-eliminated {
+    left: calc(100% + 8px);
+    bottom: 34px;
+    translate: none;
+    text-align: left;
+    max-width: 130px;
+  }
+  .game-table-scene .local-player-area .hand-eval ~ .seat-eliminated {
+    bottom: 68px;
+  }
+  .game-table-scene .controls-dock {
+    flex-direction: row;
+    align-items: center;
+    left: auto;
+    right: var(--gutter-r);
+    bottom: calc(6px + var(--safe-b));
+    width: max-content;
+    max-width: calc(100% - var(--local-w) - var(--gutter) - var(--gutter-r) - 16px);
+    padding: 6px 8px;
+    gap: 8px;
+  }
+  .game-table-scene .controls-status p {
+    max-width: 150px;
+    white-space: nowrap;
+  }
+  .game-table-scene .action-buttons {
+    display: flex;
+    gap: 5px;
+  }
+  .game-table-scene .btn-act {
+    min-height: 44px;
+    padding: 5px 9px;
+    text-align: left;
+  }
+  .game-table-scene .btn-act strong {
+    font-size: 11px;
+  }
+  .game-table-scene .btn-act small {
+    display: none; /* Single-line buttons keep the dock to one row. */
+  }
+  .game-table-scene .turn-clock,
+  .game-table-scene .your-turn .turn-clock {
+    width: 36px;
+    height: 36px;
+  }
+  .game-table-scene .turn-clock b {
+    font-size: 15px;
+  }
+  .game-table-scene .controls-dock .btn-primary {
+    width: auto;
+    min-height: 44px;
+  }
+}
+
+/* Motion: unchanged behaviour, reduced-motion handled by the base rules. */
+@media (max-width: 1050px) and (prefers-reduced-motion: reduce) {
+  .game-table-scene .controls-dock,
+  .game-table-scene .turn-clock,
+  .game-table-scene .btn-act,
+  .game-table-scene .action-buttons,
+  .game-table-scene .local-player-area .seat-cards-container {
+    transition: none;
+  }
+}
