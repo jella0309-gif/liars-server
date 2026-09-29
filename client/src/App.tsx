@@ -1,173 +1,195 @@
 import React, { useEffect } from 'react';
 import { socket } from './socket';
-import { useGameStore, type PlayerInfo } from './store/gameStore';
+import { useGameStore } from './store/gameStore';
 import { Header } from './components/Header';
+import { TavernAtmosphere } from './components/TavernAtmosphere';
 import { PokerTable } from './components/PokerTable';
 import { PlayerControls } from './components/PlayerControls';
 import { Lobby } from './components/Lobby';
 import { SwapCardPanel } from './components/SwapCardPanel';
 import { GodSaveOverlay } from './components/GodSaveOverlay';
 import { WinnerOverlay } from './components/WinnerOverlay';
-import { unlockAudioContext, speakActionVoice, playActionSound } from './utils/audio';
-import { SOCKET_EVENTS, type ClientGameState, type GameEvent } from '@liars-bar/shared';
+import {
+  unlockAudioContext,
+  speakActionVoice,
+  playActionSound,
+} from './utils/audio';
+import { handName } from './utils/handNames';
+import {
+  SOCKET_EVENTS,
+  type GameEvent,
+  type JoinedSuccessPayload,
+  type RoomUpdatePayload,
+} from '@liars-bar/shared';
 
 export const App: React.FC = () => {
-  const setConnected = useGameStore((state) => state.setConnected);
-  const setJoinedSuccess = useGameStore((state) => state.setJoinedSuccess);
-  const setRoomUpdate = useGameStore((state) => state.setRoomUpdate);
-  const setGameState = useGameStore((state) => state.setGameState);
-  const setTableLog = useGameStore((state) => state.setTableLog);
-  const showActionBubble = useGameStore((state) => state.showActionBubble);
-  const setRouletteResult = useGameStore((state) => state.setRouletteResult);
-  const setWinner = useGameStore((state) => state.setWinner);
-  const setSwapPool = useGameStore((state) => state.setSwapPool);
-  const setShowdownResults = useGameStore((state) => state.setShowdownResults);
-  const setRoundOver = useGameStore((state) => state.setRoundOver);
-
+  const isLobbyOpen = useGameStore((s) => s.isLobbyOpen);
+  const connected = useGameStore((s) => s.isConnected);
+  const errorMessage = useGameStore((s) => s.errorMessage);
   useEffect(() => {
-    // Global user click unlock audio
-    const handleBodyClick = () => unlockAudioContext();
-    window.addEventListener('click', handleBodyClick);
-
-    // Socket connection events
-    socket.on('connect', () => {
-      setConnected(true);
-    });
-
-    socket.on('disconnect', () => {
-      setConnected(false);
-    });
-
-    // Joined room success
-    socket.on(SOCKET_EVENTS.JOINED_SUCCESS, (payload: { roomId: string; seatIndex: number; token: string }) => {
-      setJoinedSuccess(payload.roomId, payload.seatIndex);
-      sessionStorage.setItem('liars_token', payload.token);
-    });
-
-    // Room player updates
-    socket.on(SOCKET_EVENTS.ROOM_UPDATE, (payload: { players: PlayerInfo[] }) => {
-      setRoomUpdate(payload.players);
-    });
-
-    // Main Game State update
-    socket.on(SOCKET_EVENTS.GAME_STATE, (state: ClientGameState) => {
-      setGameState(state);
-    });
-
-    // Top-level Match Over
-    socket.on(SOCKET_EVENTS.MATCH_OVER, (payload: { winnerSeatIndex: number; winnerName: string }) => {
-      setWinner(payload.winnerName);
-      setRoundOver(true);
-      speakActionVoice(`${payload.winnerName} won!`);
-    });
-
-    // Top-level Round Over
-    socket.on(SOCKET_EVENTS.ROUND_OVER, (payload: { message: string }) => {
-      setRoundOver(true, payload.message);
-      setTableLog(payload.message);
-    });
-
-    // Game Events
-    socket.on(SOCKET_EVENTS.GAME_EVENT, (event: GameEvent) => {
+    const store = useGameStore.getState();
+    const onConnect = () => {
+      store.setConnected(true);
+      const roomId = useGameStore.getState().currentRoomId;
+      const token = sessionStorage.getItem('liars_token');
+      if (roomId && token)
+        socket.emit(SOCKET_EVENTS.RECONNECT_ATTEMPT, { roomId, token });
+    };
+    const onDisconnect = () => store.setConnected(false);
+    const onJoined = (p: JoinedSuccessPayload) => {
+      store.setJoinedSuccess(p.roomId, p.seatIndex, p.maxPlayers);
+      sessionStorage.setItem('liars_token', p.token);
+    };
+    const onRoom = (p: RoomUpdatePayload) =>
+      store.setRoomUpdate(p.players, p.maxPlayers);
+    const onMatch = (p: { winnerName: string; winnerSeatIndex: number }) => {
+      store.setWinner(p.winnerName, p.winnerSeatIndex);
+      store.setRoundOver(true);
+    };
+    const onRound = (p: { message: string }) => {
+      store.setRoundOver(true, p.message);
+      store.setTableLog(p.message);
+    };
+    const onEvent = (event: GameEvent) => {
+      const playerName = (seat: number) => {
+        const state = useGameStore.getState();
+        return (
+          state.playersInfo.find((player) => player.seatIndex === seat)?.name ||
+          `Người chơi ${seat + 1}`
+        );
+      };
       switch (event.type) {
-        case 'action_bubble':
-          showActionBubble(event.seatIndex, event.action.toUpperCase(), `bubble-${event.action}`);
+        case 'action_bubble': {
+          const labels: Record<string, string> = {
+            call: 'THEO BÀI',
+            fold: 'BỎ BÀI',
+            allin: 'TẤT TAY',
+          };
+          store.showActionBubble(
+            event.seatIndex,
+            labels[event.action] || event.action.toUpperCase(),
+            `bubble-${event.action}`
+          );
+          store.setTableLog(
+            `${playerName(event.seatIndex)} ${(labels[event.action] || event.action).toLocaleLowerCase('vi')}.`
+          );
           speakActionVoice(event.action);
           playActionSound(event.action);
           break;
-
+        }
         case 'roulette':
-          setRouletteResult(event.result);
+          store.setRouletteResult(event.result);
           break;
-
         case 'showdown':
-          setShowdownResults(event.results);
-          setTableLog(`SHOWDOWN: ${event.winnerName} WINS WITH [${event.winnerHand}]!`);
+          store.setShowdownResults(event.results);
+          store.setTableLog(
+            event.winnerHand === 'Invalid'
+              ? `${event.winnerName} thắng do các đối thủ bỏ bài.`
+              : `${event.winnerName} thắng với ${handName(event.winnerHand)}.`
+          );
           break;
-
         case 'match_over':
-          setWinner(event.winnerName);
-          setRoundOver(true);
-          speakActionVoice(`${event.winnerName} won!`);
+          onMatch(event);
           break;
-
         case 'round_over':
-          setRoundOver(true, event.message);
-          setTableLog(event.message);
+          onRound(event);
           break;
-
         case 'swap_available':
-          setSwapPool(event.drawnCards);
+          store.setSwapPool(event.drawnCards);
           break;
-
+        case 'swap_used':
+          store.setSwapPool(null);
+          store.showActionBubble(event.seatIndex, 'ĐÃ ĐỔI BÀI', 'bubble-swap');
+          store.setTableLog(
+            `${playerName(event.seatIndex)} đã đổi một lá tẩy.`
+          );
+          playActionSound('swap');
+          break;
         case 'log':
-          setTableLog(event.message);
+          store.setTableLog(event.message);
           break;
-
+        case 'stage_change':
+          store.setTableLog(
+            `Vòng ${event.stageName} — ${event.newCommunityCards.length} lá bài chung.`
+          );
+          break;
         case 'round_start':
-          setWinner(null);
-          setRoundOver(false);
-          setShowdownResults(null);
-          setSwapPool(null);
-          setRouletteResult(null);
-          setTableLog('Ván bài mới bắt đầu! Hãy quan sát bài...');
+          store.startRound();
           break;
       }
-    });
-
-    socket.on(SOCKET_EVENTS.ROOM_NOT_FOUND, () => {
-      alert('Không tìm thấy phòng!');
-    });
-
-    socket.on(SOCKET_EVENTS.ROOM_FULL, () => {
-      alert('Phòng đã đầy người chơi!');
-    });
-
-    return () => {
-      window.removeEventListener('click', handleBodyClick);
-      socket.off('connect');
-      socket.off('disconnect');
-      socket.off(SOCKET_EVENTS.JOINED_SUCCESS);
-      socket.off(SOCKET_EVENTS.ROOM_UPDATE);
-      socket.off(SOCKET_EVENTS.GAME_STATE);
-      socket.off(SOCKET_EVENTS.MATCH_OVER);
-      socket.off(SOCKET_EVENTS.ROUND_OVER);
-      socket.off(SOCKET_EVENTS.GAME_EVENT);
-      socket.off(SOCKET_EVENTS.ROOM_NOT_FOUND);
-      socket.off(SOCKET_EVENTS.ROOM_FULL);
     };
-  }, [
-    setConnected,
-    setJoinedSuccess,
-    setRoomUpdate,
-    setGameState,
-    setTableLog,
-    showActionBubble,
-    setRouletteResult,
-    setWinner,
-    setSwapPool,
-    setShowdownResults,
-    setRoundOver
-  ]);
-
+    const onMissing = () =>
+      store.setError('Không tìm thấy phòng. Kiểm tra lại mã phòng nhé.');
+    const onFull = () =>
+      store.setError('Bàn này đã đủ người. Hãy thử một phòng khác.');
+    const onError = (p: { message?: string }) =>
+      store.setError(
+        p.message === 'Invalid payload'
+          ? 'Thông tin chưa hợp lệ. Hãy kiểm tra lại.'
+          : p.message || 'Có lỗi kết nối. Hãy thử lại.'
+      );
+    store.setConnected(socket.connected);
+    window.addEventListener('pointerdown', unlockAudioContext);
+    socket.on('connect', onConnect).on('disconnect', onDisconnect);
+    socket
+      .on(SOCKET_EVENTS.JOINED_SUCCESS, onJoined)
+      .on(SOCKET_EVENTS.ROOM_UPDATE, onRoom);
+    socket
+      .on(SOCKET_EVENTS.GAME_STATE, store.setGameState)
+      .on(SOCKET_EVENTS.GAME_EVENT, onEvent);
+    socket
+      .on(SOCKET_EVENTS.MATCH_OVER, onMatch)
+      .on(SOCKET_EVENTS.ROUND_OVER, onRound);
+    socket
+      .on(SOCKET_EVENTS.ROOM_NOT_FOUND, onMissing)
+      .on(SOCKET_EVENTS.ROOM_FULL, onFull)
+      .on(SOCKET_EVENTS.ERROR, onError);
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudioContext);
+      socket.off('connect', onConnect).off('disconnect', onDisconnect);
+      socket
+        .off(SOCKET_EVENTS.JOINED_SUCCESS, onJoined)
+        .off(SOCKET_EVENTS.ROOM_UPDATE, onRoom);
+      socket
+        .off(SOCKET_EVENTS.GAME_STATE, store.setGameState)
+        .off(SOCKET_EVENTS.GAME_EVENT, onEvent);
+      socket
+        .off(SOCKET_EVENTS.MATCH_OVER, onMatch)
+        .off(SOCKET_EVENTS.ROUND_OVER, onRound);
+      socket
+        .off(SOCKET_EVENTS.ROOM_NOT_FOUND, onMissing)
+        .off(SOCKET_EVENTS.ROOM_FULL, onFull)
+        .off(SOCKET_EVENTS.ERROR, onError);
+    };
+  }, []);
   return (
-    <div className="game-root">
-      <audio id="lofiBgm" loop preload="auto">
-        <source
-          src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
-          type="audio/mp3"
-        />
-      </audio>
-
+    <div className={`game-root ${isLobbyOpen ? 'in-lobby' : 'in-game'}`}>
+      <TavernAtmosphere />
       <Header />
-      <PokerTable />
-      <PlayerControls />
-
-      {/* Modals & Overlays */}
-      <Lobby />
-      <SwapCardPanel />
-      <GodSaveOverlay />
-      <WinnerOverlay />
+      {isLobbyOpen ? (
+        <Lobby />
+      ) : (
+        <>
+          {!connected && (
+            <div className="connection-banner" role="status">
+              Mất kết nối. Đang kết nối lại với bàn chơi…
+            </div>
+          )}
+          {errorMessage && (
+            <div className="connection-banner" role="alert">
+              {errorMessage}
+              <button onClick={() => useGameStore.getState().setError(null)}>
+                Đóng
+              </button>
+            </div>
+          )}
+          <PokerTable />
+          <PlayerControls />
+          <SwapCardPanel />
+          <GodSaveOverlay />
+          <WinnerOverlay />
+        </>
+      )}
     </div>
   );
 };

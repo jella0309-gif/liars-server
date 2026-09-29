@@ -1,216 +1,177 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { emitAction, emitSwapRequest, emitNextRound, emitPlayAgain } from '../socket';
-import { unlockAudioContext } from '../utils/audio';
-
+import { emitAction, emitSwapRequest, emitNextRound } from '../socket';
+import { useTurnClock } from '../hooks/useTurnClock';
+import { Icon } from './Icon';
 export const PlayerControls: React.FC = () => {
-  const gameState = useGameStore((state) => state.gameState);
-  const mySeatIndex = useGameStore((state) => state.mySeatIndex);
-  const currentRoomId = useGameStore((state) => state.currentRoomId);
-  const isRoundOver = useGameStore((state) => state.isRoundOver);
-  const roundOverMessage = useGameStore((state) => state.roundOverMessage);
-  const winnerName = useGameStore((state) => state.winnerName);
-  const showdownResults = useGameStore((state) => state.showdownResults);
-  const rouletteResult = useGameStore((state) => state.rouletteResult);
-
-  const me = gameState?.me;
-  const isProcessingRoulette = gameState?.isProcessingRoulette || !!rouletteResult;
-  const isShowdown = !!showdownResults;
-  const isMyTurn = gameState?.currentTurnSeat === mySeatIndex && !isProcessingRoulette && !isRoundOver && !winnerName && !isShowdown;
-  const hasAnyAllIn = gameState?.hasAnyAllIn || false;
-  const canSwap = gameState?.canSwap || false;
-
-  const currentTurnSeat = gameState?.currentTurnSeat;
-  const currentTurnPlayerName = currentTurnSeat !== undefined && currentTurnSeat !== -1
-    ? (currentTurnSeat === mySeatIndex ? (me?.name || 'Bạn') : (gameState?.opponents.find(o => o.seatIndex === currentTurnSeat)?.name || `Ghế #${currentTurnSeat + 1}`))
-    : 'Đối thủ';
-
-  const myBullets = me?.isAllIn ? 6 : (me?.bullets || 1);
-  const nextBullet = Math.min(6, myBullets + 1);
-  const nextOdds = Math.round((nextBullet / 6) * 100);
-
-  const handleAction = (action: 'fold' | 'call' | 'allin') => {
-    unlockAudioContext();
+  const {
+    gameState,
+    mySeatIndex,
+    currentRoomId,
+    isRoundOver,
+    winnerName,
+    showdownResults,
+    rouletteResult,
+    isConnected,
+    swapPoolCards,
+  } = useGameStore();
+  const seconds = useTurnClock();
+  const [pending, setPending] = useState(false);
+  useEffect(() => {
+    setPending(false);
+  }, [gameState, isRoundOver, rouletteResult, swapPoolCards, isConnected]);
+  useEffect(() => {
+    if (pending) {
+      const timer = setTimeout(() => setPending(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [pending]);
+  if (!gameState || winnerName) return null;
+  const me = gameState.me;
+  const resolving =
+    !!showdownResults || !!rouletteResult || gameState.isProcessingRoulette;
+  const isMyTurn =
+    gameState.currentTurnSeat === mySeatIndex &&
+    !resolving &&
+    !isRoundOver &&
+    !me.isDead &&
+    !me.folded;
+  const disabled = !isConnected || !isMyTurn || !!swapPoolCards || pending;
+  const nextBullet = Math.min(6, me.bullets + 1);
+  const currentPlayer =
+    gameState.opponents.find((o) => o.seatIndex === gameState.currentTurnSeat)
+      ?.name || 'đối thủ';
+  const act = (action: 'fold' | 'call' | 'allin') => {
+    if (disabled) return;
+    setPending(true);
     emitAction(currentRoomId, action);
   };
-
-  const handleRequestSwap = () => {
-    unlockAudioContext();
-    emitSwapRequest(currentRoomId);
-  };
-
-  const handleNextRound = () => {
-    unlockAudioContext();
-    emitNextRound(currentRoomId);
-  };
-
-  const handlePlayAgain = () => {
-    unlockAudioContext();
-    emitPlayAgain(currentRoomId);
-  };
-
-  // 1. MATCH OVER STATE
-  if (winnerName) {
-    return (
-      <div className="player-controls-container">
-        <div className="player-controls match-over-bar">
-          <div className="status-announcement">
-            <div className="announcement-title">🏆 TRẬN ĐẤU KẾT THÚC</div>
-            <div className="announcement-sub">
-              <strong>{winnerName.toUpperCase()}</strong> là người sống sót duy nhất!
-            </div>
-          </div>
-          <button
-            type="button"
-            className="btn-next-round btn-play-again pulse"
-            onClick={handlePlayAgain}
-          >
-            🔄 CHƠI LẠI TRẬN MỚI
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 2. ROUND OVER STATE (Do not auto-restart, player controlled!)
-  if (isRoundOver) {
-    return (
-      <div className="player-controls-container">
-        <div className="player-controls round-over-bar">
-          <div className="status-announcement">
-            <div className="announcement-title">🏁 VÁN ĐẤU ĐÃ KẾT THÚC</div>
-            <div className="announcement-sub">
-              {roundOverMessage || 'Tất cả đã hoàn thành bóp cò. Hãy bấm nút để bắt đầu ván tiếp theo!'}
-            </div>
-          </div>
-          <button
-            type="button"
-            className="btn-next-round pulse"
-            onClick={handleNextRound}
-          >
-            ▶ TIẾP TỤC VÁN TIẾP THEO
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 3. SHOWDOWN OR ROULETTE RESOLVING STATE
-  if (isShowdown || isProcessingRoulette) {
-    return (
-      <div className="player-controls-container">
-        <div className="player-controls resolving-bar">
-          <div className="resolving-indicator">
-            <span className="spinner-dot"></span>
-            {rouletteResult ? (
-              <span>☠ <strong>RUSSIAN ROULETTE:</strong> {rouletteResult.name} đang bóp cò revolver...</span>
-            ) : (
-              <span>👀 <strong>SHOWDOWN:</strong> Đang công khai bài của tất cả người chơi...</span>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 4. PLAYER DEAD OR FOLDED STATE
-  if (me?.isDead) {
-    return (
-      <div className="player-controls-container">
-        <div className="player-controls dead-bar">
-          <span className="dead-tag">☠ BẠN ĐÃ BỊ LOẠI KHỎI TRẬN ĐẤU (ĐANG THEO DÕI)</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (me?.folded) {
-    return (
-      <div className="player-controls-container">
-        <div className="player-controls folded-bar">
-          <span className="folded-tag">🏳 BẠN ĐÃ BỎ BÀI Ở VÁN NÀY (ĐÃ BÓP CÒ ROULETTE AN TOÀN)</span>
-        </div>
-      </div>
-    );
-  }
-
-  // 5. ACTIVE TURN GAMEPLAY CONTROLS
-  const isControlsDisabled = !isMyTurn;
-
+  const status = isRoundOver
+    ? 'Một ván khép lại.'
+    : rouletteResult
+      ? `${rouletteResult.name} đang thử vận may…`
+      : resolving
+        ? 'Ngửa bài. Phân định thắng thua.'
+        : me.isDead
+          ? 'Bạn đã bị hạ. Tiếp tục theo dõi.'
+          : me.folded
+            ? 'Bạn đã bỏ bài. Chờ ván tiếp theo.'
+            : isMyTurn
+              ? 'Nước đi tiếp theo là của bạn.'
+              : `Đang chờ ${currentPlayer}…`;
   return (
-    <div className="player-controls-container">
-      {/* Turn Status Banner */}
-      <div className={`turn-banner ${isMyTurn ? 'my-turn-banner' : 'opp-turn-banner'}`}>
-        {isMyTurn ? (
-          <span>👉 <strong>LƯỢT CỦA BẠN!</strong> Chọn hành động bên dưới (Thời gian: 30s)</span>
-        ) : (
-          <span>⏳ Đang chờ <strong>{currentTurnPlayerName}</strong> suy nghĩ và ra quyết định...</span>
-        )}
-      </div>
-
-      <div className="player-controls">
-        {/* FOLD BUTTON */}
-        <button
-          type="button"
-          className="btn-act btn-fold"
-          disabled={isControlsDisabled}
-          onClick={() => handleAction('fold')}
+    <section
+      className={`controls-dock ${isMyTurn ? 'your-turn' : ''}`}
+      aria-label="Hành động của bạn"
+    >
+      <div className="controls-status">
+        <div
+          className={`turn-clock ${seconds <= 5 && isMyTurn ? 'urgent' : ''}`}
         >
-          BỎ BÀI (FOLD)
-          <span className="sub">Chấp nhận bóp cò</span>
-        </button>
-
-        {/* CALL BUTTON */}
-        {!hasAnyAllIn && (
-          <button
-            type="button"
-            className="btn-act btn-call"
-            disabled={isControlsDisabled}
-            onClick={() => handleAction('call')}
-          >
-            THEO (+1 VIÊN)
-            <span className="sub">
-              Lên {nextBullet} viên ({nextOdds}% nổ)
-            </span>
-          </button>
-        )}
-
-        {/* SWAP CARD BUTTON */}
-        {!hasAnyAllIn && canSwap && (
-          <button
-            type="button"
-            className="btn-act btn-swap"
-            disabled={isControlsDisabled}
-            onClick={handleRequestSwap}
-          >
-            🔄 ĐỔI BÀI
-            <span className="sub">1 lần duy nhất</span>
-          </button>
-        )}
-
-        {/* ALL-IN BUTTON */}
-        {hasAnyAllIn ? (
-          <button
-            type="button"
-            className="btn-act btn-allin"
-            disabled={isControlsDisabled}
-            onClick={() => handleAction('allin')}
-          >
-            ALL-IN (6 VIÊN)
-            <span className="sub">Bắt buộc All-in theo!</span>
-          </button>
-        ) : gameState?.stage && gameState.stage > 0 ? (
-          <button
-            type="button"
-            className="btn-act btn-allin"
-            disabled={isControlsDisabled}
-            onClick={() => handleAction('allin')}
-          >
-            ALL-IN (6 VIÊN)
-            <span className="sub">100% buồng có đạn</span>
-          </button>
-        ) : null}
+          {isMyTurn ? (
+            <>
+              <b>{seconds}</b>
+              <small>GIÂY</small>
+            </>
+          ) : (
+            <Icon name={isRoundOver ? 'cards' : 'clock'} size={23} />
+          )}
+        </div>
+        <div>
+          <span className="eyebrow">
+            {isRoundOver
+              ? 'VÁN BÀI KẾT THÚC'
+              : isMyTurn
+                ? 'ĐẾN LƯỢT BẠN'
+                : 'TẠI BÀN CHƠI'}
+          </span>
+          <p role="status">{status}</p>
+        </div>
       </div>
-    </div>
+      {isRoundOver ? (
+        <button
+          className="btn-primary"
+          disabled={!isConnected || pending}
+          onClick={() => {
+            setPending(true);
+            emitNextRound(currentRoomId);
+          }}
+        >
+          VÁN TIẾP THEO <Icon name="arrow" />
+        </button>
+      ) : !resolving && !me.isDead && !me.folded ? (
+        <div className="action-buttons">
+          <button
+            className="btn-act btn-fold"
+            disabled={disabled}
+            onClick={() => act('fold')}
+          >
+            <strong>Bỏ bài</strong>
+            <small>Bóp cò ngay</small>
+          </button>
+          {!gameState.hasAnyAllIn && (
+            <button
+              className="btn-act btn-swap"
+              disabled={disabled || !gameState.canSwap}
+              title={
+                me.hasUsedSwap
+                  ? 'Đã dùng lượt đổi bài'
+                  : 'Đổi 1 lá tại Flop hoặc Turn'
+              }
+              onClick={() => {
+                setPending(true);
+                emitSwapRequest(currentRoomId);
+              }}
+            >
+              <strong>
+                <Icon name="swap" size={16} /> Đổi bài
+              </strong>
+              <small>
+                {me.hasUsedSwap
+                  ? 'Đã sử dụng'
+                  : gameState.canSwap
+                    ? 'Một lần duy nhất'
+                    : 'Từ vòng Flop'}
+              </small>
+            </button>
+          )}
+          {!gameState.hasAnyAllIn && (
+            <button
+              className="btn-act btn-call"
+              disabled={disabled}
+              onClick={() => act('call')}
+            >
+              <strong>
+                Theo bài <span>+1</span>
+              </strong>
+              <small>
+                {nextBullet}/6 viên · {Math.round((nextBullet / 6) * 100)}% có
+                đạn
+              </small>
+            </button>
+          )}
+          <button
+            className="btn-act btn-allin"
+            disabled={
+              disabled || (!gameState.hasAnyAllIn && gameState.stage === 0)
+            }
+            onClick={() => act('allin')}
+          >
+            <strong>Tất tay</strong>
+            <small>
+              {gameState.hasAnyAllIn
+                ? 'Theo tất tay · 6/6 viên'
+                : gameState.stage === 0
+                  ? 'Từ vòng Flop'
+                  : '6/6 viên · All-in'}
+            </small>
+          </button>
+        </div>
+      ) : (
+        <span className="controls-passive">
+          {resolving ? 'KẾT QUẢ ĐANG ĐƯỢC PHÂN ĐỊNH' : 'CHẾ ĐỘ THEO DÕI'}
+        </span>
+      )}
+    </section>
   );
 };
