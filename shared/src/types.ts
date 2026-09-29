@@ -83,6 +83,10 @@ export interface ClientGameState {
   canAllIn: boolean;
   hasAnyAllIn: boolean;
   turnTimeRemaining: number;
+  /** The server-authoritative roulette currently being presented, if any. */
+  activeRoulette: RouletteResult | null;
+  /** Current server time, used to translate server timelines to the client clock. */
+  serverTime: number;
 }
 
 // ---------- Showdown ----------
@@ -111,6 +115,8 @@ export interface RouletteResult {
   stopIndex: number;
   isDead: boolean;
   isGodSave: boolean;
+  /** Server timestamp used by every client to follow the same animation timeline. */
+  startedAt: number;
 }
 
 // ---------- Game Events (Server → Client) ----------

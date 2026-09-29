@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import type {
-  ClientGameState,
-  Card,
-  RouletteResult,
-  ShowdownResult,
+import {
+  TIMING,
+  type ClientGameState,
+  type Card,
+  type RouletteResult,
+  type ShowdownResult,
 } from '@liars-bar/shared';
 export interface PlayerInfo {
   seatIndex: number;
@@ -31,6 +32,7 @@ interface GameStore {
   roundNumber: number;
   turnDeadline: number;
   rouletteResult: RouletteResult | null;
+  rouletteStartedAt: number | null;
   rouletteRevealed: boolean;
   godSavePlayerName: string | null;
   winnerName: string | null;
@@ -71,6 +73,7 @@ export const useGameStore = create<GameStore>((set) => ({
   roundNumber: 0,
   turnDeadline: 0,
   rouletteResult: null,
+  rouletteStartedAt: null,
   rouletteRevealed: false,
   godSavePlayerName: null,
   winnerName: null,
@@ -94,6 +97,7 @@ export const useGameStore = create<GameStore>((set) => ({
       winnerSeatIndex: null,
       showdownResults: null,
       rouletteResult: null,
+      rouletteStartedAt: null,
       swapPoolCards: null,
       errorMessage: null,
       roundNumber: 0,
@@ -114,12 +118,32 @@ export const useGameStore = create<GameStore>((set) => ({
         !gameState.me.folded &&
         !gameState.me.isDead &&
         !gameState.isProcessingRoulette;
+      const activeRoulette = gameState.activeRoulette;
+      const activeRouletteAge = activeRoulette
+        ? Math.max(0, gameState.serverTime - activeRoulette.startedAt)
+        : 0;
+      const shouldRecoverRoulette =
+        !!activeRoulette &&
+        activeRouletteAge < TIMING.ROULETTE_ANIMATION_DURATION * 1000 &&
+        state.rouletteResult?.startedAt !== activeRoulette.startedAt;
+      const shouldSyncRouletteClock =
+        !!activeRoulette &&
+        activeRouletteAge < TIMING.ROULETTE_ANIMATION_DURATION * 1000;
       return {
         gameState,
         turnDeadline: newTurn
           ? Date.now() + gameState.turnTimeRemaining * 1000
           : state.turnDeadline,
         ...(!canAct ? { swapPoolCards: null } : {}),
+        ...(shouldRecoverRoulette
+          ? {
+              rouletteResult: activeRoulette,
+              rouletteRevealed: false,
+              rouletteStartedAt: Date.now() - activeRouletteAge,
+            }
+          : shouldSyncRouletteClock
+            ? { rouletteStartedAt: Date.now() - activeRouletteAge }
+          : {}),
       };
     }),
   setTableLog: (tableLog) =>
@@ -145,6 +169,7 @@ export const useGameStore = create<GameStore>((set) => ({
     set({
       rouletteResult,
       rouletteRevealed: false,
+      rouletteStartedAt: rouletteResult ? Date.now() : null,
       ...(rouletteResult ? { swapPoolCards: null } : {}),
     }),
   revealRoulette: () => set({ rouletteRevealed: true }),
@@ -179,6 +204,7 @@ export const useGameStore = create<GameStore>((set) => ({
       showdownResults: null,
       swapPoolCards: null,
       rouletteResult: null,
+      rouletteStartedAt: null,
       rouletteRevealed: false,
       godSavePlayerName: null,
       activeBubble: null,

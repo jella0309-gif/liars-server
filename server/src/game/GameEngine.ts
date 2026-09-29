@@ -26,6 +26,7 @@ export class GameEngine {
   private currentTurnSeat: number = -1;
   private roundActionsCount: number = 0;
   private isProcessingRoulette: boolean = false;
+  private activeRoulette: RouletteResult | null = null;
   private activeSeats: number[] = [];
   private turnTimer: NodeJS.Timeout | null = null;
   private turnDeadline = 0;
@@ -44,6 +45,7 @@ export class GameEngine {
     this.currentStageIndex = 0;
     this.roundActionsCount = 0;
     this.isProcessingRoulette = false;
+    this.activeRoulette = null;
     this.swapDrawnCards.clear();
     this.swappedThisTurnSeat = null;
 
@@ -117,7 +119,15 @@ export class GameEngine {
 
   public nextTurnAfterRoulette(): GameEvent[] {
     this.isProcessingRoulette = false;
+    this.activeRoulette = null;
     return this.nextTurn();
+  }
+
+  /** Clear a completed presentation without erasing a newer roulette result. */
+  public clearActiveRoulette(startedAt: number): void {
+    if (this.activeRoulette?.startedAt === startedAt) {
+      this.activeRoulette = null;
+    }
   }
 
   private nextTurn(): GameEvent[] {
@@ -297,7 +307,7 @@ export class GameEngine {
         survivors[0].matchRank = 1;
       }
     }
-    return {
+    const result: RouletteResult = {
       seatIndex: player.seatIndex,
       name: player.name,
       avatar: player.avatar,
@@ -305,7 +315,10 @@ export class GameEngine {
       stopIndex: res.stopIndex!,
       isDead: res.isDead!,
       isGodSave: res.isGodSave!,
+      startedAt: Date.now(),
     };
+    this.activeRoulette = result;
+    return result;
   }
 
   public handleSwapRequest(seatIndex: number): { drawnCards: Card[] } | null {
@@ -426,6 +439,8 @@ export class GameEngine {
       turnTimeRemaining: this.turnDeadline
         ? Math.max(0, (this.turnDeadline - Date.now()) / 1000)
         : TIMING.TURN_TIME_LIMIT,
+      activeRoulette: this.activeRoulette,
+      serverTime: Date.now(),
     };
   }
 

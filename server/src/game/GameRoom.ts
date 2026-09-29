@@ -244,6 +244,10 @@ export class GameRoom {
             });
           }
           this.broadcastGameState();
+          setTimeout(() => {
+            this.engine.clearActiveRoulette(r.startedAt);
+            this.broadcastGameState();
+          }, TIMING.ROULETTE_ANIMATION_DURATION * 1000);
         }
       }, delay);
       delay += TIMING.ROULETTE_ANIMATION_DURATION * 1000 + 1000;

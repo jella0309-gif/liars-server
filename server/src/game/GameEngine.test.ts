@@ -145,6 +145,22 @@ test('match ranks follow elimination order from last place to winner', (t) => {
     [4, 3, 2]
   );
 });
+test('game state carries the active roulette so reconnecting clients can recover it', (t) => {
+  const { engine, players } = table();
+  const startedAt = 123456;
+  t.mock.method(Date, 'now', () => startedAt);
+
+  const result = engine.dispatchRoulette(players[0]);
+  const activeState = engine.getStateForPlayer(1);
+  assert.equal(result.startedAt, startedAt);
+  assert.deepEqual(activeState.activeRoulette, result);
+  assert.equal(activeState.serverTime, startedAt);
+
+  engine.clearActiveRoulette(startedAt - 1);
+  assert.deepEqual(engine.getStateForPlayer(1).activeRoulette, result);
+  engine.clearActiveRoulette(startedAt);
+  assert.equal(engine.getStateForPlayer(1).activeRoulette, null);
+});
 test('new rounds reset swap eligibility and survivor expressions can return to idle', () => {
   const { engine, players } = table();
   flop(engine);
