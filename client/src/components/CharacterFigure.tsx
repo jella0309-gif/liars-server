@@ -7,12 +7,11 @@ import {
 } from './CharacterPortrait';
 import {
   characterAlignment,
-  characterAssets,
   characterFrames,
   markAssetFailed,
   preloadCharacterAssets,
   stateViewBox,
-  useAssetFailed,
+  useCharacterAssetUrl,
   type CharacterId,
 } from './characterAssets';
 
@@ -28,7 +27,8 @@ export function CharacterFigure({ avatar, mood, label }: {
 }) {
   const character = getCharacter(avatar);
   const id = character.id;
-  const failed = useAssetFailed(characterAssets[id][mood]);
+  // WebP → PNG chain; null means both failed for this state.
+  const url = useCharacterAssetUrl(id, mood);
   // The outgoing mood stays mounted briefly so the two states crossfade.
   const [shownMood, setShownMood] = useState(mood);
   const [leaving, setLeaving] = useState<CharacterMood | null>(null);
@@ -43,7 +43,7 @@ export function CharacterFigure({ avatar, mood, label }: {
     return () => clearTimeout(t);
   }, [leaving]);
 
-  if (failed)
+  if (!url)
     return (
       <div className="seat-portrait-wrap character-figure">
         <CharacterPortrait avatar={avatar} mood={mood} alignTop />
@@ -87,10 +87,12 @@ function FigureLayer({ id, mood, phase }: {
   phase?: 'entering' | 'leaving';
 }) {
   const maskId = `figure-mask${useId().replace(/:/g, '')}`;
-  const url = characterAssets[id][mood];
+  // Each layer (the leaving one included) resolves its own source chain.
+  const url = useCharacterAssetUrl(id, mood);
   const { width, height, states } = characterFrames[id];
   const viewBox = stateViewBox(id, mood);
   const { hide } = states[mood];
+  if (!url) return null; // Both formats failed; the parent shows the portrait.
   return (
     <svg
       className={`figure-layer ${phase ?? ''}`}

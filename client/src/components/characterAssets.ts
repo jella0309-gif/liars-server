@@ -6,14 +6,26 @@ export type CharacterId = (typeof CHARACTERS)[number]['id'];
 export const CHARACTER_MOODS: CharacterMood[] = ['idle', 'thinking', 'win', 'dead'];
 
 const ASSET_ROOT = '/assets/characters';
-const statePaths = (id: CharacterId): Record<CharacterMood, string> => ({
-  idle: `${ASSET_ROOT}/${id}/idle.png`,
-  thinking: `${ASSET_ROOT}/${id}/thinking.png`,
-  win: `${ASSET_ROOT}/${id}/win.png`,
-  dead: `${ASSET_ROOT}/${id}/dead.png`,
-});
 
-export const characterAssets: Record<CharacterId, Record<CharacterMood, string>> = {
+/** Preferred format first; the PNG masters stay as the on-disk fallback. */
+export interface AssetSources {
+  webp: string;
+  png: string;
+}
+const statePaths = (id: CharacterId): Record<CharacterMood, AssetSources> => {
+  const sources = (state: CharacterMood): AssetSources => ({
+    webp: `${ASSET_ROOT}/${id}/${state}.webp`,
+    png: `${ASSET_ROOT}/${id}/${state}.png`,
+  });
+  return {
+    idle: sources('idle'),
+    thinking: sources('thinking'),
+    win: sources('win'),
+    dead: sources('dead'),
+  };
+};
+
+export const characterAssets: Record<CharacterId, Record<CharacterMood, AssetSources>> = {
   monkey: statePaths('monkey'),
   fox: statePaths('fox'),
   boar: statePaths('boar'),
@@ -131,25 +143,41 @@ export function markAssetFailed(url: string) {
   failed.add(url);
   listeners.forEach((l) => l());
 }
-export function useAssetFailed(url: string) {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    () => failed.has(url)
-  );
+const subscribe = (l: () => void) => {
+  listeners.add(l);
+  return () => listeners.delete(l);
+};
+
+/** Resolves the WebP → PNG chain per state; null means both files failed
+ * and the caller should fall back to the CharacterPortrait sheet. */
+export function useCharacterAssetUrl(id: CharacterId, mood: CharacterMood) {
+  return useSyncExternalStore(subscribe, () => {
+    const { webp, png } = characterAssets[id][mood];
+    if (!failed.has(webp)) return webp;
+    if (!failed.has(png)) return png;
+    return null;
+  });
 }
 
-/** Warms all four states once per character, so mood changes never flash. */
+function warm(url: string, onFail?: () => void) {
+  if (requested.has(url)) return;
+  const img = new Image();
+  img.decoding = 'async';
+  img.onerror = () => {
+    markAssetFailed(url);
+    onFail?.();
+  };
+  img.src = url;
+  requested.set(url, img); // Kept referenced for the session.
+}
+
+/** Warms all four states once per character, so mood changes never flash.
+ * Only the preferred WebP is fetched; its PNG is requested solely when the
+ * WebP actually fails. */
 export function preloadCharacterAssets(id: CharacterId) {
   for (const mood of CHARACTER_MOODS) {
-    const url = characterAssets[id][mood];
-    if (requested.has(url)) continue;
-    const img = new Image();
-    img.decoding = 'async';
-    img.onerror = () => markAssetFailed(url);
-    img.src = url;
-    requested.set(url, img); // Kept referenced for the session.
+    const { webp, png } = characterAssets[id][mood];
+    if (failed.has(webp)) warm(png);
+    else warm(webp, () => warm(png));
   }
 }
