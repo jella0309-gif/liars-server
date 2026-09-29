@@ -176,6 +176,37 @@ export function setSfxVolume(vol: number) {
 }
 
 let bgmAudio: HTMLAudioElement | null = null;
+let bgmInitialized = false;
+
+function initBgm() {
+  if (!bgmAudio) {
+    bgmAudio = new Audio('/bgm.mp3');
+    bgmAudio.loop = true;
+    bgmAudio.volume = bgmVolume;
+  }
+}
+
+export function autoStartBgmOnFirstInteraction() {
+  if (bgmInitialized) return;
+  const startAudio = () => {
+    unlockAudioContext();
+    initBgm();
+    if (!isLofiOn) {
+      isLofiOn = true;
+      bgmAudio?.play().catch(() => {});
+    }
+    bgmInitialized = true;
+    window.removeEventListener('pointerdown', startAudio);
+    window.removeEventListener('keydown', startAudio);
+  };
+
+  window.addEventListener('pointerdown', startAudio, { once: true });
+  window.addEventListener('keydown', startAudio, { once: true });
+}
+
+if (typeof window !== 'undefined') {
+  autoStartBgmOnFirstInteraction();
+}
 
 export function setBgmVolume(vol: number) {
   bgmVolume = vol / 100;
@@ -186,18 +217,14 @@ export function setBgmVolume(vol: number) {
 
 export function toggleBgm(): boolean {
   unlockAudioContext();
-  if (!bgmAudio) {
-    bgmAudio = new Audio('/bgm.mp3');
-    bgmAudio.loop = true;
-    bgmAudio.volume = bgmVolume;
-  }
+  initBgm();
 
   isLofiOn = !isLofiOn;
 
   if (isLofiOn) {
-    bgmAudio.play().catch(() => {});
+    bgmAudio?.play().catch(() => {});
   } else {
-    bgmAudio.pause();
+    bgmAudio?.pause();
   }
 
   return isLofiOn;
