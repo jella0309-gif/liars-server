@@ -280,8 +280,14 @@ export const Lobby: React.FC = () => {
               disabled={!isConnected || pending}
               type="submit"
             >
+              <span className="enter-spade" aria-hidden="true">♠</span>
               <span>
-                {pending ? t('lobby.submit.pending') : t(`lobby.submit.${mode}`)}
+                <span className="enter-long">
+                  {pending ? t('lobby.submit.pending') : t(`lobby.submit.${mode}`)}
+                </span>
+                <span className="enter-short">
+                  {pending ? '…' : t(`lobby.short.${mode}`)}
+                </span>
                 <small>POKER · RUSSIAN ROULETTE</small>
               </span>
               <Icon name="arrow" />

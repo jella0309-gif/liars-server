@@ -550,3 +550,8 @@
     display: block;
   }
 }
+
+.enter-spade,
+.enter-short {
+  display: none;
+}
