@@ -56,6 +56,7 @@ export class GameRoom {
       isDead: false,
       isAllIn: false,
       hasUsedSwap: false,
+      matchRank: null,
       isBot,
     };
 
@@ -295,6 +296,7 @@ export class GameRoom {
       p.folded = false;
       p.isAllIn = false;
       p.hasUsedSwap = false;
+      p.matchRank = null;
     });
     this.engine = new GameEngine(this.players, this.maxPlayers);
     this.broadcastRoomUpdate();

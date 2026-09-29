@@ -32,6 +32,11 @@ export const WinnerOverlay: React.FC = () => {
     player?.avatar ||
     playersInfo.find((p) => p.seatIndex === winnerSeatIndex)?.avatar ||
     '🐵';
+  const standings = gameState
+    ? [gameState.me, ...gameState.opponents]
+        .filter((entry) => entry.matchRank !== null)
+        .sort((a, b) => a.matchRank! - b.matchRank!)
+    : [];
   return (
     <Dialog className="winner-dialog" label="Kết quả trận đấu">
       <div className="winner-art">
@@ -48,6 +53,14 @@ export const WinnerOverlay: React.FC = () => {
         <br />
         Đêm nay, chiếc ghế này thuộc về bạn.
       </p>
+      <ol className="match-standings" aria-label="Bảng xếp hạng chung cuộc">
+        {standings.map((entry) => (
+          <li key={entry.seatIndex} className={`rank-${entry.matchRank}`}>
+            <b>HẠNG {entry.matchRank}</b>
+            <strong>{entry.name}</strong>
+          </li>
+        ))}
+      </ol>
       <button
         className="btn-primary"
         disabled={!isConnected || pending}

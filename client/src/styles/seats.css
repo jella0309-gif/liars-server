@@ -79,6 +79,30 @@
   border-radius: 2px;
   flex-shrink: 0;
 }
+.match-rank {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 2px 5px;
+  border: 1px solid #8f6546;
+  border-radius: 3px;
+  background: #24150ddd;
+  color: #c7a98a;
+  font-size: 6px;
+  letter-spacing: 0.5px;
+}
+.match-rank.rank-1 {
+  border-color: #dcb562;
+  color: #ffe0a1;
+  box-shadow: 0 0 9px #d8a22c2b;
+}
+.match-rank.rank-2 {
+  border-color: #aaa6a0;
+  color: #dedbd5;
+}
+.match-rank.rank-3 {
+  border-color: #a76c43;
+  color: #dca078;
+}
 .seat-bullets {
   display: flex;
   align-items: center;
@@ -272,7 +296,29 @@
   line-height: 1.25;
   color: #e5c7a3;
 }
-.hand-eval span {
+.hand-eval-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.hand-eval-row strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hand-eval .hand-rank {
+  flex-shrink: 0;
+  padding: 2px 5px;
+  border: 1px solid #b7864d88;
+  border-radius: 3px;
+  background: #6f3d1d55;
+  color: #f3c77f;
+  font-size: 7px;
+  letter-spacing: 0.5px;
+}
+.hand-eval .hand-result {
   display: block;
   margin-top: 4px;
   font-size: 6px;
@@ -280,7 +326,8 @@
   color: #c3a17c;
 }
 .winning-hand,
-.winning-hand span {
+.winning-hand .hand-result,
+.winning-hand .hand-rank {
   color: #ffe0a1;
 }
 .empty-seat {

@@ -40,6 +40,7 @@ export const Seat: React.FC<{ seatIndex: number }> = ({ seatIndex }) => {
     );
   const name = player?.name || fallback?.name || 'Người chơi';
   const avatar = player?.avatar || fallback?.avatar || '🐵';
+  const matchRank = player?.matchRank;
   const shooting = rouletteResult?.seatIndex === seatIndex;
   // Keep the outcome hidden until the cylinder finishes spinning.
   const isDead = shooting
@@ -47,6 +48,7 @@ export const Seat: React.FC<{ seatIndex: number }> = ({ seatIndex }) => {
     : !!player?.isDead;
   const folded = !!player?.folded;
   const showdown = showdownResults?.find((r) => r.seatIndex === seatIndex);
+  const reachedShowdown = !!showdown && showdown.rank > 0;
   const won =
     !isDead && (winnerSeatIndex === seatIndex || showdown?.rank === 1);
   const active =
@@ -114,6 +116,11 @@ export const Seat: React.FC<{ seatIndex: number }> = ({ seatIndex }) => {
           <h3 title={name}>{name}</h3>
           {isMe && <span className="you-badge">BẠN</span>}
           {won && <Icon name="crown" size={16} />}
+          {matchRank && (
+            <span className={`match-rank rank-${matchRank}`}>
+              HẠNG {matchRank}
+            </span>
+          )}
         </div>
         <div
           className="seat-bullets"
@@ -139,7 +146,7 @@ export const Seat: React.FC<{ seatIndex: number }> = ({ seatIndex }) => {
             <small>{seconds}s</small>
           </div>
         )}
-        {!isDead && cards.length > 0 && (
+        {(reachedShowdown || !isDead) && cards.length > 0 && (
           <div className="seat-cards-container" key={roundNumber}>
             {cards.map((card, i) => (
               <PlayingCard
@@ -151,11 +158,14 @@ export const Seat: React.FC<{ seatIndex: number }> = ({ seatIndex }) => {
             ))}
           </div>
         )}
-        {showdown && !folded && (
+        {reachedShowdown && (
           <div className={`hand-eval ${won ? 'winning-hand' : ''}`}>
-            {handName(showdown.handName)}
-            <span>
-              {won ? 'THẮNG VÁN NÀY' : isDead ? 'ĐÃ BỊ LOẠI' : 'CHỜ KẾT QUẢ'}
+            <div className="hand-eval-row">
+              <strong>{handName(showdown.handName)}</strong>
+              <span className="hand-rank">BỘ #{showdown.rank}</span>
+            </div>
+            <span className="hand-result">
+              {won ? 'THẮNG VÁN NÀY' : isDead ? 'ĐÃ BỊ LOẠI' : 'KẾT QUẢ CUỐI VÁN'}
             </span>
           </div>
         )}

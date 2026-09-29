@@ -30,6 +30,7 @@ export class GameEngine {
   private turnTimer: NodeJS.Timeout | null = null;
   private turnDeadline = 0;
   private swapDrawnCards: Map<number, Card[]> = new Map();
+  private swappedThisTurnSeat: number | null = null;
 
   constructor(players: ServerPlayer[], maxPlayers: number) {
     this.players = players;
@@ -44,6 +45,7 @@ export class GameEngine {
     this.roundActionsCount = 0;
     this.isProcessingRoulette = false;
     this.swapDrawnCards.clear();
+    this.swappedThisTurnSeat = null;
 
     this.players.forEach((p) => {
       if (!p.isDead) {
@@ -77,12 +79,14 @@ export class GameEngine {
     );
     if (
       (action === 'call' && facingAllIn) ||
-      (action === 'allin' && this.currentStageIndex === 0)
+      (action === 'allin' &&
+        (this.currentStageIndex === 0 || this.swappedThisTurnSeat === seatIndex))
     )
       return events;
 
     this.clearTurnTimer();
     this.swapDrawnCards.delete(seatIndex);
+    this.swappedThisTurnSeat = null;
 
     events.push({ type: 'action_bubble', seatIndex, action });
 
@@ -247,7 +251,13 @@ export class GameEngine {
     const nonFolded = results
       .filter((r) => r.score >= 0)
       .sort((a, b) => b.score - a.score);
-    nonFolded.forEach((r, idx) => (r.rank = idx + 1));
+    nonFolded.forEach((result, index) => {
+      const previous = nonFolded[index - 1];
+      result.rank =
+        previous && previous.score === result.score
+          ? previous.rank
+          : index + 1;
+    });
 
     if (nonFolded.length > 0) {
       winner = nonFolded[0];
@@ -278,7 +288,15 @@ export class GameEngine {
 
   public dispatchRoulette(player: ServerPlayer): RouletteResult {
     const res = resolveRoulette(player.bullets);
-    if (res.isDead) player.isDead = true;
+    if (res.isDead && !player.isDead) {
+      player.matchRank = this.getAlivePlayers().length;
+      player.isDead = true;
+
+      const survivors = this.getAlivePlayers();
+      if (survivors.length === 1 && survivors[0].matchRank === null) {
+        survivors[0].matchRank = 1;
+      }
+    }
     return {
       seatIndex: player.seatIndex,
       name: player.name,
@@ -348,6 +366,7 @@ export class GameEngine {
 
     p.cards[handIdx] = drawn[drawnIdx];
     p.hasUsedSwap = true;
+    this.swappedThisTurnSeat = seatIndex;
     this.swapDrawnCards.delete(seatIndex);
     return true;
   }
@@ -382,6 +401,7 @@ export class GameEngine {
             isDead: me.isDead,
             isAllIn: me.isAllIn,
             hasUsedSwap: me.hasUsedSwap,
+            matchRank: me.matchRank,
           }
         : ({} as MyPlayerView),
       opponents: opponents.map((p) => ({
@@ -394,10 +414,14 @@ export class GameEngine {
         isDead: p.isDead,
         isAllIn: p.isAllIn,
         hasUsedSwap: p.hasUsedSwap,
+        matchRank: p.matchRank,
       })),
       isProcessingRoulette: this.isProcessingRoulette,
       maxPlayers: this.maxPlayers,
       canSwap: me ? !me.hasUsedSwap && drawCount > 0 : false,
+      canAllIn: me
+        ? this.currentStageIndex > 0 && this.swappedThisTurnSeat !== me.seatIndex
+        : false,
       hasAnyAllIn,
       turnTimeRemaining: this.turnDeadline
         ? Math.max(0, (this.turnDeadline - Date.now()) / 1000)

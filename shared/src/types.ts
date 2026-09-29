@@ -34,6 +34,7 @@ export interface ServerPlayer {
   isDead: boolean;
   isAllIn: boolean;
   hasUsedSwap: boolean;
+  matchRank: number | null;
   isBot: boolean;
 }
 
@@ -50,6 +51,7 @@ export interface MyPlayerView {
   isDead: boolean;
   isAllIn: boolean;
   hasUsedSwap: boolean;
+  matchRank: number | null;
 }
 
 /** Opponent info — NO card details */
@@ -63,6 +65,7 @@ export interface OpponentView {
   isDead: boolean;
   isAllIn: boolean;
   hasUsedSwap: boolean;
+  matchRank: number | null;
 }
 
 /** Full game state sent to a specific client */
@@ -77,6 +80,7 @@ export interface ClientGameState {
   isProcessingRoulette: boolean;
   maxPlayers: number;
   canSwap: boolean;
+  canAllIn: boolean;
   hasAnyAllIn: boolean;
   turnTimeRemaining: number;
 }

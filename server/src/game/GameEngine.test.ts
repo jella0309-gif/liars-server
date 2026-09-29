@@ -17,6 +17,7 @@ function table(count = 2) {
       isDead: false,
       isAllIn: false,
       hasUsedSwap: false,
+      matchRank: null,
       isBot: false,
     })
   );
@@ -59,6 +60,23 @@ test('reopening the swap panel returns the same pool and only one swap is accept
   assert.equal(engine.handleSwapConfirm(0, 1, 0), false);
   assert.equal(engine.getStateForPlayer(0).canSwap, false);
 });
+test('a successful swap blocks all-in only for the rest of that turn', () => {
+  const { engine, players } = table();
+  flop(engine);
+  engine.handleSwapRequest(0);
+  assert.equal(engine.handleSwapConfirm(0, 0, 0), true);
+  assert.equal(engine.getStateForPlayer(0).canAllIn, false);
+
+  assert.deepEqual(engine.handleAction(0, 'allin'), []);
+  assert.equal(players[0].isAllIn, false);
+  assert.equal(engine.getStateForPlayer(0).currentTurnSeat, 0);
+
+  engine.handleAction(0, 'call');
+  engine.handleAction(1, 'call');
+  assert.equal(engine.getStateForPlayer(0).canAllIn, true);
+  engine.handleAction(0, 'allin');
+  assert.equal(players[0].isAllIn, true);
+});
 test('a previous turn cannot confirm a stale swap selection', () => {
   const { engine } = table();
   flop(engine);
@@ -77,7 +95,14 @@ test('all-in reveals the full board and closes turn actions during showdown', ()
   assert.deepEqual(engine.handleAction(1, 'call'), []);
   assert.equal(engine.handleSwapRequest(1), null);
   const events = engine.handleAction(1, 'allin');
-  assert.ok(events.some((e) => e.type === 'showdown'));
+  const showdown = events.find((e) => e.type === 'showdown');
+  assert.ok(showdown);
+  assert.equal(showdown.results.length, 2);
+  assert.ok(
+    showdown.results.every(
+      (result) => result.cards.length === 2 && result.rank >= 1
+    )
+  );
   const state = engine.getStateForPlayer(0);
   assert.equal(state.communityCards.length, 5);
   assert.equal(state.currentTurnSeat, -1);
@@ -97,6 +122,28 @@ test('turn time reflects the server deadline without resetting after a state upd
   } finally {
     engine.clearTurnTimer();
   }
+});
+test('match ranks follow elimination order from last place to winner', (t) => {
+  const { engine, players } = table(4);
+  t.mock.method(Math, 'random', () => 0.5);
+
+  players[0].bullets = 6;
+  players[1].bullets = 6;
+  players[2].bullets = 6;
+  assert.equal(engine.dispatchRoulette(players[0]).isDead, true);
+  assert.equal(engine.dispatchRoulette(players[1]).isDead, true);
+  assert.equal(engine.dispatchRoulette(players[2]).isDead, true);
+
+  assert.deepEqual(
+    players.map((player) => player.matchRank),
+    [4, 3, 2, 1]
+  );
+  const finalState = engine.getStateForPlayer(3);
+  assert.equal(finalState.me.matchRank, 1);
+  assert.deepEqual(
+    finalState.opponents.map((player) => player.matchRank),
+    [4, 3, 2]
+  );
 });
 test('new rounds reset swap eligibility and survivor expressions can return to idle', () => {
   const { engine, players } = table();

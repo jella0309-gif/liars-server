@@ -337,17 +337,6 @@
   top: 20%;
   --toward-x: -55px;
 }
-.pos-bottom-left {
-  left: 19%;
-  top: 80%;
-  --toward-y: -45px;
-}
-.pos-bottom-right {
-  left: 81%;
-  top: 80%;
-  --toward-x: -55px;
-  --toward-y: -45px;
-}
 .pos-top {
   left: 50%;
   top: 16%;
@@ -359,6 +348,17 @@
   --toward-x: 0px;
   --toward-y: -45px;
 }
+.pos-left {
+  left: 15%;
+  top: 50%;
+  --toward-y: 0px;
+}
+.pos-right {
+  left: 85%;
+  top: 50%;
+  --toward-x: -55px;
+  --toward-y: 0px;
+}
 .seats-3 .pos-top-left {
   left: 18%;
   top: 24%;
@@ -367,8 +367,16 @@
   left: 82%;
   top: 24%;
 }
+.seats-4 .pos-top {
+  top: 16%;
+}
+.seats-4 .pos-left,
+.seats-4 .pos-right {
+  width: min(22%, 220px);
+}
 .seats-2 .seat-position,
-.seats-3 .pos-bottom {
+.seats-3 .pos-bottom,
+.seats-4 .pos-bottom {
   width: 285px;
 }
 .table-edge-label {

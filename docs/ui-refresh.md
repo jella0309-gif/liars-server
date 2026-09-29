@@ -21,7 +21,7 @@ Avatar identifiers remain compatible with the socket protocol. The old cowboy av
 ## Interface
 
 - Full lobby with six selectable portraits, expression previews, nickname, bot/create/join modes, room size, connection and inline error states.
-- Private cards remain hidden. Four players occupy four table corners; three form a triangle; two sit opposite each other. Seats rotate relative to the local player, who stays at bottom-left with four players and bottom-center with two or three, including guests.
+- Private cards remain hidden. The local player always sits at the center of the near edge. With four players, the opposite player sits at the center of the far edge while the other two sit evenly along the outer left and right edges; three players form a triangle; two sit opposite each other. The mapping remains correct when joining as a guest.
 - Community cards flip as they arrive. Hole cards flip at showdown. New rounds deal cards again.
 - Swap dialog shows the hand and drawn pool, accessible selection buttons, a countdown bounded by the remaining turn, and a short exchange animation. Closing/reopening reuses the server's same draw pool.
 - Roulette runs within the shared 4.5-second interval, cancels its timers on cleanup, and reveals character death only with the cylinder result.
