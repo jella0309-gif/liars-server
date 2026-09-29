@@ -73,6 +73,8 @@
     position: relative;
     width: 100%;
     max-width: none;
+    /* vh fallback first; dvh (iOS toolbar-aware) wins where supported. */
+    height: calc(100vh - var(--header-h) - env(safe-area-inset-top, 0px));
     height: calc(100dvh - var(--header-h) - env(safe-area-inset-top, 0px));
     min-height: 560px;
     margin: 0;
@@ -172,7 +174,7 @@
     translate: -50% -50%;
     width: var(--felt-w, 90%);
     max-width: none;
-    height: var(--felt-h, 46dvh);
+    height: var(--felt-h, 46%); /* % of the fixed-height scene: no dvh needed */
     border: 12px solid #372117;
     border-radius: var(--felt-radius, 50%);
     background: radial-gradient(ellipse at 50% 35%, #4b2628, #291516 75%);
@@ -730,6 +732,20 @@
     margin-top: 3px;
     font-size: 7px;
   }
+  /* Disabled actions read as clearly secondary but stay legible; the live
+     Call / All-in hierarchy is untouched. */
+  .game-table-scene .btn-act:disabled {
+    opacity: 0.55;
+    border-color: #5b452f;
+    box-shadow: none;
+    filter: saturate(0.45);
+  }
+  .game-table-scene .btn-act:disabled strong {
+    font-weight: 500;
+  }
+  .game-table-scene .btn-act:disabled small {
+    opacity: 0.8;
+  }
   .game-table-scene .controls-passive {
     text-align: right;
     font-size: 8px;
@@ -779,6 +795,7 @@
     right: 0;
     bottom: 0;
     margin: 0;
+    max-height: min(46vh, 360px);
     max-height: min(46dvh, 360px);
     padding: 16px var(--gutter-r) calc(16px + var(--safe-b)) var(--gutter);
     border: 0;
@@ -794,34 +811,36 @@
 @media (max-width: 767px) {
   .in-game .game-table-scene {
     --dock-h: 128px;
-    --felt-y: 51%;
+    --felt-y: 50%;
     --felt-w: 94%;
-    --felt-h: 46dvh;
+    --felt-h: 46%;
     --felt-radius: 46% / 40%;
-    --board-y: 52%;
+    --board-y: 50%;
     --board-card: 58px;
     --board-gap: 7px;
     --seat-w: 150px;
-    --fig-w: 220px;
-    --fig-h: 210px;
-    --hud-off: 160px;
-    --cards-off: 198px;
+    --fig-w: 250px;
+    --fig-h: 240px;
+    --hud-off: 188px;
+    --cards-off: 228px;
     --opp-card: 34px;
     --local-w: 320px;
     --local-card: 76px;
     --local-gap: 14px;
   }
+  /* Tablet portrait: taller figures use the slack between the opponent row
+     and the board; the board moves up to meet them. */
   .game-table-scene .pos-top {
-    top: 5%;
+    top: 4%;
   }
   .game-table-scene .pos-left,
   .game-table-scene .pos-top-left {
-    top: 19%;
+    top: 17%;
     left: 19%;
   }
   .game-table-scene .pos-right,
   .game-table-scene .pos-top-right {
-    top: 19%;
+    top: 17%;
     left: 81%;
   }
   .game-table-scene .seats-2 .pos-top {
@@ -872,7 +891,7 @@
     --dock-h: 176px; /* status row + 2x2 grid */
     --felt-y: 54%;
     --felt-w: 96%;
-    --felt-h: 50dvh;
+    --felt-h: 50%;
     --felt-radius: 48% / 34%;
     --emblem-size: 70px;
     --board-y: 49%;
@@ -933,8 +952,22 @@
   .game-table-scene .pos-top .seat-cards-container {
     --cards-y: calc(var(--fig-h) - 4px);
   }
+  /* Showdown density: one-line result chips under the cards; the winner's
+     HUD already carries "CHIẾN THẮNG", so the second line is redundant. */
   .game-table-scene .opponent-seat .hand-eval {
+    width: max-content;
+    max-width: 110px;
+    padding: 3px 6px;
     font-size: 7px;
+  }
+  .game-table-scene .opponent-seat .hand-eval .hand-result {
+    display: none;
+  }
+  .game-table-scene .opponent-seat .hand-eval-row {
+    flex-wrap: nowrap;
+  }
+  .game-table-scene .opponent-seat .hand-eval-row strong {
+    white-space: nowrap;
   }
   .game-table-scene .stage-track {
     top: 42px;
@@ -1002,6 +1035,22 @@
   .game-table-scene .empty-seat svg {
     width: 18px;
     height: 18px;
+  }
+}
+
+/* Medium/large phones: a touch more shoulder and torso on the side seats.
+   The rail sits a little lower and the seats a little higher; the board and
+   the side cards keep their clearance. Small phones keep the compact cut. */
+@media (min-width: 390px) and (max-width: 599px) {
+  .in-game .game-table-scene {
+    --felt-y: 55%;
+    --felt-h: 48%;
+  }
+  .game-table-scene .pos-left,
+  .game-table-scene .pos-top-left,
+  .game-table-scene .pos-right,
+  .game-table-scene .pos-top-right {
+    top: 9%;
   }
 }
 
@@ -1199,5 +1248,19 @@
   .game-table-scene .action-buttons,
   .game-table-scene .local-player-area .seat-cards-container {
     transition: none;
+  }
+}
+
+/* ---------- Compatibility fallbacks (all widths) ---------- */
+/* Browsers without mask compositing get a single vertical fade: the figure
+   stays visible and anchored, only the soft side/corner edges are lost. */
+@supports not ((mask-composite: intersect) or (-webkit-mask-composite: source-in)) {
+  .game-table-scene .character-figure .character-art.figure-art,
+  .game-table-scene .pos-left .character-art.figure-art,
+  .game-table-scene .pos-right .character-art.figure-art,
+  .game-table-scene .pos-top-left .character-art.figure-art,
+  .game-table-scene .pos-top-right .character-art.figure-art {
+    -webkit-mask-image: linear-gradient(#000 80%, transparent 98%);
+    mask-image: linear-gradient(#000 80%, transparent 98%);
   }
 }

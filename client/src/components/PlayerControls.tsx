@@ -67,6 +67,8 @@ export const PlayerControls: React.FC = () => {
       <div className="controls-status">
         <div
           className={`turn-clock ${seconds <= 5 && isMyTurn ? 'urgent' : ''}`}
+          role="timer"
+          aria-label={isMyTurn ? `Còn ${seconds} giây` : undefined}
           style={
             {
               // Presentation only: remaining-time fraction for the CSS ring.
@@ -93,6 +95,11 @@ export const PlayerControls: React.FC = () => {
           </span>
           <p role="status">{status}</p>
         </div>
+        {/* The status line above already announces "your turn"; this only
+            fires once when the clock reaches the 5-second threshold. */}
+        <span className="sr-only" aria-live="assertive">
+          {isMyTurn && seconds <= 5 ? 'Còn 5 giây' : ''}
+        </span>
       </div>
       {isRoundOver ? (
         <button
