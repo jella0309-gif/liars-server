@@ -693,6 +693,14 @@
     margin-left: -16px;
     rotate: 4deg;
   }
+  /* Local winner: keep the fan angles but add the showdown lift (the fan's
+     own translate would otherwise override the shared winner rule). */
+  .game-table-scene .seat-winner .local-player-area .card:first-child {
+    translate: 0 -1px;
+  }
+  .game-table-scene .seat-winner .local-player-area .card + .card {
+    translate: 0 -4px;
+  }
   /* Local turn: the hand lifts toward the player. */
   .game-table-scene .local-seat .seat.active-turn .seat-cards-container {
     translate: 0 -9px;
