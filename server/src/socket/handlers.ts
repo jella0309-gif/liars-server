@@ -9,7 +9,9 @@ const rooms = new Map<string, GameRoom>();
 function generateRoomId(): string {
   let id = '';
   do {
-    const r = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    const r = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, '0');
     id = `${ROOM.CODE_PREFIX}${r}`;
   } while (rooms.has(id));
   return id;
@@ -19,29 +21,29 @@ const CreateRoomSchema = z.object({
   playerName: z.string().min(1).max(20),
   avatar: z.string(),
   maxPlayers: z.number().min(ROOM.MIN_PLAYERS).max(ROOM.MAX_PLAYERS),
-  addBots: z.boolean().optional()
+  addBots: z.boolean().optional(),
 });
 
 const JoinRoomSchema = z.object({
   roomId: z.string(),
   playerName: z.string().min(1).max(20),
-  avatar: z.string()
+  avatar: z.string(),
 });
 
 const PlayerActionSchema = z.object({
   roomId: z.string(),
-  action: z.enum(['fold', 'call', 'allin'])
+  action: z.enum(['fold', 'call', 'allin']),
 });
 
 const SwapConfirmSchema = z.object({
   roomId: z.string(),
   handCardIndex: z.number().int().min(0).max(1),
-  drawnCardIndex: z.number().int().min(0)
+  drawnCardIndex: z.number().int().min(0),
 });
 
 const ReconnectSchema = z.object({
   token: z.string(),
-  roomId: z.string()
+  roomId: z.string(),
 });
 
 export function registerSocketHandlers(io: Server) {
@@ -55,14 +57,19 @@ export function registerSocketHandlers(io: Server) {
         const room = new GameRoom(roomId, data.maxPlayers, io);
         rooms.set(roomId, room);
 
-        const joinResult = room.addPlayer(socket.id, data.playerName, data.avatar, false);
+        const joinResult = room.addPlayer(
+          socket.id,
+          data.playerName,
+          data.avatar,
+          false
+        );
         if (joinResult) {
           socket.join(roomId);
           socket.emit(SOCKET_EVENTS.JOINED_SUCCESS, {
             seatIndex: joinResult.seatIndex,
             roomId,
             maxPlayers: data.maxPlayers,
-            token: joinResult.token
+            token: joinResult.token,
           });
 
           if (data.addBots) {
@@ -70,6 +77,7 @@ export function registerSocketHandlers(io: Server) {
               room.addBot();
             }
           }
+          room.broadcastRoomUpdate();
         }
       } catch (err) {
         socket.emit(SOCKET_EVENTS.ERROR, { message: 'Invalid payload' });
@@ -85,7 +93,12 @@ export function registerSocketHandlers(io: Server) {
           return;
         }
 
-        const joinResult = room.addPlayer(socket.id, data.playerName, data.avatar, false);
+        const joinResult = room.addPlayer(
+          socket.id,
+          data.playerName,
+          data.avatar,
+          false
+        );
         if (!joinResult) {
           socket.emit(SOCKET_EVENTS.ROOM_FULL);
           return;
@@ -96,8 +109,9 @@ export function registerSocketHandlers(io: Server) {
           seatIndex: joinResult.seatIndex,
           roomId: data.roomId,
           maxPlayers: room.maxPlayers,
-          token: joinResult.token
+          token: joinResult.token,
         });
+        room.broadcastRoomUpdate();
       } catch (err) {
         socket.emit(SOCKET_EVENTS.ERROR, { message: 'Invalid payload' });
       }
@@ -109,7 +123,7 @@ export function registerSocketHandlers(io: Server) {
         const room = rooms.get(data.roomId);
         if (!room) return;
 
-        const player = room.players.find(p => p.id === socket.id);
+        const player = room.players.find((p) => p.id === socket.id);
         if (player) {
           room.handleAction(player.seatIndex, data.action);
         }
@@ -121,7 +135,7 @@ export function registerSocketHandlers(io: Server) {
     socket.on('swap_request', (payload: { roomId: string }) => {
       const room = rooms.get(payload.roomId);
       if (!room) return;
-      const player = room.players.find(p => p.id === socket.id);
+      const player = room.players.find((p) => p.id === socket.id);
       if (player) {
         room.handleSwapRequest(player.seatIndex);
       }
@@ -132,9 +146,13 @@ export function registerSocketHandlers(io: Server) {
         const data = SwapConfirmSchema.parse(payload);
         const room = rooms.get(data.roomId);
         if (!room) return;
-        const player = room.players.find(p => p.id === socket.id);
+        const player = room.players.find((p) => p.id === socket.id);
         if (player) {
-          room.handleSwapConfirm(player.seatIndex, data.handCardIndex, data.drawnCardIndex);
+          room.handleSwapConfirm(
+            player.seatIndex,
+            data.handCardIndex,
+            data.drawnCardIndex
+          );
         }
       } catch (err) {
         socket.emit(SOCKET_EVENTS.ERROR, { message: 'Invalid payload' });
@@ -173,7 +191,7 @@ export function registerSocketHandlers(io: Server) {
 
     socket.on('disconnect', () => {
       logger.info(`Disconnected: ${socket.id}`);
-      rooms.forEach(room => {
+      rooms.forEach((room) => {
         room.disconnect(socket.id);
       });
     });

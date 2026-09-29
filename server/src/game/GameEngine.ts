@@ -1,7 +1,16 @@
-import { 
-  ServerPlayer, Card, GameEvent, PlayerActionType, 
-  ClientGameState, MyPlayerView, OpponentView, RouletteResult,
-  STAGES, REVOLVER, SWAP_DRAW_COUNT, TIMING
+import {
+  ServerPlayer,
+  Card,
+  GameEvent,
+  PlayerActionType,
+  ClientGameState,
+  MyPlayerView,
+  OpponentView,
+  RouletteResult,
+  STAGES,
+  REVOLVER,
+  SWAP_DRAW_COUNT,
+  TIMING,
 } from '@liars-bar/shared';
 import { Deck } from './Deck.js';
 import { resolveRoulette } from './Roulette.js';
@@ -10,7 +19,7 @@ import { evaluateBestHand } from './HandEvaluator.js';
 export class GameEngine {
   private players: ServerPlayer[];
   private maxPlayers: number;
-  
+
   private deck!: Deck;
   private communityCards: Card[] = [];
   private currentStageIndex: number = 0;
@@ -19,6 +28,7 @@ export class GameEngine {
   private isProcessingRoulette: boolean = false;
   private activeSeats: number[] = [];
   private turnTimer: NodeJS.Timeout | null = null;
+  private turnDeadline = 0;
   private swapDrawnCards: Map<number, Card[]> = new Map();
 
   constructor(players: ServerPlayer[], maxPlayers: number) {
@@ -27,14 +37,15 @@ export class GameEngine {
   }
 
   public initRound(): void {
+    this.clearTurnTimer();
     this.deck = new Deck();
     this.communityCards = [];
     this.currentStageIndex = 0;
     this.roundActionsCount = 0;
     this.isProcessingRoulette = false;
     this.swapDrawnCards.clear();
-    
-    this.players.forEach(p => {
+
+    this.players.forEach((p) => {
       if (!p.isDead) {
         p.cards = this.deck.draw(2);
         p.bullets = REVOLVER.INITIAL_BULLETS;
@@ -44,18 +55,34 @@ export class GameEngine {
       }
     });
 
-    this.activeSeats = this.players.filter(p => !p.isDead).map(p => p.seatIndex);
+    this.activeSeats = this.players
+      .filter((p) => !p.isDead)
+      .map((p) => p.seatIndex);
     this.currentTurnSeat = this.activeSeats[0];
   }
 
-  public handleAction(seatIndex: number, action: PlayerActionType): GameEvent[] {
+  public handleAction(
+    seatIndex: number,
+    action: PlayerActionType
+  ): GameEvent[] {
     const events: GameEvent[] = [];
-    if (this.currentTurnSeat !== seatIndex || this.isProcessingRoulette) return events;
+    if (this.currentTurnSeat !== seatIndex || this.isProcessingRoulette)
+      return events;
 
-    const player = this.players.find(p => p.seatIndex === seatIndex);
-    if (!player) return events;
+    const player = this.players.find((p) => p.seatIndex === seatIndex);
+    if (!player || player.isDead || player.folded || player.isAllIn)
+      return events;
+    const facingAllIn = this.players.some(
+      (p) => p.isAllIn && !p.isDead && !p.folded
+    );
+    if (
+      (action === 'call' && facingAllIn) ||
+      (action === 'allin' && this.currentStageIndex === 0)
+    )
+      return events;
 
     this.clearTurnTimer();
+    this.swapDrawnCards.delete(seatIndex);
 
     events.push({ type: 'action_bubble', seatIndex, action });
 
@@ -64,14 +91,14 @@ export class GameEngine {
       this.isProcessingRoulette = true;
       const rouletteResult = this.dispatchRoulette(player);
       events.push({ type: 'roulette', result: rouletteResult });
-      
+
       if (rouletteResult.isGodSave) {
         events.push({ type: 'god_save', seatIndex, name: player.name });
       }
 
       // Next turn handled after roulette animation typically, but returning events here
     } else if (action === 'call') {
-      player.bullets++;
+      player.bullets = Math.min(REVOLVER.CHAMBER_COUNT, player.bullets + 1);
       this.roundActionsCount++;
       events.push(...this.nextTurn());
     } else if (action === 'allin') {
@@ -90,14 +117,17 @@ export class GameEngine {
   }
 
   private nextTurn(): GameEvent[] {
-    const aliveNonFolded = this.getAlivePlayers().filter(p => !p.folded);
-    
+    const aliveNonFolded = this.getAlivePlayers().filter((p) => !p.folded);
+
     if (aliveNonFolded.length <= 1) {
       return this.handleShowdown();
     }
 
-    const allInCount = aliveNonFolded.filter(p => p.isAllIn).length;
-    if (allInCount === aliveNonFolded.length || (allInCount > 0 && this.roundActionsCount >= aliveNonFolded.length)) {
+    const allInCount = aliveNonFolded.filter((p) => p.isAllIn).length;
+    if (
+      allInCount === aliveNonFolded.length ||
+      (allInCount > 0 && this.roundActionsCount >= aliveNonFolded.length)
+    ) {
       return this.fastForwardAllIn();
     }
 
@@ -109,7 +139,9 @@ export class GameEngine {
     let nextIdx = this.activeSeats.indexOf(this.currentTurnSeat) + 1;
     while (true) {
       if (nextIdx >= this.activeSeats.length) nextIdx = 0;
-      const p = this.players.find(p => p.seatIndex === this.activeSeats[nextIdx]);
+      const p = this.players.find(
+        (p) => p.seatIndex === this.activeSeats[nextIdx]
+      );
       if (p && !p.isDead && !p.folded && !p.isAllIn) {
         this.currentTurnSeat = p.seatIndex;
         break;
@@ -137,14 +169,16 @@ export class GameEngine {
       type: 'stage_change',
       stage: this.currentStageIndex,
       stageName: STAGES[this.currentStageIndex],
-      newCommunityCards: [...this.communityCards]
+      newCommunityCards: [...this.communityCards],
     });
 
     // Reset turn to first alive non-folded
     let nextIdx = 0;
     while (true) {
       if (nextIdx >= this.activeSeats.length) break;
-      const p = this.players.find(p => p.seatIndex === this.activeSeats[nextIdx]);
+      const p = this.players.find(
+        (p) => p.seatIndex === this.activeSeats[nextIdx]
+      );
       if (p && !p.isDead && !p.folded && !p.isAllIn) {
         this.currentTurnSeat = p.seatIndex;
         break;
@@ -158,19 +192,19 @@ export class GameEngine {
   private fastForwardAllIn(): GameEvent[] {
     const events: GameEvent[] = [];
     events.push({ type: 'all_allin_fast_forward' });
-    
+
     // Draw remaining community cards
     const totalCardsNeeded = 5 - this.communityCards.length;
     if (totalCardsNeeded > 0) {
       this.communityCards.push(...this.deck.draw(totalCardsNeeded));
     }
     this.currentStageIndex = 4; // Showdown
-    
+
     events.push({
       type: 'stage_change',
       stage: this.currentStageIndex,
       stageName: STAGES[this.currentStageIndex],
-      newCommunityCards: [...this.communityCards]
+      newCommunityCards: [...this.communityCards],
     });
 
     events.push(...this.handleShowdown());
@@ -178,12 +212,14 @@ export class GameEngine {
   }
 
   private handleShowdown(): GameEvent[] {
+    this.currentTurnSeat = -1;
+    this.clearTurnTimer();
     const alivePlayers = this.getAlivePlayers();
     let winner = null;
     let bestScore = -1;
     let bestHandName = '';
 
-    const results = alivePlayers.map(p => {
+    const results = alivePlayers.map((p) => {
       if (p.folded) {
         return {
           seatIndex: p.seatIndex,
@@ -192,7 +228,7 @@ export class GameEngine {
           cards: p.cards,
           handName: 'Folded',
           rank: -1,
-          score: -1
+          score: -1,
         };
       }
       const evalResult = evaluateBestHand([...p.cards, ...this.communityCards]);
@@ -203,13 +239,15 @@ export class GameEngine {
         cards: p.cards,
         handName: evalResult.name,
         rank: 0,
-        score: evalResult.score
+        score: evalResult.score,
       };
     });
 
     // Sort to find ranks
-    const nonFolded = results.filter(r => r.score >= 0).sort((a, b) => b.score - a.score);
-    nonFolded.forEach((r, idx) => r.rank = idx + 1);
+    const nonFolded = results
+      .filter((r) => r.score >= 0)
+      .sort((a, b) => b.score - a.score);
+    nonFolded.forEach((r, idx) => (r.rank = idx + 1));
 
     if (nonFolded.length > 0) {
       winner = nonFolded[0];
@@ -221,20 +259,20 @@ export class GameEngine {
     const events: GameEvent[] = [];
     events.push({
       type: 'showdown',
-      results: results.map(r => ({
+      results: results.map((r) => ({
         seatIndex: r.seatIndex,
         name: r.name,
         avatar: r.avatar,
         cards: r.cards,
         handName: r.handName,
-        rank: r.rank
+        rank: r.rank,
       })),
       winnerName: winner ? winner.name : '',
-      winnerHand: bestHandName
+      winnerHand: bestHandName,
     });
 
     // Handle roulettes for losers (not fully implemented the sequential delay here, should be handled via room orchestration)
-    
+
     return events;
   }
 
@@ -248,27 +286,65 @@ export class GameEngine {
       bullets: player.bullets,
       stopIndex: res.stopIndex!,
       isDead: res.isDead!,
-      isGodSave: res.isGodSave!
+      isGodSave: res.isGodSave!,
     };
   }
 
   public handleSwapRequest(seatIndex: number): { drawnCards: Card[] } | null {
-    const p = this.players.find(p => p.seatIndex === seatIndex);
-    if (!p || p.hasUsedSwap || this.currentStageIndex === 0) return null;
+    const p = this.players.find((p) => p.seatIndex === seatIndex);
+    if (
+      !p ||
+      p.hasUsedSwap ||
+      p.isDead ||
+      p.folded ||
+      p.isAllIn ||
+      this.currentTurnSeat !== seatIndex ||
+      this.isProcessingRoulette ||
+      this.players.some(
+        (player) => player.isAllIn && !player.isDead && !player.folded
+      )
+    )
+      return null;
 
     const drawCount = SWAP_DRAW_COUNT[this.currentStageIndex] || 0;
     if (drawCount === 0) return null;
+
+    const existing = this.swapDrawnCards.get(seatIndex);
+    if (existing) return { drawnCards: existing };
 
     const drawn = this.deck.draw(drawCount);
     this.swapDrawnCards.set(seatIndex, drawn);
     return { drawnCards: drawn };
   }
 
-  public handleSwapConfirm(seatIndex: number, handIdx: number, drawnIdx: number): boolean {
-    const p = this.players.find(p => p.seatIndex === seatIndex);
-    if (!p) return false;
+  public handleSwapConfirm(
+    seatIndex: number,
+    handIdx: number,
+    drawnIdx: number
+  ): boolean {
+    const p = this.players.find((p) => p.seatIndex === seatIndex);
+    if (
+      !p ||
+      p.hasUsedSwap ||
+      p.isDead ||
+      p.folded ||
+      p.isAllIn ||
+      this.currentTurnSeat !== seatIndex ||
+      this.isProcessingRoulette ||
+      !SWAP_DRAW_COUNT[this.currentStageIndex]
+    )
+      return false;
     const drawn = this.swapDrawnCards.get(seatIndex);
-    if (!drawn || drawnIdx >= drawn.length || handIdx > 1) return false;
+    if (
+      !drawn ||
+      !Number.isInteger(handIdx) ||
+      !Number.isInteger(drawnIdx) ||
+      drawnIdx < 0 ||
+      drawnIdx >= drawn.length ||
+      handIdx < 0 ||
+      handIdx > 1
+    )
+      return false;
 
     p.cards[handIdx] = drawn[drawnIdx];
     p.hasUsedSwap = true;
@@ -281,10 +357,12 @@ export class GameEngine {
   }
 
   public getStateForPlayer(seatIndex: number): ClientGameState {
-    const me = this.players.find(p => p.seatIndex === seatIndex);
-    const opponents = this.players.filter(p => p.seatIndex !== seatIndex);
+    const me = this.players.find((p) => p.seatIndex === seatIndex);
+    const opponents = this.players.filter((p) => p.seatIndex !== seatIndex);
 
-    const hasAnyAllIn = this.players.some(p => p.isAllIn && !p.isDead && !p.folded);
+    const hasAnyAllIn = this.players.some(
+      (p) => p.isAllIn && !p.isDead && !p.folded
+    );
     const drawCount = SWAP_DRAW_COUNT[this.currentStageIndex] || 0;
 
     return {
@@ -293,18 +371,20 @@ export class GameEngine {
       stageName: STAGES[this.currentStageIndex],
       communityCards: this.communityCards,
       currentTurnSeat: this.currentTurnSeat,
-      me: me ? {
-        seatIndex: me.seatIndex,
-        name: me.name,
-        avatar: me.avatar,
-        cards: me.cards,
-        bullets: me.bullets,
-        folded: me.folded,
-        isDead: me.isDead,
-        isAllIn: me.isAllIn,
-        hasUsedSwap: me.hasUsedSwap
-      } : {} as MyPlayerView,
-      opponents: opponents.map(p => ({
+      me: me
+        ? {
+            seatIndex: me.seatIndex,
+            name: me.name,
+            avatar: me.avatar,
+            cards: me.cards,
+            bullets: me.bullets,
+            folded: me.folded,
+            isDead: me.isDead,
+            isAllIn: me.isAllIn,
+            hasUsedSwap: me.hasUsedSwap,
+          }
+        : ({} as MyPlayerView),
+      opponents: opponents.map((p) => ({
         seatIndex: p.seatIndex,
         name: p.name,
         avatar: p.avatar,
@@ -313,18 +393,20 @@ export class GameEngine {
         folded: p.folded,
         isDead: p.isDead,
         isAllIn: p.isAllIn,
-        hasUsedSwap: p.hasUsedSwap
+        hasUsedSwap: p.hasUsedSwap,
       })),
       isProcessingRoulette: this.isProcessingRoulette,
       maxPlayers: this.maxPlayers,
-      canSwap: me ? (!me.hasUsedSwap && drawCount > 0) : false,
+      canSwap: me ? !me.hasUsedSwap && drawCount > 0 : false,
       hasAnyAllIn,
-      turnTimeRemaining: TIMING.TURN_TIME_LIMIT
+      turnTimeRemaining: this.turnDeadline
+        ? Math.max(0, (this.turnDeadline - Date.now()) / 1000)
+        : TIMING.TURN_TIME_LIMIT,
     };
   }
 
   public getAlivePlayers(): ServerPlayer[] {
-    return this.players.filter(p => !p.isDead);
+    return this.players.filter((p) => !p.isDead);
   }
 
   public isMatchOver(): boolean {
@@ -340,12 +422,14 @@ export class GameEngine {
 
   public startTurnTimer(seatIndex: number, onTimeout: () => void): void {
     this.clearTurnTimer();
+    this.turnDeadline = Date.now() + TIMING.TURN_TIME_LIMIT * 1000;
     this.turnTimer = setTimeout(() => {
       onTimeout();
     }, TIMING.TURN_TIME_LIMIT * 1000);
   }
 
   public clearTurnTimer(): void {
+    this.turnDeadline = 0;
     if (this.turnTimer) {
       clearTimeout(this.turnTimer);
       this.turnTimer = null;

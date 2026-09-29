@@ -1,44 +1,75 @@
 import React from 'react';
 import type { Card } from '@liars-bar/shared';
-
 interface PlayingCardProps {
   card?: Card | null;
   hidden?: boolean;
   selectable?: boolean;
   selected?: boolean;
   onClick?: () => void;
+  delay?: number;
 }
-
+const suitNames: Record<string, string> = {
+  '♠': 'bích',
+  '♣': 'tép',
+  '♦': 'rô',
+  '♥': 'cơ',
+};
 export const PlayingCard: React.FC<PlayingCardProps> = ({
   card,
   hidden = false,
   selectable = false,
   selected = false,
-  onClick
+  onClick,
+  delay = 0,
 }) => {
-  if (hidden || !card) {
-    return (
-      <div 
-        className="card back" 
-        onClick={onClick}
-        style={{ cursor: onClick ? 'pointer' : 'default' }}
-      >
-        ☠
-      </div>
-    );
-  }
-
-  const colorClass = card.isRed ? 'red' : 'black';
-  const selectableClass = selectable ? 'selectable' : '';
-  const selectedClass = selected ? 'selected-gold' : '';
-
-  return (
-    <div
-      className={`card ${colorClass} ${selectableClass} ${selectedClass}`}
-      onClick={onClick}
+  const faceUp = !!card && !hidden;
+  const label = faceUp ? `${card.val} ${suitNames[card.suit]}` : 'Bài úp';
+  const content = (
+    <span
+      className={`card-motion ${faceUp ? 'face-up' : ''}`}
+      key={faceUp ? `${card.val}${card.suit}` : 'back'}
     >
-      <div>{card.val}</div>
-      <div className="card-suit">{card.suit}</div>
+      <span className="card-face card-back">
+        <span className="card-back-border">
+          <span>♠</span>
+          <small>
+            LIAR'S
+            <br />
+            BAR
+          </small>
+          <i>◆</i>
+        </span>
+      </span>
+      <span className={`card-face card-front ${card?.isRed ? 'red' : 'black'}`}>
+        <span className="card-corner">
+          <b>{card?.val}</b>
+          <span>{card?.suit}</span>
+        </span>
+        <span className="card-suit">{card?.suit}</span>
+        <span className="card-corner bottom">
+          <b>{card?.val}</b>
+          <span>{card?.suit}</span>
+        </span>
+      </span>
+    </span>
+  );
+  const className = `card ${faceUp ? 'revealed' : 'hidden-card'} ${selectable ? 'selectable' : ''} ${selected ? 'selected-gold' : ''}`;
+  const style = { '--deal-delay': `${delay}ms` } as React.CSSProperties;
+  return selectable ? (
+    <button
+      type="button"
+      className={className}
+      style={style}
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={selected}
+    >
+      {content}
+      {selected && <span className="card-selected-tick">✓</span>}
+    </button>
+  ) : (
+    <div className={className} style={style} role="img" aria-label={label}>
+      {content}
     </div>
   );
 };

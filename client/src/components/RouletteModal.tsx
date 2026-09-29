@@ -1,156 +1,145 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { playGunshot, playEmptyClick, playGodSaveSound } from '../utils/audio';
-
+import { CharacterPortrait } from './CharacterPortrait';
+import { TIMING } from '@liars-bar/shared';
 export const RouletteModal: React.FC = () => {
-  const rouletteResult = useGameStore((state) => state.rouletteResult);
-  const setRouletteResult = useGameStore((state) => state.setRouletteResult);
-  const setGodSave = useGameStore((state) => state.setGodSave);
-
-  const [subText, setSubText] = useState('Nạp đạn...');
-  const [statusHtml, setStatusHtml] = useState<React.ReactNode>(null);
-  const [loadedBullets, setLoadedBullets] = useState(0);
-  const [rotationDeg, setRotationDeg] = useState(0);
-  const [hasTransition, setHasTransition] = useState(false);
-  const [showBloodFlash, setShowBloodFlash] = useState(false);
-
-  const modalRef = useRef<HTMLDivElement>(null);
-
+  const {
+    rouletteResult: result,
+    setRouletteResult,
+    setGodSave,
+    revealRoulette,
+  } = useGameStore();
+  const [phase, setPhase] = useState<'load' | 'spin' | 'result'>('load');
+  const [loaded, setLoaded] = useState(0);
   useEffect(() => {
-    if (!rouletteResult) return;
-
-    const { name, avatar, bullets, stopIndex, isDead, isGodSave } = rouletteResult;
-    setSubText(`Nạp ${bullets} viên vào 6 buồng...`);
-    setStatusHtml(null);
-    setLoadedBullets(0);
-    setRotationDeg(0);
-    setHasTransition(false);
-
-    // Step 1: Load bullets sequentially
-    let currentLoaded = 0;
-    const loadInterval = setInterval(() => {
-      currentLoaded++;
-      setLoadedBullets(currentLoaded);
-      if (currentLoaded >= bullets) {
-        clearInterval(loadInterval);
-
-        // Step 2: Spin cylinder after loading bullets
-        setTimeout(() => {
-          setSubText('Đang quay ổ đạn...');
-          const targetDeg = ((6 - (stopIndex % 6)) % 6) * 60;
-          const totalDegree = 360 * 4 + targetDeg;
-
-          requestAnimationFrame(() => {
-            setHasTransition(true);
-            requestAnimationFrame(() => {
-              setRotationDeg(totalDegree);
-            });
-          });
-
-          // Step 3: Reveal result after spin finishes (2.2s)
-          setTimeout(() => {
-            if (isGodSave) {
-              setStatusHtml(<span className="text-god">✨ GOD'S SAVE!</span>);
-              setSubText('LÉP ĐẠN THẦN KỲ!');
-              playGodSaveSound();
-              setGodSave(name);
-            } else if (isDead) {
-              setStatusHtml(<span className="text-dead">☠ NỔ ĐẠN!</span>);
-              setSubText('BỊ HẠ GỤC!');
-              playGunshot();
-              setShowBloodFlash(true);
-              document.body.classList.add('shake');
-              setTimeout(() => {
-                setShowBloodFlash(false);
-                document.body.classList.remove('shake');
-              }, 600);
-            } else {
-              setStatusHtml(<span className="text-life">✔ RỖNG (CLICK)</span>);
-              setSubText('THOÁT CHẾT THÀNH CÔNG!');
-              playEmptyClick();
-            }
-
-            // Close modal after showing result
-            setTimeout(
-              () => {
-                setRouletteResult(null);
-              },
-              isGodSave ? 3500 : 2200
-            );
-          }, 2300);
-        }, 350);
-      }
-    }, 200);
-
-    return () => {
-      clearInterval(loadInterval);
-      document.body.classList.remove('shake');
-    };
-  }, [rouletteResult, setRouletteResult, setGodSave]);
-
-  if (!rouletteResult) return null;
-
+    if (!result) return;
+    setPhase('load');
+    setLoaded(0);
+    const bullets = Math.min(result.bullets, 6);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (let i = 1; i <= bullets; i++)
+      timers.push(setTimeout(() => setLoaded(i), i * 65));
+    timers.push(setTimeout(() => setPhase('spin'), 500));
+    timers.push(
+      setTimeout(() => {
+        setPhase('result');
+        revealRoulette();
+        if (result.isGodSave) {
+          playGodSaveSound();
+          setGodSave(result.name);
+        } else if (result.isDead) playGunshot();
+        else playEmptyClick();
+      }, 3100)
+    );
+    timers.push(
+      setTimeout(
+        () => {
+          if (useGameStore.getState().rouletteResult === result)
+            setRouletteResult(null);
+        },
+        TIMING.ROULETTE_ANIMATION_DURATION * 1000 - 100
+      )
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [result, setRouletteResult, setGodSave, revealRoulette]);
+  if (!result) return null;
+  const revealed = phase === 'result';
+  const rotation =
+    phase === 'load' ? 0 : 1440 + ((6 - (result.stopIndex % 6)) % 6) * 60;
+  const label = !revealed
+    ? phase === 'load'
+      ? 'Nạp đạn. Nín thở.'
+      : 'Vận may đang xoay…'
+    : result.isGodSave
+      ? 'PHÉP MÀU XẢY RA!'
+      : result.isDead
+        ? 'VẬN MAY ĐÃ HẾT.'
+        : 'BẠN CÒN MỘT CƠ HỘI.';
   return (
-    <>
-      {showBloodFlash && <div className="blood-flash" />}
-
-      <div
-        ref={modalRef}
-        className={`center-roulette-modal roulette-seat-${rouletteResult.seatIndex}`}
-        style={{ display: 'flex' }}
-      >
-        <div className="roulette-player-tag">
-          <span>{rouletteResult.avatar}</span> <span>{rouletteResult.name}</span>
-        </div>
-        <div className="roulette-header-tag">RUSSIAN ROULETTE</div>
-        <div className="roulette-sub-tag">{subText}</div>
-        <div className="mini-barrel"></div>
-
-        <div
-          className="cylinder-spinner-wrap"
-          style={{
-            transform: `rotate(${rotationDeg}deg)`,
-            transition: hasTransition
-              ? 'transform 2.2s cubic-bezier(0.12, 0.88, 0.2, 1)'
-              : 'none'
-          }}
-        >
-          <svg className="revolver-svg" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="46" fill="#181a20" stroke="#3f4555" strokeWidth="4" />
-            <line x1="50" y1="4" x2="50" y2="16" stroke="#475569" strokeWidth="3" strokeLinecap="round" />
-            <line x1="50" y1="84" x2="50" y2="96" stroke="#475569" strokeWidth="3" strokeLinecap="round" />
-            <line x1="4" y1="50" x2="16" y2="50" stroke="#475569" strokeWidth="3" strokeLinecap="round" />
-            <line x1="84" y1="50" x2="96" y2="50" stroke="#475569" strokeWidth="3" strokeLinecap="round" />
-
-            {/* 6 Chambers */}
-            <g>
-              {Array.from({ length: 6 }).map((_, i) => {
-                const rad = (-90 + i * 60) * (Math.PI / 180);
-                const cx = 50 + 29 * Math.cos(rad);
-                const cy = 50 + 29 * Math.sin(rad);
-                const isBulletLoaded = i < loadedBullets;
-
+    <div
+      className={`roulette-backdrop ${revealed && result.isDead ? 'shot-fired' : ''}`}
+    >
+      <section className="roulette-dialog" role="status" aria-live="polite">
+        <CharacterPortrait
+          avatar={result.avatar}
+          mood={!revealed ? 'thinking' : result.isDead ? 'dead' : 'idle'}
+        />
+        <div className="roulette-content">
+          <span className="eyebrow">RUSSIAN ROULETTE</span>
+          <h2>{result.name}</h2>
+          <p>{result.bullets}/6 viên đạn · Một lần bóp cò</p>
+          <div className="cylinder-shell">
+            <span className="cylinder-pointer">▼</span>
+            <svg
+              viewBox="0 0 120 120"
+              className="revolver-svg"
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                transition:
+                  phase === 'load'
+                    ? 'none'
+                    : 'transform 2.5s cubic-bezier(.13,.7,.1,1)',
+              }}
+              aria-hidden="true"
+            >
+              <defs>
+                <radialGradient id="steel">
+                  <stop offset="0" stopColor="#635649" />
+                  <stop offset="1" stopColor="#211e1a" />
+                </radialGradient>
+              </defs>
+              <circle
+                cx="60"
+                cy="60"
+                r="56"
+                fill="url(#steel)"
+                stroke="#9a7954"
+                strokeWidth="3"
+              />
+              <circle
+                cx="60"
+                cy="60"
+                r="48"
+                fill="none"
+                stroke="#b59a6a"
+                strokeOpacity=".25"
+              />
+              {Array.from({ length: 6 }, (_, i) => {
+                const r = ((-90 + i * 60) * Math.PI) / 180;
                 return (
-                  <circle
-                    key={i}
-                    cx={cx}
-                    cy={cy}
-                    r={9}
-                    fill={isBulletLoaded ? '#f59e0b' : '#0c0d11'}
-                    stroke={isBulletLoaded ? '#fbbf24' : '#2d3340'}
-                    strokeWidth="1.5"
-                  />
+                  <g key={i}>
+                    <circle
+                      cx={60 + 34 * Math.cos(r)}
+                      cy={60 + 34 * Math.sin(r)}
+                      r="12"
+                      fill={i < loaded ? '#b68a4a' : '#0e100f'}
+                      stroke={i < loaded ? '#e8c685' : '#655544'}
+                      strokeWidth="2"
+                    />
+                    {i < loaded && (
+                      <circle
+                        cx={60 + 34 * Math.cos(r)}
+                        cy={60 + 34 * Math.sin(r)}
+                        r="5"
+                        fill="#846031"
+                        stroke="#dcb878"
+                      />
+                    )}
+                  </g>
                 );
               })}
-            </g>
-
-            <circle cx="50" cy="50" r="11" fill="#1e222b" stroke="#64748b" strokeWidth="2" />
-            <circle cx="50" cy="50" r="4" fill="#090a0d" />
-          </svg>
+              <circle cx="60" cy="60" r="12" fill="#27251f" stroke="#9a7954" />
+              <circle cx="60" cy="60" r="4" fill="#0c0d0b" />
+            </svg>
+          </div>
+          <div
+            className={`roulette-result ${revealed ? (result.isDead ? 'result-dead' : 'result-safe') : ''}`}
+          >
+            {label}
+          </div>
         </div>
-
-        <div className="mini-status">{statusHtml}</div>
-      </div>
-    </>
+      </section>
+    </div>
   );
 };

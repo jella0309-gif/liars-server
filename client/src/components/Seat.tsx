@@ -1,152 +1,170 @@
 import React from 'react';
 import { PlayingCard } from './PlayingCard';
+import {
+  CharacterPortrait,
+  getCharacter,
+  type CharacterMood,
+} from './CharacterPortrait';
 import { useGameStore } from '../store/gameStore';
+import { useTurnClock } from '../hooks/useTurnClock';
+import { Icon } from './Icon';
+import { handName } from '../utils/handNames';
 import type { Card } from '@liars-bar/shared';
 
-interface SeatProps {
-  seatIndex: number;
-}
-
-export const Seat: React.FC<SeatProps> = ({ seatIndex }) => {
-  const gameState = useGameStore((state) => state.gameState);
-  const mySeatIndex = useGameStore((state) => state.mySeatIndex);
-  const playersInfo = useGameStore((state) => state.playersInfo);
-  const activeBubble = useGameStore((state) => state.activeBubble);
-  const showdownResults = useGameStore((state) => state.showdownResults);
-
-  // If room max players is less than seat index + 1, don't show
-  const maxPlayers = gameState?.maxPlayers || 2;
-  if (seatIndex >= maxPlayers) return null;
-
-  // Resolve player info from gameState or playersInfo
+export const Seat: React.FC<{ seatIndex: number }> = ({ seatIndex }) => {
+  const {
+    gameState,
+    mySeatIndex,
+    playersInfo,
+    activeBubble,
+    showdownResults,
+    isRoundOver,
+    winnerSeatIndex,
+    rouletteResult,
+    rouletteRevealed,
+    roundNumber,
+  } = useGameStore();
+  const seconds = useTurnClock();
   const isMe = seatIndex === mySeatIndex;
-  const meView = isMe ? gameState?.me : null;
-  const oppView = !isMe ? gameState?.opponents.find((o) => o.seatIndex === seatIndex) : null;
-  const fallbackInfo = playersInfo.find((p) => p.seatIndex === seatIndex);
-
-  const name = meView?.name || oppView?.name || fallbackInfo?.name || `Ghế ${seatIndex + 1}`;
-  const avatar = meView?.avatar || oppView?.avatar || fallbackInfo?.avatar || '👤';
-  const bullets = meView?.bullets ?? oppView?.bullets ?? 1;
-  const isDead = meView?.isDead || oppView?.isDead || false;
-  const folded = meView?.folded || oppView?.folded || false;
-  const isAllIn = meView?.isAllIn || oppView?.isAllIn || false;
-
-  const isCurrentTurn = gameState?.currentTurnSeat === seatIndex && !gameState?.isProcessingRoulette && !showdownResults;
-
-  // Status classes
-  let seatClass = `seat seat-${seatIndex}`;
-  if (isMe) seatClass += ' seat-is-me';
-  if (isDead) seatClass += ' dead';
-  else if (folded) seatClass += ' folded';
-  else if (isCurrentTurn) seatClass += ' active-turn';
-
-  // Bullets count and danger level
-  const effectiveBullets = isAllIn ? 6 : Math.min(bullets, 6);
-  const bulletOdds = Math.round((effectiveBullets / 6) * 100);
-  let bulletThreatClass = 'threat-safe';
-  if (effectiveBullets >= 6) bulletThreatClass = 'threat-critical';
-  else if (effectiveBullets >= 4) bulletThreatClass = 'threat-high';
-  else if (effectiveBullets >= 2) bulletThreatClass = 'threat-warn';
-
-  // Cards
-  let cardsToRender: Card[] = [];
-  let hideCards = !isMe;
-
-  // If showdown results are available, show all cards
-  const showdownData = showdownResults?.find((r) => r.seatIndex === seatIndex);
-  if (showdownData) {
-    cardsToRender = showdownData.cards;
-    hideCards = false;
-  } else if (isMe && meView?.cards) {
-    cardsToRender = meView.cards;
-    hideCards = false;
-  } else if (oppView) {
-    cardsToRender = Array(oppView.cardCount || 2).fill(null);
-    hideCards = true;
-  }
-
-  // Bubble
+  const player = isMe
+    ? gameState?.me
+    : gameState?.opponents.find((o) => o.seatIndex === seatIndex);
+  const fallback = playersInfo.find((p) => p.seatIndex === seatIndex);
+  if (!player && !fallback)
+    return (
+      <div className="seat empty-seat" data-seat={seatIndex}>
+        <Icon name="users" size={28} />
+        <span>Đang chờ người chơi</span>
+        <small>GHẾ 0{seatIndex + 1}</small>
+      </div>
+    );
+  const name = player?.name || fallback?.name || 'Người chơi';
+  const avatar = player?.avatar || fallback?.avatar || '🐵';
+  const shooting = rouletteResult?.seatIndex === seatIndex;
+  // Keep the outcome hidden until the cylinder finishes spinning.
+  const isDead = shooting
+    ? rouletteRevealed && rouletteResult.isDead
+    : !!player?.isDead;
+  const folded = !!player?.folded;
+  const showdown = showdownResults?.find((r) => r.seatIndex === seatIndex);
+  const won =
+    !isDead && (winnerSeatIndex === seatIndex || showdown?.rank === 1);
+  const active =
+    gameState?.currentTurnSeat === seatIndex &&
+    !gameState.isProcessingRoulette &&
+    !rouletteResult &&
+    !showdownResults &&
+    !isRoundOver &&
+    !isDead &&
+    !folded;
+  const mood: CharacterMood =
+    shooting && !rouletteRevealed
+      ? 'thinking'
+      : isDead
+        ? 'dead'
+        : won
+          ? 'win'
+          : active
+            ? 'thinking'
+            : 'idle';
+  const bullets = Math.min(6, player?.isAllIn ? 6 : (player?.bullets ?? 1));
+  let cards: (Card | null)[] = [];
+  let hidden = !isMe;
+  if (showdown && !folded) {
+    cards = showdown.cards;
+    hidden = false;
+  } else if (isMe && gameState) cards = gameState.me.cards;
+  else if (player && 'cardCount' in player)
+    cards = Array(player.cardCount).fill(null);
   const bubble = activeBubble?.seatIndex === seatIndex ? activeBubble : null;
-
   return (
-    <div className={seatClass}>
+    <article
+      className={`seat ${isMe ? 'seat-is-me' : ''} ${active ? 'active-turn' : ''} ${isDead ? 'dead' : ''} ${folded ? 'folded' : ''} ${won ? 'seat-winner' : ''} ${bubble ? bubble.cls.replace('bubble-', 'acting-') : ''}`}
+      data-seat={seatIndex}
+      data-active={active || undefined}
+    >
       {bubble && (
-        <div className={`action-bubble ${bubble.cls}`} style={{ display: 'block' }}>
+        <div className={`action-bubble ${bubble.cls}`} role="status">
           {bubble.text}
         </div>
       )}
-
-      {/* Top badges for special state */}
-      {isCurrentTurn && (
-        <div className="seat-turn-tag">
-          👉 ĐANG CHƠI
-        </div>
+      {bubble && (
+        <span className="seat-action-trail" aria-hidden="true">
+          ♠
+        </span>
       )}
-
-      <div className="seat-header-row">
-        <div className="seat-avatar">{avatar}</div>
-        <div className="seat-name-wrap">
-          <div className="seat-name">
-            {name} {isMe && <span className="you-badge">(BẠN)</span>}
-          </div>
-          {isAllIn && !isDead && <span className="badge-allin">🔥 ALL-IN</span>}
-        </div>
+      <div className="seat-portrait-wrap">
+        <CharacterPortrait avatar={avatar} mood={mood} alignTop />
+        <span className={`seat-state-label ${active ? 'thinking-label' : ''}`}>
+          {shooting && !rouletteRevealed
+            ? 'ĐANG BÓP CÒ'
+            : isDead
+              ? 'ĐÃ BỊ HẠ'
+              : won
+                ? 'CHIẾN THẮNG'
+                : folded
+                  ? 'ĐÃ BỎ BÀI'
+                  : active
+                    ? 'ĐANG SUY NGHĨ'
+                    : getCharacter(avatar).name}
+        </span>
       </div>
-
-      {/* Player alive/dead/folded status indicators */}
-      {isDead ? (
-        <div className="seat-status-dead">☠ ĐÃ BỊ HẠ GỤC</div>
-      ) : folded ? (
-        <div className="seat-status-folded">🏳 ĐÃ BỎ BÀI</div>
-      ) : (
-        <div className={`seat-bullets ${bulletThreatClass}`}>
-          <span className="bullet-icon">🔫</span>
-          <div className="bullet-dots-row">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <span
-                key={i}
-                className={`bullet-dot ${i < effectiveBullets ? 'filled' : 'empty'}`}
-              >
-                ●
-              </span>
+      <div className="seat-details">
+        <div className="seat-name-row">
+          <h3 title={name}>{name}</h3>
+          {isMe && <span className="you-badge">BẠN</span>}
+          {won && <Icon name="crown" size={16} />}
+        </div>
+        <div
+          className="seat-bullets"
+          title={`${bullets}/6 viên đạn · ${Math.round((bullets / 6) * 100)}% buồng có đạn`}
+        >
+          <div
+            className={`bullet-dots ${bullets >= 4 ? 'danger' : ''}`}
+            aria-hidden="true"
+          >
+            {Array.from({ length: 6 }, (_, i) => (
+              <i key={i} className={i < bullets ? 'filled' : ''} />
             ))}
           </div>
-          <span className="bullet-odds-tag">
-            {effectiveBullets}/6 ({bulletOdds}%)
+          <span>
+            {bullets}/6{player?.isAllIn && <b> ALL-IN</b>}
           </span>
         </div>
-      )}
-
-      {isCurrentTurn && (
-        <div className="seat-timer-bar" style={{ display: 'block' }}>
-          <div className="seat-timer-fill"></div>
-        </div>
-      )}
-
-      {/* Cards container */}
-      {!isDead && cardsToRender.length > 0 && (
-        <div className="seat-cards-container">
-          {cardsToRender.map((c, i) => (
-            <PlayingCard key={i} card={c} hidden={hideCards} />
-          ))}
-        </div>
-      )}
-
-      {/* Showdown evaluation & rank */}
-      {showdownData && (
-        <div className="showdown-info-container">
-          <div className="hand-eval-box" style={{ display: 'flex' }}>
-            <span>🃏 {showdownData.handName}</span>
+        {active && (
+          <div className="seat-timer">
+            <span
+              style={{ width: `${Math.min((seconds / 30) * 100, 100)}%` }}
+            />
+            <small>{seconds}s</small>
           </div>
-          <div className="rank-badge" style={{ display: 'flex' }}>
-            {showdownData.rank === 1 ? (
-              <span className="rank-number r-1">🏆 #1 THẮNG</span>
-            ) : (
-              <span className="rank-number r-lost">☠ BÓP CÒ</span>
-            )}
+        )}
+        {!isDead && cards.length > 0 && (
+          <div className="seat-cards-container" key={roundNumber}>
+            {cards.map((card, i) => (
+              <PlayingCard
+                key={i}
+                card={card}
+                hidden={hidden}
+                delay={i * 100}
+              />
+            ))}
           </div>
-        </div>
-      )}
-    </div>
+        )}
+        {showdown && !folded && (
+          <div className={`hand-eval ${won ? 'winning-hand' : ''}`}>
+            {handName(showdown.handName)}
+            <span>
+              {won ? 'THẮNG VÁN NÀY' : isDead ? 'ĐÃ BỊ LOẠI' : 'CHỜ KẾT QUẢ'}
+            </span>
+          </div>
+        )}
+        {isDead && (
+          <div className="seat-eliminated">
+            Hết vận may.<span>Đang theo dõi ván chơi</span>
+          </div>
+        )}
+      </div>
+    </article>
   );
 };

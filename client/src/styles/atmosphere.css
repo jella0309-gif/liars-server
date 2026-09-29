@@ -1,0 +1,146 @@
+.tavern-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background: #130c08;
+}
+.tavern-scene {
+  position: absolute;
+  inset: -12px;
+  background: url('/art/tavern-dashboard.png') center top / cover no-repeat;
+  transform: translate3d(var(--scene-x, 0px), var(--scene-y, 0px), 0);
+  transition: transform 0.7s ease-out;
+  will-change: transform;
+}
+.tavern-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      #0603020d 5%,
+      #06030208 28%,
+      #09060445 45%,
+      #0a0706ac 70%,
+      #0a07056e
+    ),
+    linear-gradient(90deg, #0b040313, transparent 55%, #07040345);
+}
+.tavern-lamplight {
+  position: absolute;
+  left: 21%;
+  top: -8%;
+  width: 46%;
+  height: 63%;
+  background: radial-gradient(ellipse at top, #ffd48b20, transparent 65%);
+  mix-blend-mode: screen;
+  animation: lamplight 8s ease-in-out infinite;
+}
+.tavern-neon-glow {
+  position: absolute;
+  top: 6%;
+  right: 8%;
+  width: 25%;
+  height: 22%;
+  background: radial-gradient(ellipse, #fa1d1821, transparent 68%);
+  mix-blend-mode: screen;
+  animation: neon-hum 9s linear infinite;
+}
+.tavern-smoke {
+  position: absolute;
+  width: 45%;
+  height: 33%;
+  background: radial-gradient(ellipse, #e4bd8b08, transparent 63%);
+  filter: blur(23px);
+  opacity: 0.6;
+  animation: smoke-drift 22s ease-in-out infinite alternate;
+}
+.smoke-one {
+  right: 7%;
+  top: 23%;
+}
+.smoke-two {
+  left: -10%;
+  bottom: 1%;
+  animation-delay: -11s;
+  animation-duration: 28s;
+}
+.tavern-embers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.tavern-embers i {
+  position: absolute;
+  left: var(--ember-x);
+  bottom: -5%;
+  width: 2px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ffb161;
+  box-shadow: 0 0 8px #f3903b;
+  opacity: 0;
+  animation: ember-rise var(--ember-duration) linear var(--ember-delay) infinite;
+}
+.in-game .tavern-scene {
+  filter: blur(3px) saturate(0.8);
+  opacity: 0.55;
+}
+.in-game .tavern-shade {
+  background: linear-gradient(180deg, #0804035e, #100906a8 37%, #0b0706c9);
+}
+.in-game .tavern-embers {
+  opacity: 0.45;
+}
+@keyframes lamplight {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes neon-hum {
+  0%,
+  18%,
+  22%,
+  60%,
+  100% {
+    opacity: 0.85;
+  }
+  19%,
+  21% {
+    opacity: 0.5;
+  }
+  61%,
+  63% {
+    opacity: 0.65;
+  }
+}
+@keyframes smoke-drift {
+  from {
+    transform: translate3d(-20px, 15px, 0) scale(1);
+  }
+  to {
+    transform: translate3d(60px, -55px, 0) scale(1.25);
+  }
+}
+@keyframes ember-rise {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.55;
+  }
+  65% {
+    opacity: 0.2;
+  }
+  100% {
+    transform: translate3d(55px, -70vh, 0);
+    opacity: 0;
+  }
+}
