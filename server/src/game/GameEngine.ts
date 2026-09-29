@@ -25,6 +25,7 @@ export class GameEngine {
   private currentStageIndex: number = 0;
   private currentTurnSeat: number = -1;
   private roundActionsCount: number = 0;
+  private allInRespondedSeats: Set<number> = new Set();
   private isProcessingRoulette: boolean = false;
   private activeRoulette: RouletteResult | null = null;
   private activeSeats: number[] = [];
@@ -44,6 +45,7 @@ export class GameEngine {
     this.communityCards = [];
     this.currentStageIndex = 0;
     this.roundActionsCount = 0;
+    this.allInRespondedSeats.clear();
     this.isProcessingRoulette = false;
     this.activeRoulette = null;
     this.swapDrawnCards.clear();
@@ -108,11 +110,18 @@ export class GameEngine {
       this.roundActionsCount++;
       events.push(...this.nextTurn());
     } else if (action === 'allin') {
-      player.bullets = REVOLVER.CHAMBER_COUNT;
-      player.isAllIn = true;
-      this.roundActionsCount++;
-      events.push(...this.nextTurn());
-    }
+  player.bullets = REVOLVER.CHAMBER_COUNT;
+  player.isAllIn = true;
+  this.roundActionsCount++;
+
+  if (!facingAllIn) {
+    this.allInRespondedSeats.clear();
+  }
+
+  this.allInRespondedSeats.add(seatIndex);
+
+  events.push(...this.nextTurn());
+}
 
     return events;
   }
@@ -172,7 +181,8 @@ export class GameEngine {
     const allInCount = aliveNonFolded.filter((p) => p.isAllIn).length;
     if (
       allInCount === aliveNonFolded.length ||
-      (allInCount > 0 && this.roundActionsCount >= aliveNonFolded.length)
+      (allInCount > 0 &&
+  this.allInRespondedSeats.size >= aliveNonFolded.length)
     ) {
       return this.fastForwardAllIn();
     }
