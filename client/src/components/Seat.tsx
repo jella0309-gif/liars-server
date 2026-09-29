@@ -1,5 +1,8 @@
 import React from 'react';
-import { PlayingCard } from './PlayingCard';
+import { PlayerHand } from './PlayerHand';
+import { LocalPlayerArea } from './LocalPlayerArea';
+import { CharacterFigure } from './CharacterFigure';
+import { PlayerHud } from './PlayerHud';
 import {
   CharacterPortrait,
   getCharacter,
@@ -79,102 +82,68 @@ export const Seat: React.FC<{ seatIndex: number }> = ({ seatIndex }) => {
   else if (player && 'cardCount' in player)
     cards = Array(player.cardCount).fill(null);
   const bubble = activeBubble?.seatIndex === seatIndex ? activeBubble : null;
+  const stateLabel = shooting && !rouletteRevealed
+    ? 'ĐANG BÓP CÒ'
+    : isDead ? 'ĐÃ BỊ HẠ'
+      : won ? 'CHIẾN THẮNG'
+        : folded ? 'ĐÃ BỎ BÀI'
+          : active ? 'ĐANG SUY NGHĨ'
+            : getCharacter(avatar).name;
+  const portrait = (
+    <div className="seat-portrait-wrap">
+      <CharacterPortrait avatar={avatar} mood={mood} alignTop />
+      <span className={`seat-state-label ${active ? 'thinking-label' : ''}`}>
+        {stateLabel}
+      </span>
+    </div>
+  );
+  const status = (
+    <PlayerHud
+      name={name} isMe={isMe} won={won} matchRank={matchRank}
+      bullets={bullets} isAllIn={player?.isAllIn}
+      stateLabel={shooting || isDead || won || folded ? stateLabel : undefined}
+      active={active} seconds={seconds}
+    />
+  );
+  const hand = (reachedShowdown || !isDead) && cards.length > 0
+    ? <PlayerHand cards={cards} hidden={hidden} roundNumber={roundNumber} />
+    : null;
+  const result = (
+    <>
+      {reachedShowdown && (
+        <div className={`hand-eval ${won ? 'winning-hand' : ''}`}>
+          <div className="hand-eval-row">
+            <strong>{handName(showdown.handName)}</strong>
+            <span className="hand-rank">BỘ #{showdown.rank}</span>
+          </div>
+          <span className="hand-result">
+            {won ? 'THẮNG VÁN NÀY' : isDead ? 'ĐÃ BỊ LOẠI' : 'KẾT QUẢ CUỐI VÁN'}
+          </span>
+        </div>
+      )}
+      {isDead && (
+        <div className="seat-eliminated">
+          Hết vận may.<span>Đang theo dõi ván chơi</span>
+        </div>
+      )}
+    </>
+  );
   return (
     <article
-      className={`seat ${isMe ? 'seat-is-me' : ''} ${active ? 'active-turn' : ''} ${isDead ? 'dead' : ''} ${folded ? 'folded' : ''} ${won ? 'seat-winner' : ''} ${bubble ? bubble.cls.replace('bubble-', 'acting-') : ''}`}
+      className={`seat ${isMe ? 'seat-is-me' : 'opponent-seat'} ${active ? 'active-turn' : ''} ${isDead ? 'dead' : ''} ${folded ? 'folded' : ''} ${won ? 'seat-winner' : ''} ${bubble ? bubble.cls.replace('bubble-', 'acting-') : ''}`}
       data-seat={seatIndex}
       data-active={active || undefined}
     >
-      {bubble && (
-        <div className={`action-bubble ${bubble.cls}`} role="status">
-          {bubble.text}
-        </div>
+      {bubble && <div className={`action-bubble ${bubble.cls}`} role="status">{bubble.text}</div>}
+      {bubble && <span className="seat-action-trail" aria-hidden="true">♠</span>}
+      {isMe ? (
+        <LocalPlayerArea portrait={portrait} status={status} hand={hand} result={result} />
+      ) : (
+        <>
+          <CharacterFigure avatar={avatar} mood={mood} label={stateLabel} />
+          <div className="seat-details">{status}{hand}{result}</div>
+        </>
       )}
-      {bubble && (
-        <span className="seat-action-trail" aria-hidden="true">
-          ♠
-        </span>
-      )}
-      <div className="seat-portrait-wrap">
-        <CharacterPortrait avatar={avatar} mood={mood} alignTop />
-        <span className={`seat-state-label ${active ? 'thinking-label' : ''}`}>
-          {shooting && !rouletteRevealed
-            ? 'ĐANG BÓP CÒ'
-            : isDead
-              ? 'ĐÃ BỊ HẠ'
-              : won
-                ? 'CHIẾN THẮNG'
-                : folded
-                  ? 'ĐÃ BỎ BÀI'
-                  : active
-                    ? 'ĐANG SUY NGHĨ'
-                    : getCharacter(avatar).name}
-        </span>
-      </div>
-      <div className="seat-details">
-        <div className="seat-name-row">
-          <h3 title={name}>{name}</h3>
-          {isMe && <span className="you-badge">BẠN</span>}
-          {won && <Icon name="crown" size={16} />}
-          {matchRank && (
-            <span className={`match-rank rank-${matchRank}`}>
-              HẠNG {matchRank}
-            </span>
-          )}
-        </div>
-        <div
-          className="seat-bullets"
-          title={`${bullets}/6 viên đạn · ${Math.round((bullets / 6) * 100)}% buồng có đạn`}
-        >
-          <div
-            className={`bullet-dots ${bullets >= 4 ? 'danger' : ''}`}
-            aria-hidden="true"
-          >
-            {Array.from({ length: 6 }, (_, i) => (
-              <i key={i} className={i < bullets ? 'filled' : ''} />
-            ))}
-          </div>
-          <span>
-            {bullets}/6{player?.isAllIn && <b> ALL-IN</b>}
-          </span>
-        </div>
-        {active && (
-          <div className="seat-timer">
-            <span
-              style={{ width: `${Math.min((seconds / 30) * 100, 100)}%` }}
-            />
-            <small>{seconds}s</small>
-          </div>
-        )}
-        {(reachedShowdown || !isDead) && cards.length > 0 && (
-          <div className="seat-cards-container" key={roundNumber}>
-            {cards.map((card, i) => (
-              <PlayingCard
-                key={i}
-                card={card}
-                hidden={hidden}
-                delay={i * 100}
-              />
-            ))}
-          </div>
-        )}
-        {reachedShowdown && (
-          <div className={`hand-eval ${won ? 'winning-hand' : ''}`}>
-            <div className="hand-eval-row">
-              <strong>{handName(showdown.handName)}</strong>
-              <span className="hand-rank">BỘ #{showdown.rank}</span>
-            </div>
-            <span className="hand-result">
-              {won ? 'THẮNG VÁN NÀY' : isDead ? 'ĐÃ BỊ LOẠI' : 'KẾT QUẢ CUỐI VÁN'}
-            </span>
-          </div>
-        )}
-        {isDead && (
-          <div className="seat-eliminated">
-            Hết vận may.<span>Đang theo dõi ván chơi</span>
-          </div>
-        )}
-      </div>
     </article>
   );
 };
