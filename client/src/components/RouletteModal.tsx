@@ -3,24 +3,53 @@ import { useGameStore } from '../store/gameStore';
 import { playGunshot, playEmptyClick, playGodSaveSound } from '../utils/audio';
 import { CharacterPortrait } from './CharacterPortrait';
 import { TIMING } from '@liars-bar/shared';
+
+const LOAD_END_MS = 500;
+const SPIN_END_MS = 3000;
+const REVEAL_AT_MS = 3100;
+const DISMISS_EARLY_MS = 100;
+
 export const RouletteModal: React.FC = () => {
   const {
     rouletteResult: result,
+    rouletteStartedAt,
     setRouletteResult,
     setGodSave,
     revealRoulette,
   } = useGameStore();
   const [phase, setPhase] = useState<'load' | 'spin' | 'result'>('load');
   const [loaded, setLoaded] = useState(0);
+  const [spinDuration, setSpinDuration] = useState(SPIN_END_MS - LOAD_END_MS);
   useEffect(() => {
     if (!result) return;
-    setPhase('load');
-    setLoaded(0);
+    const elapsed = Math.max(0, Date.now() - (rouletteStartedAt ?? Date.now()));
+    const dismissAt =
+      TIMING.ROULETTE_ANIMATION_DURATION * 1000 - DISMISS_EARLY_MS;
+    if (elapsed >= dismissAt) {
+      setRouletteResult(null);
+      return;
+    }
+
     const bullets = Math.min(result.bullets, 6);
     const timers: ReturnType<typeof setTimeout>[] = [];
-    for (let i = 1; i <= bullets; i++)
-      timers.push(setTimeout(() => setLoaded(i), i * 65));
-    timers.push(setTimeout(() => setPhase('spin'), 500));
+    const schedule = (at: number, callback: () => void) => {
+      timers.push(setTimeout(callback, Math.max(0, at - elapsed)));
+    };
+
+    setPhase(
+      elapsed >= REVEAL_AT_MS
+        ? 'result'
+        : elapsed >= LOAD_END_MS
+          ? 'spin'
+          : 'load'
+    );
+    setLoaded(elapsed >= LOAD_END_MS ? bullets : Math.min(bullets, Math.floor(elapsed / 65)));
+    setSpinDuration(Math.max(0, SPIN_END_MS - Math.max(LOAD_END_MS, elapsed)));
+
+    for (let i = 1; i <= bullets; i++) {
+      if (i * 65 > elapsed) schedule(i * 65, () => setLoaded(i));
+    }
+    if (elapsed < LOAD_END_MS) schedule(LOAD_END_MS, () => setPhase('spin'));
     timers.push(
       setTimeout(() => {
         setPhase('result');
@@ -30,7 +59,7 @@ export const RouletteModal: React.FC = () => {
           setGodSave(result.name);
         } else if (result.isDead) playGunshot();
         else playEmptyClick();
-      }, 3100)
+      }, Math.max(0, REVEAL_AT_MS - elapsed))
     );
     timers.push(
       setTimeout(
@@ -38,11 +67,11 @@ export const RouletteModal: React.FC = () => {
           if (useGameStore.getState().rouletteResult === result)
             setRouletteResult(null);
         },
-        TIMING.ROULETTE_ANIMATION_DURATION * 1000 - 100
+        Math.max(0, dismissAt - elapsed)
       )
     );
     return () => timers.forEach(clearTimeout);
-  }, [result, setRouletteResult, setGodSave, revealRoulette]);
+  }, [result, rouletteStartedAt, setRouletteResult, setGodSave, revealRoulette]);
   if (!result) return null;
   const revealed = phase === 'result';
   const rotation =
@@ -79,7 +108,7 @@ export const RouletteModal: React.FC = () => {
                 transition:
                   phase === 'load'
                     ? 'none'
-                    : 'transform 2.5s cubic-bezier(.13,.7,.1,1)',
+                    : `transform ${spinDuration}ms cubic-bezier(.13,.7,.1,1)`,
               }}
               aria-hidden="true"
             >
