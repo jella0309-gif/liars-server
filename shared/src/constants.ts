@@ -56,7 +56,7 @@ export const REVOLVER = {
    * faces at most a 4-in-6 shot. Only all-in fills the cylinder. */
   CALL_BULLET_CAP: 5,
   /** Chance a full cylinder still misfires (all-in only). */
-  GOD_SAVE_CHANCE: 0.1,
+  GOD_SAVE_CHANCE: 0.05,
 } as const;
 
 /** Room configuration limits */
