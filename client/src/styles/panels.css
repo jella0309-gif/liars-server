@@ -140,3 +140,81 @@
   font-size: 9px;
   letter-spacing: 1px;
 }
+
+/* Phase 6: the scene dock is a compact tray under the local hand, not a
+   full-width footer. Logic and button set are untouched. */
+@media (min-width: 1051px) {
+  .game-table-scene .controls-dock {
+    position: absolute;
+    z-index: 70;
+    inset: auto 50% 12px auto;
+    translate: 50% 0;
+    width: max-content;
+    max-width: calc(100% - 48px);
+    min-height: 0;
+    padding: 9px 14px;
+    gap: 18px;
+    border: 1px solid #a575413d;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #1b110dd9, #140d0ae8);
+    box-shadow: 0 10px 24px #0006, inset 0 1px #c8944420;
+    backdrop-filter: blur(6px);
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
+  .game-table-scene .controls-dock.your-turn {
+    border-color: #d8a56695;
+    box-shadow: 0 12px 30px #0007, 0 0 22px #d9893018, inset 0 1px #c8944433;
+  }
+  .game-table-scene .controls-status {
+    gap: 11px;
+  }
+  .game-table-scene .controls-status p {
+    font-size: 11px;
+    max-width: 200px;
+  }
+  /* Circular countdown: conic ring driven by --clock from PlayerControls. */
+  .game-table-scene .turn-clock {
+    position: relative;
+    transition: width 0.25s, height 0.25s;
+  }
+  .game-table-scene .your-turn .turn-clock {
+    width: 54px;
+    height: 54px;
+    background: #1d120c;
+  }
+  .game-table-scene .your-turn .turn-clock::before {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    background: conic-gradient(#eda548 calc(var(--clock, 1) * 1turn), #42291a 0);
+    -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px));
+    mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px));
+  }
+  .game-table-scene .your-turn .turn-clock.urgent::before {
+    background: conic-gradient(#ed6847 calc(var(--clock, 1) * 1turn), #42291a 0);
+  }
+  .game-table-scene .btn-act {
+    min-width: 104px;
+    min-height: 56px;
+    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+  }
+  /* Off-turn the actions recede; the hand stays the hero. */
+  .game-table-scene .action-buttons {
+    transition: opacity 0.25s;
+  }
+  .game-table-scene .controls-dock:not(.your-turn) .action-buttons {
+    opacity: 0.72;
+  }
+  .game-table-scene .controls-passive {
+    text-align: left;
+  }
+}
+@media (min-width: 1051px) and (prefers-reduced-motion: reduce) {
+  .game-table-scene .controls-dock,
+  .game-table-scene .turn-clock,
+  .game-table-scene .btn-act,
+  .game-table-scene .action-buttons {
+    transition: none;
+  }
+}

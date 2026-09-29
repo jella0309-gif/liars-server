@@ -67,6 +67,12 @@ export const PlayerControls: React.FC = () => {
       <div className="controls-status">
         <div
           className={`turn-clock ${seconds <= 5 && isMyTurn ? 'urgent' : ''}`}
+          style={
+            {
+              // Presentation only: remaining-time fraction for the CSS ring.
+              '--clock': Math.max(0, Math.min(1, seconds / 30)),
+            } as React.CSSProperties
+          }
         >
           {isMyTurn ? (
             <>
