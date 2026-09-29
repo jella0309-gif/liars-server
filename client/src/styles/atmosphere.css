@@ -85,8 +85,9 @@
   animation: ember-rise var(--ember-duration) linear var(--ember-delay) infinite;
 }
 .in-game .tavern-scene {
-  filter: blur(3px) saturate(0.8);
-  opacity: 0.55;
+  /* Gameplay has real seats; the lobby wallpaper contains six painted figures. */
+  background: radial-gradient(ellipse at 50% 15%, #38271e, #100b09 72%);
+  opacity: 1;
 }
 .in-game .tavern-shade {
   background: linear-gradient(180deg, #0804035e, #100906a8 37%, #0b0706c9);

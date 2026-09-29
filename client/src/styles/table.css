@@ -506,3 +506,233 @@
     transform: translateY(-15px) scale(1.05);
   }
 }
+
+/* Phase 1: gameplay-only composition. Dialogs are siblings of this scene.
+   Inside scene z=1: figure 20, rail 30, board 40, local 50, HUD 60,
+   controls 70, history 80. Existing root overlays (50/60/80) stay above it. */
+.in-game .game-table-scene .game-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+.game-table-scene .local-player-area {
+  display: contents;
+}
+.game-table-scene .table-history {
+  position: absolute;
+  z-index: 80;
+  right: 20px;
+  top: 78px;
+  width: min(300px, calc(100% - 40px));
+  color: #d4b68e;
+  font-size: 10px;
+}
+.game-table-scene .table-history summary {
+  width: max-content;
+  margin-left: auto;
+  padding: 9px 12px;
+  cursor: pointer;
+  border: 1px solid #926c445e;
+  border-radius: 4px;
+  background: #19100ef2;
+}
+.game-table-scene .table-history summary span {
+  margin-left: 10px;
+  color: #f1d4aa;
+}
+.game-table-scene .table-history .history-list {
+  margin-top: 5px;
+  min-height: 0;
+  max-height: min(340px, 45dvh);
+  padding: 15px;
+  border: 1px solid #926c445e;
+  border-radius: 4px;
+  background: #19100efa;
+  box-shadow: 0 12px 24px #0006;
+}
+
+/* Keep existing small-screen seat geometry until the responsive phase. */
+@media (min-width: 1051px) {
+  .in-game {
+    padding-bottom: 0;
+  }
+  .in-game .game-table-scene {
+    width: 100%;
+    max-width: none;
+    height: calc(100dvh - 78px);
+    min-height: 690px;
+    margin: 0;
+    padding: 0;
+    isolation: isolate;
+    --scene-seat-width: clamp(170px, 15vw, 220px);
+    --scene-figure-height: clamp(130px, 18dvh, 185px);
+  }
+  .game-table-scene .game-toolbar {
+    position: absolute;
+    z-index: 60;
+    inset: 16px 28px auto;
+    margin: 0;
+    pointer-events: none;
+  }
+  .game-table-scene .game-toolbar button {
+    pointer-events: auto;
+  }
+  .game-table-scene .game-toolbar h1 {
+    font-size: 20px;
+  }
+  .game-table-scene .game-toolbar .eyebrow {
+    display: none;
+  }
+  .game-table-scene .copy-fallback {
+    position: absolute;
+    top: 62px;
+    right: 28px;
+    z-index: 60;
+  }
+  .game-table-scene .game-layout,
+  .game-table-scene .game-arena,
+  .game-table-scene .poker-table {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .game-table-scene .stage-track {
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    translate: -50% 0;
+    z-index: 60;
+    border: 0;
+    background: none;
+    gap: 16px;
+  }
+  .game-table-scene .felt-surface {
+    z-index: 30;
+    inset: auto;
+    left: 50%;
+    top: 57%;
+    translate: -50% -50%;
+    width: 82%;
+    max-width: 1460px;
+    height: clamp(330px, 50dvh, 540px);
+    border: 16px solid #372117;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 35%, #4b2628, #291516 75%);
+    /* Phase 5: rear rail picks up a little amber from the overhead light. */
+    box-shadow: 0 12px 0 #160e0a, 0 25px 35px #0008,
+      inset 0 0 0 3px #ad7b443d, inset 0 0 60px #100509,
+      inset 0 26px 46px -26px #e0904a2b, 0 -10px 30px -14px #c06a2e2e;
+  }
+  .game-table-scene .felt-surface::after {
+    inset: -12px;
+    border-color: #a4754552;
+  }
+  .game-table-scene .felt-emblem {
+    font-size: 100px;
+    color: #d8b18c06;
+  }
+  .game-table-scene .table-center {
+    z-index: 40;
+    top: 53%;
+    width: min(42%, 470px);
+  }
+  .game-table-scene .board-label {
+    margin: 0 0 12px;
+  }
+  .game-table-scene .community-slot {
+    width: 64px;
+    height: 92px;
+  }
+  .game-table-scene .comm-cards .card {
+    --card-width: 64px;
+  }
+  .game-table-scene .table-log {
+    font-size: 11px;
+    margin-top: 10px;
+  }
+  .game-table-scene .stage-announcement,
+  .game-table-scene .table-edge-label {
+    display: none;
+  }
+  /* Phase 5 atmosphere: decorative only, behind the felt (z 5-12 < 20/30),
+     pointer-events none. Overhead amber, side pools, vignette, one slow
+     smoke drift. Transform/opacity only; removed under reduced motion. */
+  .game-table-scene .poker-table::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background:
+      radial-gradient(38% 30% at 50% -4%, #d9874026, transparent 70%),
+      radial-gradient(24% 26% at 17% 12%, #a5522617, transparent 75%),
+      radial-gradient(24% 26% at 83% 12%, #a5522617, transparent 75%),
+      radial-gradient(52% 40% at 50% 8%, #8c3a2011, transparent 78%);
+  }
+  .game-table-scene .poker-table::after {
+    content: '';
+    position: absolute;
+    inset: -2%;
+    z-index: 12;
+    pointer-events: none;
+    background: radial-gradient(120% 105% at 50% 42%, transparent 60%, #12080560 100%);
+  }
+  .game-table-scene .game-arena::before {
+    content: '';
+    position: absolute;
+    z-index: 6;
+    top: 3%;
+    left: 16%;
+    width: 32%;
+    height: 26%;
+    pointer-events: none;
+    background: radial-gradient(50% 50% at 50% 50%, #c9906614, transparent 70%);
+    animation: scene-smoke 26s ease-in-out infinite alternate;
+  }
+  @keyframes scene-smoke {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to { transform: translate3d(40%, -8%, 0) scale(1.18); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .game-table-scene .game-arena::before {
+      animation: none;
+    }
+  }
+  /* Do not transform the shared anchor: figure and HUD must straddle the rail. */
+  .game-table-scene .seat-position {
+    z-index: auto;
+    translate: none;
+    width: var(--scene-seat-width);
+    height: 1px;
+    margin-left: calc(var(--scene-seat-width) / -2);
+  }
+  .game-table-scene .pos-top {
+    top: 6%;
+    left: 50%;
+  }
+  .game-table-scene .pos-left,
+  .game-table-scene .pos-top-left {
+    top: 15.5%;
+    left: 17%;
+  }
+  .game-table-scene .pos-right,
+  .game-table-scene .pos-top-right {
+    top: 16%;
+    left: 83%;
+  }
+  .game-table-scene .local-seat {
+    top: auto;
+    bottom: 114px;
+    left: 50%;
+    width: 320px;
+    height: auto;
+    margin-left: -160px;
+    z-index: 50;
+  }
+  .game-table-scene .table-history {
+    top: 75px;
+    right: 28px;
+  }
+}

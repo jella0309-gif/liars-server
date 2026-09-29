@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Seat } from './Seat';
-import { PlayingCard } from './PlayingCard';
-import { RouletteModal } from './RouletteModal';
+import { CommunityCards } from './CommunityCards';
+import { TableSurface } from './TableSurface';
+import { TableHistory } from './TableHistory';
+import { PlayerControls } from './PlayerControls';
 import { useGameStore } from '../store/gameStore';
 import { Icon } from './Icon';
 import { STAGES } from '@liars-bar/shared';
@@ -17,7 +19,6 @@ export const PokerTable: React.FC = () => {
     mySeatIndex,
     playersInfo,
     roundNumber,
-    history,
     currentRoomId,
   } = useGameStore();
   const [copied, setCopied] = useState(false);
@@ -37,7 +38,7 @@ export const PokerTable: React.FC = () => {
     }
   };
   return (
-    <main className="game-page">
+    <main className="game-page game-table-scene">
       <div className="game-toolbar">
         <div>
           <span className="eyebrow">
@@ -93,10 +94,7 @@ export const PokerTable: React.FC = () => {
             ))}
           </nav>
           <div className={`poker-table seats-${count}`} data-seat-count={count}>
-            <div className="felt-surface" aria-hidden="true">
-              <div className="felt-emblem">♠</div>
-              <div className="table-stitch" />
-            </div>
+            <TableSurface />
             <div className="table-center">
               {!gameState ? (
                 <div className="waiting-table">
@@ -116,34 +114,7 @@ export const PokerTable: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <div className="table-brand">
-                    LIAR'S <span>BAR</span>
-                    <small>TRUST NO ONE. PLAY YOUR HAND.</small>
-                  </div>
-                  <div className="board-label">
-                    <span />
-                    BÀI CHUNG
-                    <span />
-                  </div>
-                  <div className="comm-cards" key={roundNumber}>
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <div className="community-slot" key={i}>
-                        {cards[i] ? (
-                          <PlayingCard
-                            card={cards[i]}
-                            delay={i < 3 ? i * 120 : 0}
-                          />
-                        ) : (
-                          <div className="card-placeholder">
-                            <span>♠</span>
-                            <small>
-                              {i < 3 ? 'FLOP' : i === 3 ? 'TURN' : 'RIVER'}
-                            </small>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  <CommunityCards cards={cards} roundNumber={roundNumber} />
                   <div className="table-log" role="status">
                     <span className="tiny-diamond" />
                     {isRoundOver
@@ -173,47 +144,10 @@ export const PokerTable: React.FC = () => {
               ONE TABLE. DIFFERENT MASKS.
             </div>
           </div>
-          <RouletteModal />
         </section>
-        <aside className="game-sidebar">
-          <div className="sidebar-heading">
-            <span className="eyebrow">CHUYỆN TRÊN BÀN</span>
-            <span className="live-dot" />
-          </div>
-          <h2>
-            Mọi nước đi
-            <br />
-            đều để lại dấu vết.
-          </h2>
-          <div className="history-list" aria-label="Lịch sử ván chơi">
-            {history.length ? (
-              history.map((entry, i) => (
-                <div
-                  className={`history-item ${i === 0 ? 'latest' : ''}`}
-                  key={`${history.length - i}-${entry}`}
-                >
-                  <span className="history-dot" />
-                  <p>{entry}</p>
-                </div>
-              ))
-            ) : (
-              <p className="history-empty">
-                Yên lặng trước giờ chia bài.
-                <br />
-                Diễn biến sẽ xuất hiện ở đây.
-              </p>
-            )}
-          </div>
-          <div className="table-reminder">
-            <Icon name="shield" size={23} />
-            <span>MỘT CƠ HỘI ĐỔI VẬN</span>
-            <p>
-              Ở Flop hoặc Turn, bạn có thể đổi một lá tẩy. Hãy dùng đúng lúc.
-            </p>
-          </div>
-          <div className="sidebar-suits">♠ &nbsp; ♥ &nbsp; ♣ &nbsp; ♦</div>
-        </aside>
       </div>
+      <PlayerControls />
+      <TableHistory />
     </main>
   );
 };
