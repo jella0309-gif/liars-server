@@ -369,3 +369,27 @@ input[type='range'] {
   white-space: nowrap;
   border: 0;
 }
+
+/* Language switch (VI / EN) */
+.lang-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 39px;
+  padding: 0 10px;
+  border: 1px solid #82573575;
+  border-radius: 4px;
+  background: #140e0b66;
+  color: #8f7a63;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.lang-button b {
+  font-weight: 600;
+}
+.lang-button b.active {
+  color: #ffe2b2;
+}
+.lang-button:hover {
+  border-color: var(--gold);
+}

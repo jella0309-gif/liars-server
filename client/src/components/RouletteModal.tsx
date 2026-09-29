@@ -3,6 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import { playGunshot, playEmptyClick, playGodSaveSound } from '../utils/audio';
 import { CharacterPortrait } from './CharacterPortrait';
 import { TIMING } from '@liars-bar/shared';
+import { useT } from '../i18n';
 
 const LOAD_END_MS = 500;
 const SPIN_END_MS = 3000;
@@ -17,6 +18,7 @@ export const RouletteModal: React.FC = () => {
     setGodSave,
     revealRoulette,
   } = useGameStore();
+  const t = useT();
   const [phase, setPhase] = useState<'load' | 'spin' | 'result'>('load');
   const [loaded, setLoaded] = useState(0);
   const [spinDuration, setSpinDuration] = useState(SPIN_END_MS - LOAD_END_MS);
@@ -78,13 +80,13 @@ export const RouletteModal: React.FC = () => {
     phase === 'load' ? 0 : 1440 + ((6 - (result.stopIndex % 6)) % 6) * 60;
   const label = !revealed
     ? phase === 'load'
-      ? 'Nạp đạn. Nín thở.'
-      : 'Vận may đang xoay…'
+      ? t('roul.load')
+      : t('roul.spin')
     : result.isGodSave
-      ? 'PHÉP MÀU XẢY RA!'
+      ? t('roul.godSave')
       : result.isDead
-        ? 'VẬN MAY ĐÃ HẾT.'
-        : 'BẠN CÒN MỘT CƠ HỘI.';
+        ? t('roul.dead')
+        : t('roul.alive');
   return (
     <div
       className={`roulette-backdrop ${revealed && result.isDead ? 'shot-fired' : ''}`}
@@ -97,7 +99,7 @@ export const RouletteModal: React.FC = () => {
         <div className="roulette-content">
           <span className="eyebrow">RUSSIAN ROULETTE</span>
           <h2>{result.name}</h2>
-          <p>{result.bullets}/6 viên đạn · Một lần bóp cò</p>
+          <p>{t('roul.bullets', { n: result.bullets })}</p>
           <div className="cylinder-shell">
             <span className="cylinder-pointer">▼</span>
             <svg

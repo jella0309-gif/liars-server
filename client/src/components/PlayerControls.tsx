@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { emitAction, emitSwapRequest, emitNextRound } from '../socket';
 import { useTurnClock } from '../hooks/useTurnClock';
+import { REVOLVER, TIMING } from '@liars-bar/shared';
+import { useT } from '../i18n';
 import { Icon } from './Icon';
 export const PlayerControls: React.FC = () => {
   const {
@@ -15,6 +17,7 @@ export const PlayerControls: React.FC = () => {
     isConnected,
     swapPoolCards,
   } = useGameStore();
+  const t = useT();
   const seconds = useTurnClock();
   const [pending, setPending] = useState(false);
   useEffect(() => {
@@ -37,49 +40,52 @@ export const PlayerControls: React.FC = () => {
     !me.isDead &&
     !me.folded;
   const disabled = !isConnected || !isMyTurn || !!swapPoolCards || pending;
-  const nextBullet = Math.min(6, me.bullets + 1);
+  const nextBullet = Math.min(REVOLVER.CALL_BULLET_CAP, me.bullets + 1);
   const currentPlayer =
     gameState.opponents.find((o) => o.seatIndex === gameState.currentTurnSeat)
-      ?.name || 'đối thủ';
+      ?.name || t('ctl.s.opponent');
   const act = (action: 'fold' | 'call' | 'allin') => {
     if (disabled) return;
     setPending(true);
     emitAction(currentRoomId, action);
   };
   const status = isRoundOver
-    ? 'Một ván khép lại.'
+    ? t('ctl.s.roundOver')
     : rouletteResult
-      ? `${rouletteResult.name} đang thử vận may…`
+      ? t('ctl.s.roulette', { name: rouletteResult.name })
       : resolving
-        ? 'Ngửa bài. Phân định thắng thua.'
+        ? t('ctl.s.resolving')
         : me.isDead
-          ? 'Bạn đã bị hạ. Tiếp tục theo dõi.'
+          ? t('ctl.s.dead')
           : me.folded
-            ? 'Bạn đã bỏ bài. Chờ ván tiếp theo.'
+            ? t('ctl.s.folded')
             : isMyTurn
-              ? 'Nước đi tiếp theo là của bạn.'
-              : `Đang chờ ${currentPlayer}…`;
+              ? t('ctl.s.yourTurn')
+              : t('ctl.s.waiting', { name: currentPlayer });
   return (
     <section
       className={`controls-dock ${isMyTurn ? 'your-turn' : ''}`}
-      aria-label="Hành động của bạn"
+      aria-label={t('ctl.aria')}
     >
       <div className="controls-status">
         <div
           className={`turn-clock ${seconds <= 5 && isMyTurn ? 'urgent' : ''}`}
           role="timer"
-          aria-label={isMyTurn ? `Còn ${seconds} giây` : undefined}
+          aria-label={isMyTurn ? t('ctl.left', { n: seconds }) : undefined}
           style={
             {
               // Presentation only: remaining-time fraction for the CSS ring.
-              '--clock': Math.max(0, Math.min(1, seconds / 30)),
+              '--clock': Math.max(
+                0,
+                Math.min(1, seconds / TIMING.TURN_TIME_LIMIT)
+              ),
             } as React.CSSProperties
           }
         >
           {isMyTurn ? (
             <>
               <b>{seconds}</b>
-              <small>GIÂY</small>
+              <small>{t('ctl.sec')}</small>
             </>
           ) : (
             <Icon name={isRoundOver ? 'cards' : 'clock'} size={23} />
@@ -88,17 +94,17 @@ export const PlayerControls: React.FC = () => {
         <div>
           <span className="eyebrow">
             {isRoundOver
-              ? 'VÁN BÀI KẾT THÚC'
+              ? t('ctl.roundOver')
               : isMyTurn
-                ? 'ĐẾN LƯỢT BẠN'
-                : 'TẠI BÀN CHƠI'}
+                ? t('ctl.yourTurn')
+                : t('ctl.atTable')}
           </span>
           <p role="status">{status}</p>
         </div>
         {/* The status line above already announces "your turn"; this only
             fires once when the clock reaches the 5-second threshold. */}
         <span className="sr-only" aria-live="assertive">
-          {isMyTurn && seconds <= 5 ? 'Còn 5 giây' : ''}
+          {isMyTurn && seconds <= 5 ? t('ctl.left5') : ''}
         </span>
       </div>
       {isRoundOver ? (
@@ -110,7 +116,7 @@ export const PlayerControls: React.FC = () => {
             emitNextRound(currentRoomId);
           }}
         >
-          VÁN TIẾP THEO <Icon name="arrow" />
+          {t('ctl.next')} <Icon name="arrow" />
         </button>
       ) : !resolving && !me.isDead && !me.folded ? (
         <div className="action-buttons">
@@ -119,32 +125,28 @@ export const PlayerControls: React.FC = () => {
             disabled={disabled}
             onClick={() => act('fold')}
           >
-            <strong>Bỏ bài</strong>
-            <small>Bóp cò ngay</small>
+            <strong>{t('ctl.fold')}</strong>
+            <small>{t('ctl.fold.sub')}</small>
           </button>
           {!gameState.hasAnyAllIn && (
             <button
               className="btn-act btn-swap"
               disabled={disabled || !gameState.canSwap}
-              title={
-                me.hasUsedSwap
-                  ? 'Đã dùng lượt đổi bài'
-                  : 'Đổi 1 lá tại Flop hoặc Turn'
-              }
+              title={me.hasUsedSwap ? t('ctl.swap.title.used') : t('ctl.swap.title')}
               onClick={() => {
                 setPending(true);
                 emitSwapRequest(currentRoomId);
               }}
             >
               <strong>
-                <Icon name="swap" size={16} /> Đổi bài
+                <Icon name="swap" size={16} /> {t('ctl.swap')}
               </strong>
               <small>
                 {me.hasUsedSwap
-                  ? 'Đã sử dụng'
+                  ? t('ctl.swap.used')
                   : gameState.canSwap
-                    ? 'Một lần duy nhất'
-                    : 'Từ vòng Flop'}
+                    ? t('ctl.swap.once')
+                    : t('ctl.swap.fromFlop')}
               </small>
             </button>
           )}
@@ -155,11 +157,13 @@ export const PlayerControls: React.FC = () => {
               onClick={() => act('call')}
             >
               <strong>
-                Theo bài <span>+1</span>
+                {t('ctl.call')} <span>+1</span>
               </strong>
               <small>
-                {nextBullet}/6 viên · {Math.round((nextBullet / 6) * 100)}% có
-                đạn
+                {t('ctl.call.sub', {
+                  n: nextBullet,
+                  pct: Math.round((nextBullet / REVOLVER.CHAMBER_COUNT) * 100),
+                })}
               </small>
             </button>
           )}
@@ -168,21 +172,21 @@ export const PlayerControls: React.FC = () => {
             disabled={disabled || !gameState.canAllIn}
             onClick={() => act('allin')}
           >
-            <strong>Tất tay</strong>
+            <strong>{t('ctl.allin')}</strong>
             <small>
               {!gameState.canAllIn && me.hasUsedSwap && gameState.stage > 0
-                ? 'Không thể tất tay sau khi đổi bài'
+                ? t('ctl.allin.blocked')
                 : gameState.hasAnyAllIn
-                  ? 'Theo tất tay · 6/6 viên'
+                  ? t('ctl.allin.follow')
                   : gameState.stage === 0
-                    ? 'Từ vòng Flop'
-                    : '6/6 viên · All-in'}
+                    ? t('ctl.allin.fromFlop')
+                    : t('ctl.allin.sub')}
             </small>
           </button>
         </div>
       ) : (
         <span className="controls-passive">
-          {resolving ? 'KẾT QUẢ ĐANG ĐƯỢC PHÂN ĐỊNH' : 'CHẾ ĐỘ THEO DÕI'}
+          {resolving ? t('ctl.passive.resolving') : t('ctl.passive.spectate')}
         </span>
       )}
     </section>

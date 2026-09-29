@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Seat } from './Seat';
 import { CommunityCards } from './CommunityCards';
 import { TableSurface } from './TableSurface';
-import { TableHistory } from './TableHistory';
 import { PlayerControls } from './PlayerControls';
 import { useGameStore } from '../store/gameStore';
+import { useT } from '../i18n';
 import { Icon } from './Icon';
 import { STAGES } from '@liars-bar/shared';
 import { seatPosition } from '../utils/seating';
@@ -21,6 +21,7 @@ export const PokerTable: React.FC = () => {
     roundNumber,
     currentRoomId,
   } = useGameStore();
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const count = gameState?.maxPlayers ?? roomMaxPlayers;
@@ -37,6 +38,7 @@ export const PokerTable: React.FC = () => {
       setCopyError(true);
     }
   };
+  const [waitingA, waitingB] = t('table.waiting.title').split('\n');
   return (
     <main className="game-page game-table-scene">
       <div className="game-toolbar">
@@ -45,37 +47,36 @@ export const PokerTable: React.FC = () => {
             <span className="tiny-diamond" /> THE LAST SEAT STANDING
           </span>
           <h1>
-            Bàn cược sinh tử
-            <span>VÁN {String(roundNumber || 1).padStart(2, '0')}</span>
+            {t('table.title')}
+            <span>{t('table.round', { n: String(roundNumber || 1).padStart(2, '0') })}</span>
           </h1>
         </div>
         <div className="table-meta">
           <span className="table-capacity">
             <Icon name="users" size={17} />
-            {count} NGƯỜI
+            {t('table.players', { n: count })}
           </span>
           <button
             className="room-code-button"
             onClick={copyCode}
-            aria-label="Sao chép mã phòng"
+            aria-label={t('table.copy')}
           >
             <span>
-              PHÒNG <b>{currentRoomId}</b>
+              {t('table.room')} <b>{currentRoomId}</b>
             </span>
             <Icon name={copied ? 'check' : 'copy'} size={17} />
-            {copied && <small>Đã sao chép</small>}
+            {copied && <small>{t('table.copied')}</small>}
           </button>
         </div>
       </div>
       {copyError && (
         <p className="copy-fallback" role="status">
-          Mã phòng: <strong>{currentRoomId}</strong> — bạn có thể chọn và sao
-          chép mã này.
+          {t('table.copyFallback', { code: currentRoomId })}
         </p>
       )}
       <div className="game-layout">
-        <section className="game-arena" aria-label="Bàn Poker">
-          <nav className="stage-track" aria-label="Các vòng bài">
+        <section className="game-arena" aria-label={t('table.aria')}>
+          <nav className="stage-track" aria-label={t('table.stages')}>
             {STAGES.map((name, i) => (
               <span
                 key={name}
@@ -98,18 +99,16 @@ export const PokerTable: React.FC = () => {
             <div className="table-center">
               {!gameState ? (
                 <div className="waiting-table">
-                  <span className="eyebrow">BÀN ĐÃ MỞ</span>
+                  <span className="eyebrow">{t('table.waiting.eyebrow')}</span>
                   <h2>
-                    Đợi đủ mặt.
+                    {waitingA}
                     <br />
-                    Bắt đầu cuộc chơi.
+                    {waitingB}
                   </h2>
-                  <p>
-                    {playersInfo.length}/{count} người đã vào bàn
-                  </p>
+                  <p>{t('table.waiting.count', { have: playersInfo.length, need: count })}</p>
                   <button className="btn-secondary" onClick={copyCode}>
                     <Icon name="copy" size={16} />
-                    {copied ? 'Đã sao chép mã' : `Mời bạn · ${currentRoomId}`}
+                    {copied ? t('table.copiedCode') : t('table.invite', { code: currentRoomId })}
                   </button>
                 </div>
               ) : (
@@ -117,16 +116,14 @@ export const PokerTable: React.FC = () => {
                   <CommunityCards cards={cards} roundNumber={roundNumber} />
                   <div className="table-log" role="status">
                     <span className="tiny-diamond" />
-                    {isRoundOver
-                      ? 'Ván đã kết thúc. Sẵn sàng cho ván tiếp theo?'
-                      : tableLog}
+                    {isRoundOver ? t('table.roundOverLog') : tableLog}
                   </div>
                   <div
                     key={`${roundNumber}-${stage}`}
                     className="stage-announcement"
                     aria-hidden="true"
                   >
-                    {stage === 0 ? 'DEAL THE CARDS' : STAGES[stage]}
+                    {stage === 0 ? t('table.deal') : STAGES[stage]}
                   </div>
                 </>
               )}
@@ -147,7 +144,6 @@ export const PokerTable: React.FC = () => {
         </section>
       </div>
       <PlayerControls />
-      <TableHistory />
     </main>
   );
 };

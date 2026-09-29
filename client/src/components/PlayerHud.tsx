@@ -1,9 +1,11 @@
 import React from 'react';
+import { TIMING } from '@liars-bar/shared';
+import { useT } from '../i18n';
 import { Icon } from './Icon';
 
 /** Receives already-derived seat information. No store, clock or permissions. */
 export function PlayerHud({
-  name, isMe, won, matchRank, bullets, isAllIn, stateLabel, active, seconds,
+  name, isMe, won, matchRank, bullets, isAllIn, stateLabel, active, seconds, offline,
 }: {
   name: string;
   isMe: boolean;
@@ -14,7 +16,9 @@ export function PlayerHud({
   stateLabel?: string;
   active: boolean;
   seconds: number;
+  offline?: boolean;
 }) {
+  const t = useT();
   // The current public player view carries the server's "(Bot)" name suffix,
   // not an isBot field. Restyle that existing label, without inferring identity.
   const hasBotLabel = !isMe && name.endsWith(' (Bot)');
@@ -22,16 +26,18 @@ export function PlayerHud({
     <div className="seat-status player-hud">
       <div className="seat-name-row">
         <h3 title={name}>{hasBotLabel ? name.slice(0, -6) : name}</h3>
-        {hasBotLabel && <span className="bot-badge">BOT</span>}
-        {isMe && <span className="you-badge">BẠN</span>}
+        {hasBotLabel && <span className="bot-badge">{t('seat.bot')}</span>}
+        {isMe && <span className="you-badge">{t('seat.you')}</span>}
         {won && <Icon name="crown" size={16} />}
         {matchRank && (
-          <span className={`match-rank rank-${matchRank}`}>HẠNG {matchRank}</span>
+          <span className={`match-rank rank-${matchRank}`}>
+            {t('seat.rank', { n: matchRank })}
+          </span>
         )}
       </div>
       <div
         className="seat-bullets"
-        title={`${bullets}/6 viên đạn · ${Math.round((bullets / 6) * 100)}% buồng có đạn`}
+        title={t('seat.bullets', { n: bullets, pct: Math.round((bullets / 6) * 100) })}
       >
         <div className={`bullet-dots ${bullets >= 4 ? 'danger' : ''}`} aria-hidden="true">
           {Array.from({ length: 6 }, (_, i) => (
@@ -40,10 +46,16 @@ export function PlayerHud({
         </div>
         <span>{bullets}/6{isAllIn && <b> ALL-IN</b>}</span>
       </div>
-      {stateLabel && <span className="seat-hud-state">{stateLabel}</span>}
+      {(stateLabel || offline) && (
+        <span className="seat-hud-state">{offline ? t('seat.offline') : stateLabel}</span>
+      )}
       {active && (
         <div className="seat-timer">
-          <span style={{ width: `${Math.min((seconds / 30) * 100, 100)}%` }} />
+          <span
+            style={{
+              width: `${Math.min((seconds / TIMING.TURN_TIME_LIMIT) * 100, 100)}%`,
+            }}
+          />
           <small>{seconds}s</small>
         </div>
       )}

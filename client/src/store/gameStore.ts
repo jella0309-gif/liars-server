@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { create } from 'zustand';
 import {
   TIMING,
@@ -67,7 +68,7 @@ export const useGameStore = create<GameStore>((set) => ({
   playersInfo: [],
   errorMessage: null,
   gameState: null,
-  tableLog: 'Chờ người chơi vào bàn…',
+  tableLog: t('log.waiting'),
   history: [],
   activeBubble: null,
   roundNumber: 0,
@@ -102,7 +103,7 @@ export const useGameStore = create<GameStore>((set) => ({
       errorMessage: null,
       roundNumber: 0,
       history: [],
-      tableLog: 'Bàn đã sẵn sàng. Đang chờ đủ người chơi…',
+      tableLog: t('log.ready'),
     }),
   setRoomUpdate: (playersInfo, roomMaxPlayers) =>
     set({ playersInfo, roomMaxPlayers }),
@@ -208,9 +209,9 @@ export const useGameStore = create<GameStore>((set) => ({
       rouletteRevealed: false,
       godSavePlayerName: null,
       activeBubble: null,
-      tableLog: 'Ván mới bắt đầu. Giữ bài kín, giữ mạng mình.',
+      tableLog: t('log.newRound'),
       history: [
-        'Ván mới bắt đầu. Giữ bài kín, giữ mạng mình.',
+        t('log.newRound'),
         ...state.history,
       ].slice(0, 30),
     })),

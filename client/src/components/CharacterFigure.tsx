@@ -1,7 +1,7 @@
 import React, { useEffect, useId, useState } from 'react';
 import {
   CharacterPortrait,
-  MOOD_LABELS,
+  moodLabel,
   getCharacter,
   type CharacterMood,
 } from './CharacterPortrait';
@@ -60,7 +60,7 @@ export function CharacterFigure({ avatar, mood, label }: {
       <div
         className="character-art figure-art"
         role="img"
-        aria-label={`${character.name} — ${MOOD_LABELS[mood]}`}
+        aria-label={`${character.name} — ${moodLabel(mood)}`}
       >
         <div
           className="figure-stage"
