@@ -4,7 +4,7 @@ import { useGameStore } from './store/gameStore';
 import { Header } from './components/Header';
 import { TavernAtmosphere } from './components/TavernAtmosphere';
 import { PokerTable } from './components/PokerTable';
-import { PlayerControls } from './components/PlayerControls';
+import { RouletteModal } from './components/RouletteModal';
 import { Lobby } from './components/Lobby';
 import { SwapCardPanel } from './components/SwapCardPanel';
 import { GodSaveOverlay } from './components/GodSaveOverlay';
@@ -184,7 +184,7 @@ export const App: React.FC = () => {
             </div>
           )}
           <PokerTable />
-          <PlayerControls />
+          <RouletteModal />
           <SwapCardPanel />
           <GodSaveOverlay />
           <WinnerOverlay />
