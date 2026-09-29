@@ -1,98 +1,94 @@
-.center-roulette-modal { 
-  position: absolute; 
-  background: rgba(18, 20, 28, 0.96); 
-  border: 2px solid var(--accent); 
-  border-radius: 16px; 
-  padding: clamp(8px, 1.5vh, 12px) clamp(10px, 2vw, 16px); 
-  display: none; 
-  flex-direction: column; 
-  align-items: center; 
-  gap: 5px; 
-  box-shadow: 0 0 25px rgba(239, 68, 68, 0.8), 0 0 50px rgba(0, 0, 0, 0.95); 
-  z-index: 100; 
-  pointer-events: none; 
-  width: clamp(140px, 22vw, 185px);
-  animation: roulettePopIn 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-}
-
-@keyframes roulettePopIn {
-  from { opacity: 0; transform: scale(0.8); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* Positioning beside each seat */
-.roulette-seat-0 {
-  bottom: 8px;
-  left: calc(50% + clamp(75px, 16vw, 110px));
-}
-
-.roulette-seat-1 {
-  top: 8px;
-  left: calc(50% + clamp(75px, 16vw, 110px));
-}
-
-.roulette-seat-2 {
-  left: clamp(80px, 15vw, 120px);
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.roulette-seat-3 {
-  right: clamp(80px, 15vw, 120px);
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-@media (max-width: 640px) {
-  .roulette-seat-0 {
-    bottom: 65px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  .roulette-seat-1 {
-    top: 65px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  .roulette-seat-2 {
-    left: 6px;
-    top: 20%;
-    transform: none;
-  }
-  .roulette-seat-3 {
-    right: 6px;
-    top: 20%;
-    transform: none;
-  }
-}
-
-.roulette-player-tag {
-  font-size: clamp(0.72rem, 1.8vw, 0.85rem);
-  font-weight: 900;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.roulette-header-tag { font-size: 0.65rem; font-weight: 900; color: var(--accent); letter-spacing: 1.2px; }
-.roulette-sub-tag { font-size: 0.72rem; color: var(--bullet); font-weight: bold; min-height: 16px; text-align: center; }
-.mini-barrel { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #ef4444; margin-bottom: -3px; z-index: 2; }
-
-.cylinder-spinner-wrap {
-  width: clamp(75px, 15vw, 95px);
-  height: clamp(75px, 15vw, 95px);
+.roulette-backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 25px;
+  background: #0d0805c4;
+  backdrop-filter: blur(5px);
+}
+.roulette-dialog {
+  display: grid;
+  grid-template-columns: 205px 285px;
+  border: 1px solid #ad8951;
+  border-radius: 8px;
+  background: #24170f;
+  overflow: hidden;
+  box-shadow: 0 25px 100px #0008;
+  max-width: 100%;
+}
+.roulette-dialog > .character-art {
+  width: 100%;
+  height: 100%;
+  border-right: 1px solid #775e3e;
+}
+.roulette-content {
+  padding: 28px;
+  text-align: center;
+}
+.roulette-content h2 {
+  font: 24px var(--font-display);
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.roulette-content > p {
+  font-size: 10px;
+  color: #c8af8c;
+}
+.roulette-content .eyebrow {
+  font-size: 8px;
+}
+.cylinder-shell {
   position: relative;
-  transform-origin: center center;
+  margin: 22px auto;
+  width: 166px;
+  height: 166px;
+  padding-top: 8px;
 }
-.revolver-svg { 
-  width: 100%; 
-  height: 100%; 
-  overflow: visible;
+.cylinder-pointer {
+  position: absolute;
+  top: -8px;
+  left: calc(50% - 5px);
+  color: #f0c683;
+  font-size: 14px;
+  z-index: 1;
+  filter: drop-shadow(0 0 5px #cfaa6b60);
 }
-.mini-status { font-size: clamp(0.85rem, 2vw, 1.05rem); font-weight: 900; min-height: 22px; text-align: center; }
-.text-dead { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.8); }
-.text-life { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.8); }
-.text-god { color: #fbbf24; text-shadow: 0 0 12px rgba(251, 191, 36, 0.9); }
+.revolver-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 5px 10px #0008);
+}
+.roulette-result {
+  min-height: 30px;
+  font-size: 11px;
+  color: #cab58a;
+  letter-spacing: 0.7px;
+  display: grid;
+  place-items: center;
+}
+.result-dead {
+  color: #ef997e;
+}
+.result-safe {
+  color: #bdd59b;
+}
+.shot-fired .roulette-dialog {
+  animation: shot-shake 0.35s ease;
+}
+.shot-fired {
+  background: #2f130fcf;
+}
+@keyframes shot-shake {
+  20%,
+  60% {
+    transform: translate(-5px, 2px);
+  }
+  40%,
+  80% {
+    transform: translate(5px, -2px);
+  }
+}

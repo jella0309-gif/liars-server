@@ -1,12 +1,25 @@
+@font-face {
+  font-family: 'Permanent Marker';
+  src: url('/fonts/permanent-marker.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 :root {
-  --bg: #090a0d;
-  --felt: #0f241a;
-  --felt-border: #351c0d;
-  --wood: #1e1107;
-  --accent: #ef4444;
-  --gold: #f59e0b;
-  --bullet: #fbbf24;
-  --card-bg: #f8fafc;
-  --card-back: #18191f;
-  --text: #e2e8f0;
+  color-scheme: dark;
+  --bg: #100b09;
+  --surface: #1d1410;
+  --surface-raised: #2c1e17;
+  --text: #f2e6cf;
+  --muted: #b5a38c;
+  --faint: #a59682;
+  --gold: #d6aa66;
+  --gold-light: #f3d49e;
+  --red: #d44735;
+  --green: #84bc8a;
+  --line: #503a29;
+  --line-light: #765235;
+  --font-body: 'Segoe UI', Arial, sans-serif;
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-brush: 'Permanent Marker', 'Segoe Print', cursive;
 }

@@ -1,5 +1,6 @@
 @import './styles/variables.css';
 @import './styles/base.css';
+@import './styles/atmosphere.css';
 @import './styles/lobby.css';
 @import './styles/table.css';
 @import './styles/cards.css';

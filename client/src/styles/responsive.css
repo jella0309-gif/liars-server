@@ -1,337 +1,959 @@
-/* ==========================================================================
-   RESPONSIVE DESIGN RULES FOR ALL SCREENS (MOBILE, TABLET, DESKTOP)
-   ========================================================================== */
-
-/* 1. Large Screens & Desktop (1025px+) */
-@media (min-width: 1025px) {
-  .poker-table {
-    max-width: 950px;
-    max-height: 540px;
+@media (max-width: 1250px) {
+  .site-header {
+    padding: 0 26px;
+    gap: 20px;
   }
-
-  .player-controls {
+  .header-nav {
+    gap: 5px;
+  }
+  .header-nav button {
+    padding: 10px 13px;
+    font-size: 10px;
+  }
+  .header-controls {
+    gap: 12px;
+  }
+  .server-status {
+    font-size: 8px;
+  }
+  .lobby-page {
+    padding: 0 30px;
+  }
+  .lobby-layout {
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 30px;
+  }
+  .hero-copy {
+    padding-top: 180px;
+  }
+  .hero-copy h1 {
+    font-size: clamp(36px, 4.3vw, 51px);
+  }
+  .entry-panel {
+    padding: 23px 20px;
+  }
+  .entry-panel h2 {
+    font-size: 38px;
+  }
+  .character-roster {
+    gap: 7px;
+  }
+  .character-choice {
+    height: 145px;
+  }
+  .character-profile {
+    gap: 13px;
+  }
+  .character-profile > .character-art {
+    width: 100px;
+    min-width: 100px;
+  }
+  .character-profile h3 {
+    font-size: 29px;
+  }
+  .mood-switch {
+    gap: 4px;
+  }
+  .mood-switch button {
+    padding: 5px 8px;
+  }
+  .game-page {
+    padding: 22px 24px 20px;
+  }
+  .game-layout {
+    grid-template-columns: minmax(0, 1fr) 200px;
     gap: 16px;
   }
-
-  .btn-act {
-    max-width: 190px;
-    min-height: 48px;
+  .game-sidebar {
+    padding: 20px 15px;
   }
-}
-
-/* 2. Tablets & Small Laptops (769px - 1024px) */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .poker-table {
-    max-width: 90%;
-    max-height: 500px;
+  .game-sidebar h2 {
+    font-size: 20px;
   }
-
-  .seat-2 { left: 8px; }
-  .seat-3 { right: 8px; }
-  .seat-1 { top: -16px; }
-  .seat-0 { bottom: -16px; }
-
   .seat {
-    min-width: 120px;
+    grid-template-columns: minmax(64px, 43%) minmax(0, 1fr);
+    gap: 7px;
   }
-}
-
-/* 3. Phablets & Mobile Landscape (481px - 768px) */
-@media (min-width: 481px) and (max-width: 768px) {
-  header {
-    padding: 4px 10px;
+  .seat-portrait-wrap .character-art {
+    height: 130px;
   }
-
-  .poker-table {
-    width: 96%;
-    height: 94%;
-    max-height: 460px;
-    border-radius: 60px;
+  .seat-position {
+    width: 28%;
   }
-
-  .seat-2 { left: 4px; top: 48%; }
-  .seat-3 { right: 4px; top: 48%; }
-  .seat-1 { top: -14px; }
-  .seat-0 { bottom: -14px; }
-
-  .seat {
-    min-width: 105px;
-    padding: 4px 8px;
+  .seat-name-row h3 {
+    font-size: 10px;
   }
-
-  .btn-act {
-    max-width: 150px;
-    min-height: 42px;
+  .seat-cards-container {
+    gap: 5px;
   }
-}
-
-/* 4. Standard Mobile Portrait (381px - 480px) */
-@media (max-width: 480px) {
-  header {
-    padding: 4px 8px;
+  .seat-cards-container .card {
+    --card-width: 33px;
+  }
+  .seat-is-me .card {
+    --card-width: 38px;
+  }
+  .seat-bullets {
     gap: 4px;
   }
-
-  .title {
-    font-size: 0.85rem;
-  }
-
-  .header-controls {
-    gap: 6px;
-  }
-
-  .vol-control {
-    font-size: 0.65rem;
-    padding: 2px 6px;
-  }
-
-  .vol-control input[type=range] {
-    width: 42px;
-  }
-
-  .table-stage {
-    padding: 4px;
-  }
-
-  .poker-table {
-    width: 98%;
-    height: 96%;
-    max-height: 56vh;
-    border-radius: 45px;
-    border-width: 8px;
-    outline-width: 2px;
-  }
-
-  .table-center {
-    width: 92%;
-    max-width: 280px;
-    gap: 4px;
-  }
-
-  .phase-badge {
-    padding: 2px 8px;
-    font-size: 0.65rem;
-  }
-
-  .comm-cards-label {
-    font-size: 0.58rem;
-  }
-
-  .comm-cards {
-    min-height: 40px;
-    gap: 3px;
-  }
-
-  .table-log-box {
-    padding: 3px 8px;
-    font-size: 0.68rem;
-  }
-
-  /* Seats placement on mobile */
-  .seat-1 { 
-    top: -12px; 
-    left: 50%; 
-    transform: translateX(-50%); 
-  }
-
-  .seat-0 { 
-    bottom: -12px; 
-    left: 50%; 
-    transform: translateX(-50%); 
-  }
-
-  .seat-2 { 
-    left: 2px; 
-    top: 48%; 
-    transform: translateY(-50%); 
-  }
-
-  .seat-3 { 
-    right: 2px; 
-    top: 48%; 
-    transform: translateY(-50%); 
-  }
-
-  .seat {
-    min-width: 95px;
-    max-width: 115px;
-    padding: 3px 6px;
-    border-radius: 10px;
+  .bullet-dots {
     gap: 2px;
   }
-
-  .seat-name {
-    max-width: 70px;
-    font-size: 0.72rem;
+  .bullet-dots i {
+    width: 4px;
   }
-
-  .seat-avatar {
-    font-size: 1.1rem;
+  .table-center {
+    width: 51%;
   }
-
-  .bullet-odds-tag {
-    font-size: 0.65rem;
+  .community-slot {
+    width: 55px;
+    height: 79px;
   }
-
-  .bullet-dot {
-    font-size: 0.62rem;
+  .comm-cards .card {
+    --card-width: 55px;
   }
-
-  .seat-status-dead,
-  .seat-status-folded {
-    font-size: 0.65rem;
-    padding: 1px 4px;
+}
+@media (max-width: 1050px) {
+  .server-status {
+    display: none;
   }
-
-  .hand-eval-box {
-    font-size: 0.65rem;
-    padding: 2px 6px;
+  .brand {
+    font-size: 28px;
+    gap: 10px;
   }
-
-  .rank-number {
-    font-size: 0.62rem;
-    padding: 1px 6px;
+  .brand-emblem {
+    width: 38px;
+    height: 43px;
+    font-size: 31px;
   }
-
-  /* Controls on mobile */
-  .player-controls {
-    padding: 6px 8px;
-    gap: 6px;
+  .game-layout {
+    grid-template-columns: minmax(0, 1fr);
   }
-
+  .game-sidebar {
+    display: none;
+  }
+  .poker-table {
+    height: clamp(610px, 72vh, 730px);
+  }
+  .seat-position {
+    width: min(29%, 260px);
+  }
+  .controls-dock {
+    padding: 16px 24px;
+    gap: 15px;
+  }
   .btn-act {
-    padding: 5px 4px;
-    min-height: 40px;
-    border-radius: 8px;
-    font-size: 0.72rem;
+    min-width: 104px;
+    padding: 10px 12px;
   }
-
-  .btn-act span.sub {
-    font-size: 0.58rem;
-  }
-
-  .round-over-bar,
-  .match-over-bar {
-    padding: 8px 10px;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  .action-buttons {
     gap: 8px;
   }
-
-  .status-announcement {
-    text-align: center;
-    align-items: center;
-  }
-
-  .btn-next-round {
-    width: 100%;
-    max-width: 280px;
-    padding: 10px 16px;
-    font-size: 0.88rem;
+  .controls-status p {
+    font-size: 11px;
   }
 }
-
-/* 5. Very Small Mobile Devices (≤ 380px, e.g. iPhone SE, Folded screens) */
-@media (max-width: 380px) {
-  .header-controls .vol-control:nth-child(2) {
-    display: none; /* Hide SFX on ultra-small screens to save space */
+@media (max-width: 900px) {
+  .header-nav {
+    display: none;
   }
-
-  .poker-table {
-    border-radius: 35px;
-    border-width: 6px;
-    max-height: 52vh;
+  .site-header {
+    padding: 0 24px;
   }
-
+  .lobby-page {
+    max-width: 760px;
+    padding: 0 26px;
+  }
+  .lobby-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .hero-copy {
+    padding-top: 150px;
+  }
+  .hero-copy h1 {
+    font-size: 54px;
+  }
+  .hero-copy p {
+    max-width: 470px;
+  }
+  .character-choice {
+    height: clamp(135px, 20vw, 170px);
+  }
+  .character-choice-name {
+    font-size: 22px;
+  }
+  .entry-panel {
+    margin-top: 0;
+    padding: 26px;
+  }
+  .entry-panel form {
+    margin-top: 20px;
+  }
+  .entry-rule {
+    margin-top: 18px;
+  }
+  .entry-rule p br {
+    display: none;
+  }
+  .lobby-footer {
+    margin-top: 24px;
+    padding-bottom: 24px;
+  }
+  .character-profile > .character-art {
+    width: 120px;
+    min-width: 120px;
+  }
+  .character-profile {
+    gap: 20px;
+  }
+  .hero-copy .eyebrow {
+    font-size: 9px;
+  }
+  .tavern-scene {
+    background-position: 45% top;
+  }
+}
+@media (max-width: 760px) {
+  .in-game {
+    padding-bottom: 165px;
+  }
+  .game-page {
+    padding: 18px 16px;
+  }
+  .game-toolbar {
+    margin-bottom: 16px;
+  }
+  .game-toolbar h1 {
+    font-size: 23px;
+  }
+  .game-toolbar h1 > span {
+    margin-left: 8px;
+    padding-left: 8px;
+    font-size: 8px;
+  }
+  .table-capacity {
+    display: none;
+  }
+  .room-code-button {
+    padding: 10px;
+    gap: 10px;
+  }
+  .room-code-button b {
+    font-size: 11px;
+    margin-left: 6px;
+  }
+  .controls-dock {
+    min-height: 145px;
+    padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+  }
+  .controls-status {
+    gap: 10px;
+  }
+  .turn-clock {
+    width: 34px;
+    height: 34px;
+  }
+  .turn-clock b {
+    font-size: 17px;
+  }
+  .turn-clock small {
+    font-size: 5px;
+  }
+  .controls-status .eyebrow {
+    font-size: 7px;
+  }
+  .controls-status p {
+    margin-top: 2px;
+    font-size: 10px;
+  }
+  .action-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .btn-act {
+    min-width: 0;
+    min-height: 56px;
+    padding: 9px 10px;
+  }
+  .btn-act strong {
+    font-size: 12px;
+  }
+  .btn-act small {
+    font-size: 7px;
+  }
+  .controls-passive {
+    text-align: left;
+    padding: 9px 0;
+  }
+  .god-save-toast {
+    bottom: 166px;
+    padding: 14px 17px;
+  }
+}
+@media (max-width: 650px) {
+  .seat-position {
+    width: 28%;
+  }
   .seat {
-    min-width: 86px;
-    max-width: 102px;
-    padding: 2px 4px;
-  }
-
-  .seat-name {
-    max-width: 60px;
-    font-size: 0.68rem;
-  }
-
-  .seat-avatar {
-    font-size: 0.95rem;
-  }
-
-  .card {
-    width: 28px;
-    height: 42px;
-  }
-
-  .card-suit {
-    font-size: 0.9rem;
-  }
-
-  .player-controls {
+    grid-template-columns: 1fr;
+    gap: 0;
     padding: 4px;
+  }
+  .seat-portrait-wrap .character-art {
+    height: 88px;
+    width: 95px;
+    margin: 0 auto;
+  }
+  .seat-details {
+    padding: 6px 4px 4px;
+  }
+  .seat-state-label {
+    font-size: 5px;
+    padding-top: 16px;
+    padding-bottom: 3px;
+  }
+  .seat-name-row {
+    justify-content: center;
     gap: 4px;
   }
-
-  .btn-act {
-    padding: 4px 2px;
-    min-height: 38px;
-    font-size: 0.66rem;
+  .seat-name-row h3 {
+    font-size: 10px;
   }
-
-  .btn-act span.sub {
-    font-size: 0.54rem;
+  .you-badge {
+    font-size: 5px;
+  }
+  .seat-bullets {
+    margin-top: 5px;
+    justify-content: center;
+  }
+  .bullet-dots i {
+    height: 8px;
+  }
+  .seat-cards-container,
+  .active-turn .seat-cards-container {
+    margin-top: 8px;
+    justify-content: center;
+  }
+  .seat-cards-container .card {
+    --card-width: 28px;
+  }
+  .seat-is-me .card {
+    --card-width: 33px;
+  }
+  .seat-timer {
+    margin-top: 7px;
+  }
+  .hand-eval {
+    margin-top: 5px;
+    font-size: 9px;
+    text-align: center;
+  }
+  .hand-eval span {
+    margin-top: 3px;
+    font-size: 5px;
+  }
+  .seat-eliminated {
+    margin: 10px 0;
+    text-align: center;
+    font-size: 11px;
+  }
+  .seat-eliminated span {
+    font-size: 7px;
+  }
+  .seats-2 .seat-position,
+  .seats-3 .pos-bottom {
+    width: 240px;
+  }
+  .seats-2 .seat,
+  .seats-3 .pos-bottom .seat {
+    grid-template-columns: 90px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .seats-2 .seat-portrait-wrap .character-art,
+  .seats-3 .pos-bottom .seat-portrait-wrap .character-art {
+    height: 115px;
+    width: 100%;
+  }
+  .pos-top-left,
+  .seats-3 .pos-top-left {
+    left: 23%;
+    top: 19%;
+  }
+  .pos-top-right,
+  .seats-3 .pos-top-right {
+    left: 77%;
+    top: 19%;
+  }
+  .pos-bottom-left {
+    left: 23%;
+    top: 81%;
+  }
+  .pos-bottom-right {
+    left: 77%;
+    top: 81%;
+  }
+  .table-center {
+    width: calc(100% - 28px);
+  }
+  .table-brand {
+    font-size: 24px;
+  }
+  .table-brand small {
+    font-size: 5px;
+  }
+  .poker-table {
+    height: 660px;
+  }
+  .felt-surface {
+    inset: 10% 5%;
+    border-width: 11px;
+    border-radius: 41%;
+  }
+  .community-slot {
+    width: 54px;
+    height: 78px;
+  }
+  .comm-cards .card {
+    --card-width: 54px;
+  }
+  .stage-track {
+    gap: 13px;
+    padding: 11px 8px;
+  }
+  .stage-track > span {
+    font-size: 7px;
+    gap: 5px;
+    letter-spacing: 0.5px;
+  }
+  .table-edge-label {
+    font-size: 6px;
+    letter-spacing: 1.7px;
+    bottom: 9px;
+  }
+  .empty-seat {
+    height: 180px;
+  }
+  .table-log {
+    max-width: 90%;
+  }
+  .board-label {
+    margin: 10px 0 8px;
+  }
+  .stage-announcement {
+    font-size: 21px;
   }
 }
-
-/* 6. Landscape Orientation on Mobile (height ≤ 500px) */
-@media (max-height: 500px) and (orientation: landscape) {
-  header {
-    padding: 2px 8px;
+@media (max-width: 480px) {
+  html {
+    scroll-padding-top: 20px;
   }
-
-  .table-stage {
-    padding: 2px;
+  .site-header {
+    height: 68px;
+    padding: 0 16px;
+    gap: 10px;
   }
-
-  .poker-table {
-    height: 98%;
-    max-height: 280px;
-    border-radius: 50px;
-    border-width: 6px;
+  .brand {
+    font-size: 24px;
+    gap: 8px;
   }
-
-  .seat-1 { top: -14px; }
-  .seat-0 { bottom: -14px; }
-  .seat-2 { left: 4px; }
-  .seat-3 { right: 4px; }
-
-  .seat {
-    padding: 2px 6px;
-    min-width: 95px;
+  .brand-emblem {
+    width: 29px;
+    height: 34px;
+    font-size: 25px;
+    border-radius: 6px 6px 10px 10px;
   }
-
-  .card {
-    width: 26px;
-    height: 38px;
+  .brand small {
+    font-size: 5px;
+    letter-spacing: 1px;
+    margin-top: 6px;
   }
-
-  .player-controls-container {
-    padding: 0;
+  .header-controls {
+    gap: 10px;
   }
-
-  .turn-banner {
-    padding: 2px;
-    font-size: 0.68rem;
+  .header-controls .icon-button {
+    width: 30px;
+    height: 33px;
   }
-
-  .player-controls {
-    padding: 3px 6px;
+  .help-button {
+    padding: 8px 0;
+  }
+  .help-button span {
+    display: none;
+  }
+  .help-button svg {
+    width: 18px;
+  }
+  .lobby-page {
+    padding: 0 18px;
+  }
+  .lobby-layout {
+    gap: 23px;
+  }
+  .hero-copy {
+    padding-top: 145px;
+    margin-bottom: 22px;
+  }
+  .hero-copy .eyebrow {
+    font-size: 7px;
+    letter-spacing: 1.5px;
+  }
+  .hero-copy h1 {
+    font-size: clamp(32px, 9vw, 43px);
+    letter-spacing: -1px;
+  }
+  .hero-copy p {
+    font-size: 12px;
+    margin-top: 15px;
+  }
+  .desktop-break {
+    display: none;
+  }
+  .section-heading h2 {
+    font-size: 9px;
+  }
+  .section-heading h2 span {
+    padding-right: 5px;
+  }
+  .character-roster {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+  }
+  .character-choice {
+    height: clamp(132px, 39vw, 167px);
+  }
+  .character-choice-name {
+    font-size: 24px;
+  }
+  .character-profile {
+    padding: 9px;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .character-profile > .character-art {
+    min-width: 84px;
+    width: 84px;
+    height: 123px;
+  }
+  .character-profile h3 {
+    font-size: 26px;
+    margin: 0 0 6px;
+  }
+  .character-profile h3 span {
+    font-size: 8px;
+    margin-left: 6px;
+  }
+  .character-profile p {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .mood-switch {
+    gap: 4px;
+    margin-top: 9px;
+  }
+  .mood-switch button {
+    padding: 5px 7px;
+    font-size: 8px;
+    min-height: 29px;
+  }
+  .profile-suit {
+    right: 10px;
+  }
+  .lobby-footnote {
+    font-size: 8px;
     gap: 6px;
   }
-
+  .entry-panel {
+    padding: 23px 20px;
+  }
+  .entry-panel h2 {
+    font-size: 36px;
+  }
+  .entry-panel > p {
+    font-size: 12px;
+  }
+  .lobby-input {
+    font-size: 16px;
+  }
+  .room-code-input {
+    font-size: 20px;
+  }
+  .lobby-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 6px;
+    margin-top: 20px;
+  }
+  .tavern-scene {
+    background-position: 49% top;
+  }
+  .in-lobby .tavern-scene {
+    background-size: auto max(620px, 100svh);
+  }
+  .game-page {
+    padding: 16px 8px;
+  }
+  .game-toolbar {
+    padding: 0 4px;
+    gap: 8px;
+  }
+  .game-toolbar .eyebrow {
+    font-size: 6px;
+    letter-spacing: 1px;
+  }
+  .game-toolbar h1 {
+    font-size: 20px;
+  }
+  .game-toolbar h1 > span {
+    font-size: 6px;
+    padding-left: 5px;
+    margin-left: 5px;
+  }
+  .room-code-button {
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 9px;
+  }
+  .room-code-button > svg {
+    display: none;
+  }
+  .room-code-button b {
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-left: 4px;
+  }
+  .room-code-button {
+    font-size: 6px;
+  }
+  .game-arena {
+    border-radius: 5px;
+  }
+  .stage-track {
+    gap: 9px;
+    padding: 10px 5px;
+  }
+  .stage-track > span {
+    font-size: 6px;
+    gap: 3px;
+    letter-spacing: 0.2px;
+  }
+  .stage-track i {
+    height: 14px;
+    width: 14px;
+    font-size: 6px;
+  }
+  .poker-table {
+    height: clamp(500px, calc(100svh - 350px), 660px);
+  }
+  .seat-position {
+    width: 36%;
+    max-width: 153px;
+  }
+  .pos-top-left,
+  .seats-3 .pos-top-left {
+    left: 24%;
+    top: 17%;
+  }
+  .pos-top-right,
+  .seats-3 .pos-top-right {
+    left: 76%;
+    top: 17%;
+  }
+  .pos-bottom-left {
+    left: 24%;
+    top: 83%;
+  }
+  .pos-bottom-right {
+    left: 76%;
+    top: 83%;
+  }
+  .seat {
+    padding: 3px;
+  }
+  .seat-portrait-wrap .character-art {
+    height: 70px;
+    width: 76px;
+  }
+  .seat-details {
+    padding: 5px 3px 3px;
+  }
+  .seat-name-row h3 {
+    font-size: 9px;
+  }
+  .seat-state-label {
+    font-size: 5px;
+    letter-spacing: 0.7px;
+    padding-bottom: 2px;
+  }
+  .seat-bullets {
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .seat-bullets > span {
+    font-size: 7px;
+  }
+  .seat-bullets b {
+    font-size: 5px;
+  }
+  .bullet-dots {
+    gap: 2px;
+  }
+  .bullet-dots i {
+    width: 4px;
+    height: 7px;
+  }
+  .seat-cards-container,
+  .active-turn .seat-cards-container {
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .seat-cards-container .card {
+    --card-width: 27px;
+  }
+  .seat-is-me .card {
+    --card-width: 30px;
+  }
+  .seat-timer {
+    height: 2px;
+    margin-top: 5px;
+  }
+  .seat-timer > small {
+    font-size: 7px;
+  }
+  .seats-2 .seat-position,
+  .seats-3 .pos-bottom {
+    width: 220px;
+    max-width: none;
+  }
+  .seats-2 .seat,
+  .seats-3 .pos-bottom .seat {
+    grid-template-columns: 80px minmax(0, 1fr);
+  }
+  .seats-2 .seat-portrait-wrap .character-art,
+  .seats-3 .pos-bottom .seat-portrait-wrap .character-art {
+    height: 96px;
+    width: 100%;
+  }
+  .seats-2 .seat-name-row,
+  .seats-3 .pos-bottom .seat-name-row {
+    justify-content: flex-start;
+  }
+  .seats-2 .seat-bullets,
+  .seats-3 .pos-bottom .seat-bullets {
+    justify-content: flex-start;
+  }
+  .seats-2 .seat-cards-container,
+  .seats-3 .pos-bottom .seat-cards-container {
+    justify-content: flex-start;
+  }
+  .seats-2 .seat-is-me .card,
+  .seats-3 .pos-bottom .card {
+    --card-width: 36px;
+  }
+  .hand-eval {
+    font-size: 8px;
+    margin-top: 4px;
+  }
+  .hand-eval span {
+    margin-top: 2px;
+  }
+  .action-bubble {
+    font-size: 8px;
+    padding: 3px 8px;
+    top: -17px;
+  }
+  .empty-seat {
+    height: 156px;
+    gap: 8px;
+  }
+  .empty-seat > span {
+    font-size: 9px;
+  }
+  .felt-surface {
+    inset: 9% 4.5%;
+    border-width: 9px;
+  }
+  .table-stitch {
+    inset: 7px;
+  }
+  .table-center {
+    width: calc(100% - 14px);
+  }
+  .table-brand {
+    font-size: 21px;
+  }
+  .table-brand small {
+    margin-top: 4px;
+    font-size: 5px;
+    letter-spacing: 1.3px;
+  }
+  .board-label {
+    font-size: 6px;
+    letter-spacing: 1.5px;
+    margin: 9px 0 7px;
+  }
+  .community-slot {
+    width: 47px;
+    height: 68px;
+  }
+  .comm-cards {
+    gap: 6px;
+  }
+  .comm-cards .card {
+    --card-width: 47px;
+  }
+  .card-placeholder {
+    gap: 8px;
+  }
+  .card-placeholder > span {
+    font-size: 21px;
+  }
+  .card-placeholder > small {
+    font-size: 5px;
+  }
+  .table-log {
+    min-height: 28px;
+    font-size: 8px;
+    margin-top: 8px;
+    gap: 5px;
+    max-width: 90%;
+  }
+  .table-log .tiny-diamond {
+    width: 3px;
+    height: 3px;
+  }
+  .table-edge-label {
+    display: none;
+  }
+  .stage-announcement {
+    font-size: 18px;
+    top: -26px;
+  }
+  .waiting-table {
+    max-width: 230px;
+  }
+  .waiting-table h2 {
+    font-size: 21px;
+  }
+  .waiting-table p {
+    font-size: 10px;
+  }
+  .controls-dock {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .action-buttons {
+    gap: 5px;
+  }
   .btn-act {
-    min-height: 34px;
-    padding: 2px 6px;
+    padding: 9px 7px;
+    min-height: 53px;
+  }
+  .btn-act strong {
+    font-size: 11px;
+  }
+  .btn-act small {
+    font-size: 6px;
+  }
+  .btn-call strong > span {
+    font-size: 7px;
+  }
+  .modal-backdrop {
+    padding: 14px;
+  }
+  .dialog {
+    max-height: calc(100dvh - 28px);
+    padding: 26px 21px;
+  }
+  .dialog h2 {
+    font-size: 30px;
+  }
+  .dialog-close {
+    top: 10px;
+    right: 10px;
+  }
+  .dialog-actions {
+    gap: 7px;
+  }
+  .dialog-actions button {
+    padding: 11px;
+    font-size: 10px;
+  }
+  .swap-zone {
+    padding: 12px 9px;
+  }
+  .swap-cards-row {
+    gap: 10px;
+  }
+  .swap-cards-row .card {
+    --card-width: 59px;
+  }
+  .swap-intro {
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .roulette-backdrop {
+    padding: 16px;
+  }
+  .roulette-dialog {
+    grid-template-columns: 105px minmax(0, 1fr);
+    width: 365px;
+  }
+  .roulette-content {
+    padding: 20px 13px;
+  }
+  .roulette-content h2 {
+    font-size: 20px;
+  }
+  .cylinder-shell {
+    width: 135px;
+    height: 135px;
+    margin: 18px auto;
+  }
+  .roulette-result {
+    font-size: 9px;
+  }
+  .roulette-content .eyebrow {
+    font-size: 6px;
+    letter-spacing: 1px;
+  }
+  .winner-dialog h2 {
+    font-size: 34px;
+  }
+  .god-save-toast {
+    gap: 10px;
+  }
+  .god-save-toast strong,
+  .god-save-toast p {
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .tavern-scene {
+    transform: none !important;
+  }
+  .tavern-smoke,
+  .tavern-embers,
+  .seat-action-trail {
+    display: none;
+  }
+  .card-motion.face-up {
+    transform: rotateY(180deg);
+  }
+  .stage-announcement {
+    display: none;
   }
 }
