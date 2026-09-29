@@ -3,7 +3,21 @@
 // ============================================================
 
 /** Card values in ascending order (index = rank) */
-export const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] as const;
+export const VALUES = [
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  '10',
+  'J',
+  'Q',
+  'K',
+  'A',
+] as const;
 
 /** Card suits */
 export const SUITS = ['♠', '♣', '♦', '♥'] as const;
@@ -12,7 +26,13 @@ export const SUITS = ['♠', '♣', '♦', '♥'] as const;
 export const RED_SUITS: readonly string[] = ['♦', '♥'];
 
 /** Game stages in order */
-export const STAGES = ['PRE-FLOP', 'FLOP', 'TURN', 'RIVER', 'SHOWDOWN'] as const;
+export const STAGES = [
+  'PRE-FLOP',
+  'FLOP',
+  'TURN',
+  'RIVER',
+  'SHOWDOWN',
+] as const;
 
 /** Timing constants (in seconds) */
 export const TIMING = {
@@ -48,11 +68,11 @@ export const SWAP_DRAW_COUNT: Record<number, number> = {
 };
 
 /** Available avatar emojis */
-export const AVATARS = ['🤠', '🦊', '🐗', '🐶', '🐱', '🐻'] as const;
+export const AVATARS = ['🐵', '🦊', '🐗', '🐶', '🐱', '🐻'] as const;
 
 /** Bot avatar */
-export const BOT_AVATAR = '🐺';
-export const BOT_NAME = 'Sói Bạc (Bot)';
+export const BOT_AVATAR = '🐻';
+export const BOT_NAME = 'Bear (Bot)';
 
 /** Socket event names */
 export const SOCKET_EVENTS = {
