@@ -23,6 +23,10 @@ export class GameRoom {
   private engine: GameEngine;
   private gameStarted: boolean = false;
   private isRoundOverState: boolean = false;
+  private offlineSeats = new Set<number>();
+  private dropTimers = new Map<number, NodeJS.Timeout>();
+  /** Set by the socket layer; called once no human is left in the room. */
+  public onEmpty?: () => void;
 
   constructor(id: string, maxPlayers: number, io: Server) {
     this.id = id;
@@ -82,6 +86,15 @@ export class GameRoom {
     this.addPlayer('', `${names[AVATARS.indexOf(avatar)]} (Bot)`, avatar, true);
   }
 
+  /** Seat held by a token, or null when the token is unknown / dropped. */
+  public seatForToken(token: string): number | null {
+    const socketId = this.connections.get(token);
+    const player = socketId
+      ? this.players.find((p) => p.id === socketId)
+      : undefined;
+    return player ? player.seatIndex : null;
+  }
+
   public reconnect(token: string, newSocketId: string): boolean {
     if (this.connections.has(token)) {
       const oldSocketId = this.connections.get(token);
@@ -89,6 +102,8 @@ export class GameRoom {
       if (player) {
         player.id = newSocketId;
         this.connections.set(token, newSocketId);
+        this.cancelDrop(player.seatIndex);
+        logger.info(`Player ${player.name} reconnected to room ${this.id}`);
         this.broadcastRoomUpdate();
         this.sendGameState(player);
         return true;
@@ -99,12 +114,99 @@ export class GameRoom {
 
   public disconnect(socketId: string): void {
     const player = this.players.find((p) => p.id === socketId);
-    if (player) {
-      // In a full game we might fold them or wait for reconnect.
-      // For now, let's just log and they can reconnect if they have token.
-      logger.info(`Player ${player.name} disconnected from room ${this.id}`);
-      this.broadcastRoomUpdate();
+    if (!player || player.isBot) return;
+    logger.info(`Player ${player.name} disconnected from room ${this.id}`);
+    this.offlineSeats.add(player.seatIndex);
+    this.broadcastRoomUpdate();
+    // Give them a grace period (page reload, brief network loss) before the
+    // seat is given up, so the other players are never left waiting.
+    this.cancelDrop(player.seatIndex);
+    this.dropTimers.set(
+      player.seatIndex,
+      setTimeout(
+        () => this.removePlayer(player.seatIndex),
+        TIMING.RECONNECT_GRACE * 1000
+      )
+    );
+  }
+
+  private cancelDrop(seatIndex: number) {
+    this.offlineSeats.delete(seatIndex);
+    const timer = this.dropTimers.get(seatIndex);
+    if (timer) clearTimeout(timer);
+    this.dropTimers.delete(seatIndex);
+  }
+
+  private removePlayer(seatIndex: number) {
+    const player = this.players.find((p) => p.seatIndex === seatIndex);
+    this.dropTimers.delete(seatIndex);
+    this.offlineSeats.delete(seatIndex);
+    if (!player) return;
+    for (const [token, socketId] of this.connections) {
+      if (socketId === player.id) this.connections.delete(token);
     }
+    logger.info(`Player ${player.name} left room ${this.id}`);
+    this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, {
+      type: 'player_left',
+      seatIndex,
+      name: player.name,
+    });
+
+    if (!this.gameStarted) {
+      // Free the seat: compact the table and tell everyone their new seat.
+      this.players.splice(this.players.indexOf(player), 1);
+      this.players.forEach((p, index) => (p.seatIndex = index));
+      for (const [token, socketId] of this.connections) {
+        const p = this.players.find((x) => x.id === socketId);
+        if (p)
+          this.io.to(socketId).emit(SOCKET_EVENTS.JOINED_SUCCESS, {
+            seatIndex: p.seatIndex,
+            roomId: this.id,
+            maxPlayers: this.maxPlayers,
+            token,
+          });
+      }
+      this.broadcastRoomUpdate();
+    } else {
+      const wasTheirTurn = this.engine.getCurrentTurnSeat() === seatIndex;
+      const events = this.engine.dropPlayer(seatIndex);
+      this.broadcastRoomUpdate();
+      if (this.isRoundOverState) {
+        if (this.engine.isMatchOver()) this.announceMatchOver();
+        else this.broadcastGameState();
+      } else if (events.length > 0) {
+        this.dispatchEvents(events);
+      } else {
+        this.broadcastGameState();
+        if (wasTheirTurn) this.processTurn();
+      }
+    }
+
+    if (!this.players.some((p) => !p.isBot)) {
+      this.destroy();
+      this.onEmpty?.();
+    }
+  }
+
+  private announceMatchOver() {
+    const winner = this.engine.getWinner();
+    if (!winner) return;
+    this.io.to(this.id).emit(SOCKET_EVENTS.MATCH_OVER, {
+      winnerSeatIndex: winner.seatIndex,
+      winnerName: winner.name,
+    });
+    this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, {
+      type: 'match_over',
+      winnerSeatIndex: winner.seatIndex,
+      winnerName: winner.name,
+    });
+  }
+
+  public destroy() {
+    this.dropTimers.forEach((t) => clearTimeout(t));
+    this.dropTimers.clear();
+    this.engine.clearTurnTimer();
+    logger.info(`Room ${this.id} closed`);
   }
 
   public broadcastRoomUpdate() {
@@ -115,9 +217,7 @@ export class GameRoom {
         seatIndex: p.seatIndex,
         name: p.name,
         avatar: p.avatar,
-        connected: p.isBot
-          ? true
-          : Array.from(this.connections.values()).includes(p.id),
+        connected: p.isBot ? true : !this.offlineSeats.has(p.seatIndex),
       })),
     });
   }
@@ -231,7 +331,9 @@ export class GameRoom {
           const r = this.engine.dispatchRoulette(loser);
           this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, {
             type: 'log',
-            message: `☠ Đến lượt [${loser.name}] bóp cò Russian Roulette!`,
+            key: 'roulette_turn',
+            name: loser.name,
+            message: `${loser.name} pulls the trigger.`,
           });
           this.io
             .to(this.id)
@@ -271,11 +373,11 @@ export class GameRoom {
       } else {
         // Round ended, do not auto-restart! Let the user decide to click next round!
         this.io.to(this.id).emit(SOCKET_EVENTS.ROUND_OVER, {
-          message: 'Ván bài đã kết thúc! Bấm [TIẾP TỤC VÁN MỚI] để bắt đầu.',
+          message: 'Round over.',
         });
         this.io.to(this.id).emit(SOCKET_EVENTS.GAME_EVENT, {
           type: 'round_over',
-          message: 'Ván bài đã kết thúc! Bấm [TIẾP TỤC VÁN MỚI] để bắt đầu.',
+          message: 'Round over.',
         });
       }
       this.broadcastGameState();

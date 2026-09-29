@@ -4,11 +4,13 @@ import { useGameStore } from '../store/gameStore';
 import { emitSwapConfirm } from '../socket';
 import { useTurnClock } from '../hooks/useTurnClock';
 import { TIMING } from '@liars-bar/shared';
+import { useT } from '../i18n';
 import { Dialog } from './Dialog';
 import { Icon } from './Icon';
 export const SwapCardPanel: React.FC = () => {
   const { swapPoolCards, setSwapPool, gameState, currentRoomId, isConnected } =
     useGameStore();
+  const t = useT();
   const turnSeconds = useTurnClock();
   const [handIndex, setHandIndex] = useState<number | null>(null),
     [drawnIndex, setDrawnIndex] = useState<number | null>(null);
@@ -52,43 +54,60 @@ export const SwapCardPanel: React.FC = () => {
   const close = () => {
     if (!swapping) setSwapPool(null);
   };
+  const [introA, introB] = t('swap.p').split('\n');
+  const board = gameState?.communityCards ?? [];
   return (
     <Dialog
-      label="Đổi một lá bài"
+      label={t('swap.title')}
       className={`swap-dialog ${swapping ? 'is-swapping' : ''}`}
       onClose={close}
     >
       <button
         className="dialog-close icon-button"
         disabled={swapping}
-        aria-label="Giữ bài và đóng"
+        aria-label={t('swap.keepClose')}
         onClick={close}
       >
         <Icon name="close" />
       </button>
-      <span className="eyebrow">MỘT LẦN ĐỔI VẬN</span>
+      <span className="eyebrow">{t('swap.eyebrow')}</span>
       <h2>
-        Thay lá bài.
+        {t('swap.h')}
         <br />
-        <em>Đổi số phận.</em>
+        <em>{t('swap.h2')}</em>
       </h2>
       <div className="swap-intro">
         <p>
-          Chọn một lá bỏ đi và một lá nhận về.
+          {introA}
           <br />
-          Sau khi đổi, bạn vẫn cần chọn hành động.
+          {introB}
         </p>
         <span className={`swap-timer ${remaining <= 5 ? 'urgent' : ''}`}>
           <Icon name="clock" size={16} />
           {remaining}s
         </span>
       </div>
+      {/* The board stays in view while choosing, so the decision is informed. */}
+      {board.length > 0 && (
+        <div className="swap-zone swap-board" aria-label={t('swap.board')}>
+          <div className="section-heading">
+            <h3>
+              <span>♠</span> {t('swap.board')}
+            </h3>
+          </div>
+          <div className="swap-cards-row swap-board-row">
+            {board.map((c, i) => (
+              <PlayingCard key={i} card={c} />
+            ))}
+          </div>
+        </div>
+      )}
       <div className="swap-zone swap-hand">
         <div className="section-heading">
           <h3>
-            <span>01</span> LÁ BẠN MUỐN BỎ
+            <span>01</span> {t('swap.give')}
           </h3>
-          <span>{handIndex !== null ? 'ĐÃ CHỌN 1 LÁ' : 'CHỌN 1 LÁ'}</span>
+          <span>{handIndex !== null ? t('swap.picked') : t('swap.pick')}</span>
         </div>
         <div className="swap-cards-row">
           {gameState?.me.cards.map((c, i) => (
@@ -110,9 +129,9 @@ export const SwapCardPanel: React.FC = () => {
       <div className="swap-zone swap-draw">
         <div className="section-heading">
           <h3>
-            <span>02</span> LÁ BẠN NHẬN VỀ
+            <span>02</span> {t('swap.take')}
           </h3>
-          <span>{drawnIndex !== null ? 'ĐÃ CHỌN 1 LÁ' : 'CHỌN 1 LÁ'}</span>
+          <span>{drawnIndex !== null ? t('swap.picked') : t('swap.pick')}</span>
         </div>
         <div className="swap-cards-row">
           {swapPoolCards.map((c, i) => (
@@ -138,11 +157,11 @@ export const SwapCardPanel: React.FC = () => {
         }
         onClick={confirm}
       >
-        {swapping ? 'ĐANG ĐỔI BÀI…' : 'XÁC NHẬN ĐỔI BÀI'}
+        {swapping ? t('swap.swapping') : t('swap.confirm')}
         <Icon name="swap" />
       </button>
       <button className="text-button" disabled={swapping} onClick={close}>
-        Giữ bài hiện tại
+        {t('swap.keep')}
       </button>
     </Dialog>
   );

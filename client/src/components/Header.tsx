@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { leaveRoom } from '../socket';
 import { setBgmVolume, setSfxVolume, toggleBgm } from '../utils/audio';
+import { REVOLVER, TIMING } from '@liars-bar/shared';
+import { useI18n, useT } from '../i18n';
 import { Icon } from './Icon';
 import { Dialog } from './Dialog';
 export const Header: React.FC = () => {
   const { isLobbyOpen, isConnected } = useGameStore();
+  const { lang, setLang } = useI18n();
+  const t = useT();
   const [panel, setPanel] = useState<'sound' | 'rules' | 'leave' | null>(null);
   const [bgm, setBgm] = useState(20),
     [sfx, setSfx] = useState(80),
     [musicOn, setMusicOn] = useState(false);
+  const [rulesTitleA, rulesTitleB] = t('rules.title').split('\n');
   return (
     <>
       <header className="site-header">
@@ -19,7 +25,7 @@ export const Header: React.FC = () => {
             <small>TRUST NO ONE. PLAY YOUR HAND.</small>
           </div>
         </div>
-        <nav className="header-nav" aria-label="Điều hướng chính">
+        <nav className="header-nav" aria-label="Main navigation">
           <button
             className="nav-active"
             onClick={() => {
@@ -35,55 +41,43 @@ export const Header: React.FC = () => {
             }}
           >
             <Icon name="cards" size={16} />
-            {isLobbyOpen ? 'CHƠI' : 'BÀN CHƠI'}
-          </button>
-          {isLobbyOpen && (
-            <button
-              onClick={() => {
-                document
-                  .querySelector('#character-selection')
-                  ?.scrollIntoView({
-                    behavior: matchMedia('(prefers-reduced-motion: reduce)')
-                      .matches
-                      ? 'auto'
-                      : 'smooth',
-                    block: 'center',
-                  });
-              }}
-            >
-              <Icon name="users" size={16} />
-              NHÂN VẬT
-            </button>
-          )}
-          <button onClick={() => setPanel('sound')}>
-            <Icon name="sound" size={16} />
-            ÂM THANH
+            {isLobbyOpen ? t('nav.play') : t('nav.table')}
           </button>
         </nav>
         <div className="header-controls">
           <span className={`server-status ${isConnected ? 'online' : ''}`}>
             <i />
-            {isConnected ? 'TRỰC TUYẾN' : 'KẾT NỐI…'}
+            {isConnected ? t('header.online') : t('header.connecting')}
           </span>
           <button
+            className="lang-button"
+            aria-label={t('header.lang')}
+            title={t('header.lang')}
+            onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')}
+          >
+            <b className={lang === 'vi' ? 'active' : ''}>VI</b>
+            <span aria-hidden="true">/</span>
+            <b className={lang === 'en' ? 'active' : ''}>EN</b>
+          </button>
+          <button
             className="icon-button"
-            aria-label="Cài đặt âm thanh"
+            aria-label={t('header.sound')}
             onClick={() => setPanel('sound')}
           >
             <Icon name="sound" />
           </button>
           <button
             className="help-button"
-            aria-label="Cách chơi"
+            aria-label={t('header.help')}
             onClick={() => setPanel('rules')}
           >
             <Icon name="help" size={18} />
-            <span>Cách chơi</span>
+            <span>{t('header.help')}</span>
           </button>
           {!isLobbyOpen && (
             <button
               className="icon-button"
-              aria-label="Rời phòng"
+              aria-label={t('header.leave')}
               onClick={() => setPanel('leave')}
             >
               <Icon name="exit" />
@@ -95,78 +89,61 @@ export const Header: React.FC = () => {
         <Dialog
           label={
             panel === 'rules'
-              ? 'Cách chơi'
+              ? t('header.help')
               : panel === 'sound'
-                ? 'Âm thanh'
-                : 'Rời bàn chơi'
+                ? t('sound.title')
+                : t('leave.eyebrow')
           }
           onClose={() => setPanel(null)}
         >
           <button
             className="dialog-close icon-button"
-            aria-label="Đóng"
+            aria-label={t('dialog.close')}
             onClick={() => setPanel(null)}
           >
             <Icon name="close" />
           </button>
           {panel === 'rules' ? (
             <>
-              <span className="eyebrow">LUẬT CỦA BÀN</span>
+              <span className="eyebrow">{t('rules.eyebrow')}</span>
               <h2>
-                Bài trên tay.
+                {rulesTitleA}
                 <br />
-                Mạng trên bàn.
+                {rulesTitleB}
               </h2>
               <ol className="rules-list">
-                <li>
-                  <strong>Ghép bộ bài mạnh nhất</strong>
-                  <p>
-                    Dùng 2 lá tẩy và 5 lá chung để tạo bộ 5 lá mạnh nhất. Bài
-                    chung lần lượt mở ở Flop, Turn và River.
-                  </p>
-                </li>
-                <li>
-                  <strong>Mỗi quyết định đều có giá</strong>
-                  <p>
-                    Theo bài thêm 1 viên đạn. Bỏ bài phải bóp cò ngay. Tất tay
-                    nạp đủ 6 viên và buộc đối thủ tất tay hoặc bỏ bài.
-                  </p>
-                </li>
-                <li>
-                  <strong>Một cơ hội đổi vận</strong>
-                  <p>
-                    Đổi 1 lá tẩy một lần mỗi ván, ở Flop hoặc Turn. Hành động
-                    trước khi hết thời gian 30 giây; hết giờ sẽ tự bỏ bài.
-                  </p>
-                </li>
-                <li>
-                  <strong>Sống sót đến cuối cùng</strong>
-                  <p>
-                    Khi ngửa bài, người thua phải bóp cò. Còn sống thì chơi ván
-                    tiếp. Người sống sót cuối cùng thắng trận.
-                  </p>
-                </li>
+                {([1, 2, 3, 4] as const).map((n) => (
+                  <li key={n}>
+                    <strong>{t(`rules.${n}.t`)}</strong>
+                    <p>
+                      {t(`rules.${n}.p`, {
+                        cap: REVOLVER.CALL_BULLET_CAP,
+                        turn: TIMING.TURN_TIME_LIMIT,
+                      })}
+                    </p>
+                  </li>
+                ))}
               </ol>
               <button className="btn-primary" onClick={() => setPanel(null)}>
-                ĐÃ HIỂU LUẬT <Icon name="check" />
+                {t('rules.ok')} <Icon name="check" />
               </button>
             </>
           ) : panel === 'sound' ? (
             <>
-              <span className="eyebrow">KHÔNG KHÍ QUÁN BAR</span>
-              <h2>Âm thanh</h2>
+              <span className="eyebrow">{t('sound.eyebrow')}</span>
+              <h2>{t('sound.title')}</h2>
               <div className="sound-setting">
-                <span>Nhạc nền</span>
+                <span>{t('sound.bgm')}</span>
                 <button
                   className="btn-secondary"
                   aria-pressed={musicOn}
                   onClick={() => setMusicOn(toggleBgm())}
                 >
-                  {musicOn ? 'Đang bật' : 'Đang tắt'}
+                  {musicOn ? t('sound.on') : t('sound.off')}
                 </button>
               </div>
               <label className="sound-setting" htmlFor="bgm-volume">
-                Âm lượng nhạc <span>{bgm}%</span>
+                {t('sound.bgmVolume')} <span>{bgm}%</span>
               </label>
               <input
                 id="bgm-volume"
@@ -180,7 +157,7 @@ export const Header: React.FC = () => {
                 }}
               />
               <label className="sound-setting" htmlFor="sfx-volume">
-                Hiệu ứng & giọng nói <span>{sfx}%</span>
+                {t('sound.sfxVolume')} <span>{sfx}%</span>
               </label>
               <input
                 id="sfx-volume"
@@ -196,23 +173,18 @@ export const Header: React.FC = () => {
             </>
           ) : (
             <>
-              <span className="eyebrow">RỜI BÀN</span>
-              <h2>Rời cuộc chơi?</h2>
-              <p>
-                Ván chơi hiện tại sẽ tiếp tục. Bạn sẽ trở về sảnh chọn nhân vật.
-              </p>
+              <span className="eyebrow">{t('leave.eyebrow')}</span>
+              <h2>{t('leave.title')}</h2>
+              <p>{t('leave.p')}</p>
               <div className="dialog-actions">
                 <button
                   className="btn-secondary"
                   onClick={() => setPanel(null)}
                 >
-                  Ở lại bàn
+                  {t('leave.stay')}
                 </button>
-                <button
-                  className="btn-primary"
-                  onClick={() => location.reload()}
-                >
-                  Rời phòng <Icon name="exit" />
+                <button className="btn-primary" onClick={leaveRoom}>
+                  {t('leave.go')} <Icon name="exit" />
                 </button>
               </div>
             </>

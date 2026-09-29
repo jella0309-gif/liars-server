@@ -1,4 +1,18 @@
 @font-face {
+  font-family: 'Playfair Display';
+  src: url('/fonts/PlayfairDisplay[wght].ttf') format('truetype');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('/fonts/PlayfairDisplay-Italic[wght].ttf') format('truetype');
+  font-weight: 400 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
   font-family: 'Permanent Marker';
   src: url('/fonts/permanent-marker.ttf') format('truetype');
   font-weight: 400;
@@ -20,6 +34,7 @@
   --line: #503a29;
   --line-light: #765235;
   --font-body: 'Segoe UI', Arial, sans-serif;
-  --font-display: Georgia, 'Times New Roman', serif;
+  /* Playfair carries the full Vietnamese glyph set; Georgia does not. */
+  --font-display: 'Playfair Display', 'Times New Roman', Georgia, serif;
   --font-brush: 'Permanent Marker', 'Segoe Print', cursive;
 }

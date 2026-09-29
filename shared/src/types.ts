@@ -133,7 +133,8 @@ export type GameEvent =
   | { type: 'swap_available'; drawnCards: Card[] }
   | { type: 'swap_used'; seatIndex: number }
   | { type: 'all_allin_fast_forward' }
-  | { type: 'log'; message: string };
+  | { type: 'player_left'; seatIndex: number; name: string }
+  | { type: 'log'; message: string; key?: 'roulette_turn'; name?: string };
 
 // ---------- Client → Server Payloads ----------
 

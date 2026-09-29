@@ -55,6 +55,7 @@ export function registerSocketHandlers(io: Server) {
         const data = CreateRoomSchema.parse(payload);
         const roomId = generateRoomId();
         const room = new GameRoom(roomId, data.maxPlayers, io);
+        room.onEmpty = () => rooms.delete(roomId);
         rooms.set(roomId, room);
 
         const joinResult = room.addPlayer(
@@ -177,12 +178,19 @@ export function registerSocketHandlers(io: Server) {
       try {
         const data = ReconnectSchema.parse(payload);
         const room = rooms.get(data.roomId);
-        if (room) {
-          if (room.reconnect(data.token, socket.id)) {
-            socket.join(data.roomId);
-          } else {
-            socket.emit(SOCKET_EVENTS.ERROR, { message: 'Reconnect failed' });
-          }
+        const seatIndex = room ? room.seatForToken(data.token) : null;
+        if (room && seatIndex !== null) {
+          socket.join(data.roomId);
+          // Seat first so the client leaves the lobby before state arrives.
+          socket.emit(SOCKET_EVENTS.JOINED_SUCCESS, {
+            seatIndex,
+            roomId: data.roomId,
+            maxPlayers: room.maxPlayers,
+            token: data.token,
+          });
+          room.reconnect(data.token, socket.id);
+        } else {
+          socket.emit(SOCKET_EVENTS.ERROR, { message: 'Reconnect failed' });
         }
       } catch (err) {
         socket.emit(SOCKET_EVENTS.ERROR, { message: 'Invalid payload' });

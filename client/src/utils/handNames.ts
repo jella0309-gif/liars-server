@@ -1,17 +1,21 @@
-const handNames: Record<string, string> = {
-  'Royal Flush': 'Sảnh chúa',
-  'Straight Flush': 'Thùng phá sảnh',
-  'Four of a Kind': 'Tứ quý',
-  'Full House': 'Cù lũ',
-  Flush: 'Thùng',
-  Straight: 'Sảnh',
-  'Three of a Kind': 'Bộ ba',
-  'Two Pair': 'Hai đôi',
-  'One Pair': 'Một đôi',
-  'High Card': 'Mậu thầu',
-  Folded: 'Đã bỏ bài',
-  Invalid: 'Thắng do đối thủ bỏ bài',
-};
+import { t, type Key } from '../i18n';
+
+const KNOWN = new Set([
+  'Royal Flush',
+  'Straight Flush',
+  'Four of a Kind',
+  'Full House',
+  'Flush',
+  'Straight',
+  'Three of a Kind',
+  'Two Pair',
+  'One Pair',
+  'High Card',
+  'Folded',
+  'Invalid',
+]);
+
+/** Localized poker hand name (server sends the English evaluator name). */
 export function handName(name: string) {
-  return handNames[name] || name;
+  return KNOWN.has(name) ? t(`hand.${name}` as Key) : name;
 }

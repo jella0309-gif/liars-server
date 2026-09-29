@@ -125,32 +125,6 @@
     height: 43px;
     font-size: 31px;
   }
-  .game-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .game-sidebar {
-    display: none;
-  }
-  .poker-table {
-    height: clamp(610px, 72vh, 730px);
-  }
-  .seat-position {
-    width: min(29%, 260px);
-  }
-  .controls-dock {
-    padding: 16px 24px;
-    gap: 15px;
-  }
-  .btn-act {
-    min-width: 104px;
-    padding: 10px 12px;
-  }
-  .action-buttons {
-    gap: 8px;
-  }
-  .controls-status p {
-    font-size: 11px;
-  }
 }
 @media (max-width: 900px) {
   .header-nav {
@@ -214,191 +188,16 @@
   }
 }
 @media (max-width: 760px) {
-  .in-game {
-    padding-bottom: 165px;
-  }
-  .game-page {
-    padding: 18px 16px;
-  }
-  .game-toolbar {
-    margin-bottom: 16px;
-  }
-  .game-toolbar h1 {
-    font-size: 23px;
-  }
-  .game-toolbar h1 > span {
-    margin-left: 8px;
-    padding-left: 8px;
-    font-size: 8px;
-  }
-  .table-capacity {
-    display: none;
-  }
-  .room-code-button {
-    padding: 10px;
-    gap: 10px;
-  }
-  .room-code-button b {
-    font-size: 11px;
-    margin-left: 6px;
-  }
-  .controls-dock {
-    min-height: 145px;
-    padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
-    flex-direction: column;
-    align-items: stretch;
-    gap: 9px;
-  }
-  .controls-status {
-    gap: 10px;
-  }
-  .turn-clock {
-    width: 34px;
-    height: 34px;
-  }
-  .turn-clock b {
-    font-size: 17px;
-  }
-  .turn-clock small {
-    font-size: 5px;
-  }
-  .controls-status .eyebrow {
-    font-size: 7px;
-  }
-  .controls-status p {
-    margin-top: 2px;
-    font-size: 10px;
-  }
-  .action-buttons {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 7px;
-  }
-  .btn-act {
-    min-width: 0;
-    min-height: 56px;
-    padding: 9px 10px;
-  }
-  .btn-act strong {
-    font-size: 12px;
-  }
-  .btn-act small {
-    font-size: 7px;
-  }
-  .controls-passive {
-    text-align: left;
-    padding: 9px 0;
-  }
   .god-save-toast {
     bottom: 166px;
     padding: 14px 17px;
   }
 }
 @media (max-width: 650px) {
-  .seat-position {
-    width: 28%;
-  }
-  .seat {
-    grid-template-columns: 1fr;
-    gap: 0;
-    padding: 4px;
-  }
-  .seat-portrait-wrap .character-art {
-    height: 88px;
-    width: 95px;
-    margin: 0 auto;
-  }
-  .seat-details {
-    padding: 6px 4px 4px;
-  }
-  .seat-state-label {
-    font-size: 5px;
-    padding-top: 16px;
-    padding-bottom: 3px;
-  }
-  .seat-name-row {
-    justify-content: center;
-    gap: 4px;
-  }
-  .seat-name-row h3 {
-    font-size: 10px;
-  }
-  .you-badge {
-    font-size: 5px;
-  }
-  .seat-bullets {
-    margin-top: 5px;
-    justify-content: center;
-  }
-  .bullet-dots i {
-    height: 8px;
-  }
   .seat-cards-container,
   .active-turn .seat-cards-container {
     margin-top: 8px;
     justify-content: center;
-  }
-  .seat-cards-container .card {
-    --card-width: 28px;
-  }
-  .seat-is-me .card {
-    --card-width: 33px;
-  }
-  .seat-timer {
-    margin-top: 7px;
-  }
-  .hand-eval {
-    margin-top: 5px;
-    font-size: 9px;
-    text-align: center;
-  }
-  .hand-eval .hand-result {
-    margin-top: 3px;
-    font-size: 5px;
-  }
-  .seat-eliminated {
-    margin: 10px 0;
-    text-align: center;
-    font-size: 11px;
-  }
-  .seat-eliminated span {
-    font-size: 7px;
-  }
-  .seats-2 .seat-position,
-  .seats-3 .pos-bottom,
-  .seats-4 .pos-bottom {
-    width: 240px;
-  }
-  .seats-2 .seat,
-  .seats-3 .pos-bottom .seat,
-  .seats-4 .pos-bottom .seat {
-    grid-template-columns: 90px minmax(0, 1fr);
-    gap: 8px;
-  }
-  .seats-2 .seat-portrait-wrap .character-art,
-  .seats-3 .pos-bottom .seat-portrait-wrap .character-art,
-  .seats-4 .pos-bottom .seat-portrait-wrap .character-art {
-    height: 115px;
-    width: 100%;
-  }
-  .pos-top-left,
-  .seats-3 .pos-top-left {
-    left: 23%;
-    top: 19%;
-  }
-  .pos-top-right,
-  .seats-3 .pos-top-right {
-    left: 77%;
-    top: 19%;
-  }
-  .seats-4 .pos-left {
-    left: 14%;
-  }
-  .seats-4 .pos-right {
-    left: 86%;
-  }
-  .table-center {
-    width: calc(100% - 28px);
   }
   .table-brand {
     font-size: 24px;
@@ -406,46 +205,8 @@
   .table-brand small {
     font-size: 5px;
   }
-  .poker-table {
-    height: 660px;
-  }
-  .felt-surface {
-    inset: 10% 5%;
-    border-width: 11px;
-    border-radius: 41%;
-  }
-  .community-slot {
-    width: 54px;
-    height: 78px;
-  }
-  .comm-cards .card {
-    --card-width: 54px;
-  }
-  .stage-track {
-    gap: 13px;
-    padding: 11px 8px;
-  }
-  .stage-track > span {
-    font-size: 7px;
-    gap: 5px;
-    letter-spacing: 0.5px;
-  }
-  .table-edge-label {
-    font-size: 6px;
-    letter-spacing: 1.7px;
-    bottom: 9px;
-  }
   .empty-seat {
     height: 180px;
-  }
-  .table-log {
-    max-width: 90%;
-  }
-  .board-label {
-    margin: 10px 0 8px;
-  }
-  .stage-announcement {
-    font-size: 21px;
   }
 }
 @media (max-width: 480px) {
@@ -595,204 +356,10 @@
   .in-lobby .tavern-scene {
     background-size: auto max(620px, 100svh);
   }
-  .game-page {
-    padding: 16px 8px;
-  }
-  .game-toolbar {
-    padding: 0 4px;
-    gap: 8px;
-  }
-  .game-toolbar .eyebrow {
-    font-size: 6px;
-    letter-spacing: 1px;
-  }
-  .game-toolbar h1 {
-    font-size: 20px;
-  }
-  .game-toolbar h1 > span {
-    font-size: 6px;
-    padding-left: 5px;
-    margin-left: 5px;
-  }
-  .room-code-button {
-    flex-direction: column;
-    gap: 2px;
-    padding: 7px 9px;
-  }
-  .room-code-button > svg {
-    display: none;
-  }
-  .room-code-button b {
-    font-size: 10px;
-    letter-spacing: 1px;
-    margin-left: 4px;
-  }
-  .room-code-button {
-    font-size: 6px;
-  }
-  .game-arena {
-    border-radius: 5px;
-  }
-  .stage-track {
-    gap: 9px;
-    padding: 10px 5px;
-  }
-  .stage-track > span {
-    font-size: 6px;
-    gap: 3px;
-    letter-spacing: 0.2px;
-  }
-  .stage-track i {
-    height: 14px;
-    width: 14px;
-    font-size: 6px;
-  }
-  .poker-table {
-    height: clamp(500px, calc(100svh - 350px), 660px);
-  }
-  .seat-position {
-    width: 36%;
-    max-width: 153px;
-  }
-  .pos-top-left,
-  .seats-3 .pos-top-left {
-    left: 24%;
-    top: 17%;
-  }
-  .pos-top-right,
-  .seats-3 .pos-top-right {
-    left: 76%;
-    top: 17%;
-  }
-  .seats-4 .pos-top {
-    top: 14%;
-    width: 30%;
-  }
-  .seats-4 .pos-left,
-  .seats-4 .pos-right {
-    top: 31%;
-    width: 27%;
-  }
-  .seats-4 .pos-left {
-    left: 14%;
-  }
-  .seats-4 .pos-right {
-    left: 86%;
-  }
-  .seat {
-    padding: 3px;
-  }
-  .seats-4 .pos-left .seat,
-  .seats-4 .pos-right .seat {
-    grid-template-columns: 46px minmax(0, 1fr);
-    gap: 3px;
-  }
-  .seats-4 .pos-left .seat-portrait-wrap .character-art,
-  .seats-4 .pos-right .seat-portrait-wrap .character-art {
-    width: 100%;
-    height: 82px;
-  }
-  .seats-4 .pos-left .seat-cards-container,
-  .seats-4 .pos-right .seat-cards-container {
-    gap: 2px;
-  }
-  .seats-4 .pos-left .seat-cards-container .card,
-  .seats-4 .pos-right .seat-cards-container .card {
-    --card-width: 18px;
-  }
-  .seat-portrait-wrap .character-art {
-    height: 70px;
-    width: 76px;
-  }
-  .seat-details {
-    padding: 5px 3px 3px;
-  }
-  .seat-name-row h3 {
-    font-size: 9px;
-  }
-  .seat-state-label {
-    font-size: 5px;
-    letter-spacing: 0.7px;
-    padding-bottom: 2px;
-  }
-  .seat-bullets {
-    gap: 4px;
-    margin-top: 4px;
-  }
-  .seat-bullets > span {
-    font-size: 7px;
-  }
-  .seat-bullets b {
-    font-size: 5px;
-  }
-  .bullet-dots {
-    gap: 2px;
-  }
-  .bullet-dots i {
-    width: 4px;
-    height: 7px;
-  }
   .seat-cards-container,
   .active-turn .seat-cards-container {
     gap: 6px;
     margin-top: 6px;
-  }
-  .seat-cards-container .card {
-    --card-width: 27px;
-  }
-  .seat-is-me .card {
-    --card-width: 30px;
-  }
-  .seat-timer {
-    height: 2px;
-    margin-top: 5px;
-  }
-  .seat-timer > small {
-    font-size: 7px;
-  }
-  .seats-2 .seat-position,
-  .seats-3 .pos-bottom,
-  .seats-4 .pos-bottom {
-    width: 220px;
-    max-width: none;
-  }
-  .seats-2 .seat,
-  .seats-3 .pos-bottom .seat,
-  .seats-4 .pos-bottom .seat {
-    grid-template-columns: 80px minmax(0, 1fr);
-  }
-  .seats-2 .seat-portrait-wrap .character-art,
-  .seats-3 .pos-bottom .seat-portrait-wrap .character-art,
-  .seats-4 .pos-bottom .seat-portrait-wrap .character-art {
-    height: 96px;
-    width: 100%;
-  }
-  .seats-2 .seat-name-row,
-  .seats-3 .pos-bottom .seat-name-row,
-  .seats-4 .pos-bottom .seat-name-row {
-    justify-content: flex-start;
-  }
-  .seats-2 .seat-bullets,
-  .seats-3 .pos-bottom .seat-bullets,
-  .seats-4 .pos-bottom .seat-bullets {
-    justify-content: flex-start;
-  }
-  .seats-2 .seat-cards-container,
-  .seats-3 .pos-bottom .seat-cards-container,
-  .seats-4 .pos-bottom .seat-cards-container {
-    justify-content: flex-start;
-  }
-  .seats-2 .seat-is-me .card,
-  .seats-3 .pos-bottom .card,
-  .seats-4 .pos-bottom .card {
-    --card-width: 36px;
-  }
-  .hand-eval {
-    font-size: 8px;
-    margin-top: 4px;
-  }
-  .hand-eval .hand-result {
-    margin-top: 2px;
   }
   .action-bubble {
     font-size: 8px;
@@ -806,15 +373,8 @@
   .empty-seat > span {
     font-size: 9px;
   }
-  .felt-surface {
-    inset: 9% 4.5%;
-    border-width: 9px;
-  }
   .table-stitch {
     inset: 7px;
-  }
-  .table-center {
-    width: calc(100% - 14px);
   }
   .table-brand {
     font-size: 21px;
@@ -823,74 +383,6 @@
     margin-top: 4px;
     font-size: 5px;
     letter-spacing: 1.3px;
-  }
-  .board-label {
-    font-size: 6px;
-    letter-spacing: 1.5px;
-    margin: 9px 0 7px;
-  }
-  .community-slot {
-    width: 47px;
-    height: 68px;
-  }
-  .comm-cards {
-    gap: 6px;
-  }
-  .comm-cards .card {
-    --card-width: 47px;
-  }
-  .card-placeholder {
-    gap: 8px;
-  }
-  .card-placeholder > span {
-    font-size: 21px;
-  }
-  .card-placeholder > small {
-    font-size: 5px;
-  }
-  .table-log {
-    min-height: 28px;
-    font-size: 8px;
-    margin-top: 8px;
-    gap: 5px;
-    max-width: 90%;
-  }
-  .table-log .tiny-diamond {
-    width: 3px;
-    height: 3px;
-  }
-  .table-edge-label {
-    display: none;
-  }
-  .stage-announcement {
-    font-size: 18px;
-    top: -26px;
-  }
-  .waiting-table {
-    max-width: 230px;
-  }
-  .waiting-table h2 {
-    font-size: 21px;
-  }
-  .waiting-table p {
-    font-size: 10px;
-  }
-  .controls-dock {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-  .action-buttons {
-    gap: 5px;
-  }
-  .btn-act {
-    padding: 9px 7px;
-    min-height: 53px;
-  }
-  .btn-act strong {
-    font-size: 11px;
-  }
-  .btn-act small {
-    font-size: 6px;
   }
   .btn-call strong > span {
     font-size: 7px;
@@ -974,7 +466,10 @@
     animation-duration: 0.01ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    /* Disable transitions outright: a near-zero duration still turns the
+       default `transition-property: all` into live transitions on every
+       element, which can stall layout-affecting changes (header height). */
+    transition-property: none !important;
     scroll-behavior: auto !important;
   }
   .tavern-scene {

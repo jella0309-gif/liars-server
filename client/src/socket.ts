@@ -27,6 +27,44 @@ export function setMySeatIndex(index: number) {
   mySeatIndex = index;
 }
 
+/* The seat token and room id survive a reload so the player can rejoin. */
+const TOKEN_KEY = 'liars_token';
+const ROOM_KEY = 'liars_room';
+
+export function rememberSeat(roomId: string, token: string) {
+  try {
+    sessionStorage.setItem(TOKEN_KEY, token);
+    sessionStorage.setItem(ROOM_KEY, roomId);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function rememberedSeat(): { roomId: string; token: string } | null {
+  try {
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    const roomId = sessionStorage.getItem(ROOM_KEY);
+    return token && roomId ? { roomId, token } : null;
+  } catch {
+    return null;
+  }
+}
+
+export function forgetSeat() {
+  try {
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(ROOM_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** Leave deliberately: drop the remembered seat so a reload does not rejoin. */
+export function leaveRoom() {
+  forgetSeat();
+  location.reload();
+}
+
 export function emitCreateRoom(
   payload: CreateRoomPayload & { addBots?: boolean }
 ) {

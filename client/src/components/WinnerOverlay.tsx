@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { emitPlayAgain } from '../socket';
+import { emitPlayAgain, leaveRoom } from '../socket';
 import { CharacterPortrait } from './CharacterPortrait';
+import { useT } from '../i18n';
 import { Dialog } from './Dialog';
 import { Icon } from './Icon';
 export const WinnerOverlay: React.FC = () => {
@@ -13,6 +14,7 @@ export const WinnerOverlay: React.FC = () => {
     playersInfo,
     isConnected,
   } = useGameStore();
+  const t = useT();
   const [pending, setPending] = useState(false);
   React.useEffect(() => {
     setPending(false);
@@ -37,8 +39,9 @@ export const WinnerOverlay: React.FC = () => {
         .filter((entry) => entry.matchRank !== null)
         .sort((a, b) => a.matchRank! - b.matchRank!)
     : [];
+  const [lineA, lineB] = t('win.p').split('\n');
   return (
-    <Dialog className="winner-dialog" label="Kết quả trận đấu">
+    <Dialog className="winner-dialog" label={t('win.aria')}>
       <div className="winner-art">
         <CharacterPortrait avatar={avatar} mood="win" />
         <span className="winner-crown">
@@ -47,16 +50,16 @@ export const WinnerOverlay: React.FC = () => {
       </div>
       <span className="eyebrow">THE LAST ONE STANDING</span>
       <h2>{winnerName}</h2>
-      <div className="winner-caption">KẺ SỐNG SÓT CUỐI CÙNG.</div>
+      <div className="winner-caption">{t('win.caption')}</div>
       <p>
-        Bài đã hạ. Vận may vẫn còn.
+        {lineA}
         <br />
-        Đêm nay, chiếc ghế này thuộc về bạn.
+        {lineB}
       </p>
-      <ol className="match-standings" aria-label="Bảng xếp hạng chung cuộc">
+      <ol className="match-standings" aria-label={t('win.standings')}>
         {standings.map((entry) => (
           <li key={entry.seatIndex} className={`rank-${entry.matchRank}`}>
-            <b>HẠNG {entry.matchRank}</b>
+            <b>{t('seat.rank', { n: entry.matchRank! })}</b>
             <strong>{entry.name}</strong>
           </li>
         ))}
@@ -69,11 +72,11 @@ export const WinnerOverlay: React.FC = () => {
           emitPlayAgain(currentRoomId);
         }}
       >
-        {pending ? 'ĐANG CHUẨN BỊ…' : 'THÊM MỘT TRẬN'}
+        {pending ? t('win.preparing') : t('win.again')}
         <Icon name="arrow" />
       </button>
-      <button className="text-button" onClick={() => location.reload()}>
-        Trở về sảnh
+      <button className="text-button" onClick={leaveRoom}>
+        {t('win.lobby')}
       </button>
     </Dialog>
   );

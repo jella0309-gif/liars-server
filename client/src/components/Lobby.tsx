@@ -4,13 +4,16 @@ import { emitCreateRoom, emitJoinRoom } from '../socket';
 import {
   CharacterPortrait,
   CHARACTERS,
-  MOOD_LABELS,
+  MOODS,
   type CharacterMood,
 } from './CharacterPortrait';
+import { TIMING } from '@liars-bar/shared';
+import { useT } from '../i18n';
 import { Icon } from './Icon';
 
 export const Lobby: React.FC = () => {
   const { isConnected, isLobbyOpen, errorMessage, setError } = useGameStore();
+  const t = useT();
   const [selectedAvatar, setSelectedAvatar] = useState<string>('🐵');
   const [playerName, setPlayerName] = useState('');
   const [maxPlayers, setMaxPlayers] = useState(2);
@@ -26,10 +29,10 @@ export const Lobby: React.FC = () => {
     if (!pending) return;
     const timeout = setTimeout(() => {
       setPending(false);
-      setError('Chưa nhận được phản hồi. Bạn hãy thử lại.');
+      setError(t('lobby.timeout'));
     }, 10000);
     return () => clearTimeout(timeout);
-  }, [pending, setError]);
+  }, [pending, setError, t]);
   if (!isLobbyOpen) return null;
   const selectCharacter = (avatar: string) => {
     setSelectedAvatar(avatar);
@@ -55,10 +58,11 @@ export const Lobby: React.FC = () => {
       emitJoinRoom({ ...identity, roomId: roomCode.trim().toUpperCase() });
     else emitCreateRoom({ ...identity, maxPlayers, addBots: mode === 'bot' });
   };
+  const [waitingA, waitingB] = t('lobby.quote').split('\n');
   return (
     <main className="lobby-page" id="play">
       <div className="lobby-layout">
-        <section className="character-selection" aria-label="Chọn nhân vật">
+        <section className="character-selection" aria-label={t('lobby.section')}>
           <div className="hero-copy">
             <span className="eyebrow">
               <span className="tiny-diamond" /> THE UNDERGROUND POKER CLUB
@@ -68,20 +72,17 @@ export const Lobby: React.FC = () => {
               <br />
               <em>PLAY YOUR HAND.</em>
             </h1>
-            <p>
-              Sáu gương mặt. Một bàn cược. Ai sẽ là người cuối cùng
-              <br className="desktop-break" /> rời khỏi Liar's Bar?
-            </p>
+            <p>{t('lobby.hero.p')}</p>
           </div>
           <div className="section-heading" id="character-selection">
             <h2>
-              <span>01</span> CHỌN NHÂN VẬT CỦA BẠN
+              <span>01</span> {t('lobby.pick')}
             </h2>
             <div className="roster-controls">
               <button
                 type="button"
                 className="icon-button"
-                aria-label="Nhân vật trước"
+                aria-label={t('lobby.prev')}
                 onClick={() => cycleCharacter(-1)}
               >
                 <Icon
@@ -93,7 +94,7 @@ export const Lobby: React.FC = () => {
               <button
                 type="button"
                 className="icon-button"
-                aria-label="Nhân vật tiếp theo"
+                aria-label={t('lobby.next')}
                 onClick={() => cycleCharacter(1)}
               >
                 <Icon name="arrow" size={16} />
@@ -106,7 +107,7 @@ export const Lobby: React.FC = () => {
                 key={c.id}
                 type="button"
                 className={`character-choice ${selectedAvatar === c.avatar ? 'selected' : ''}`}
-                aria-label={`Chọn ${c.name}`}
+                aria-label={t('lobby.choose', { name: c.name })}
                 aria-pressed={selectedAvatar === c.avatar}
                 onClick={() => selectCharacter(c.avatar)}
                 style={
@@ -127,14 +128,14 @@ export const Lobby: React.FC = () => {
           <div className="character-profile">
             <CharacterPortrait avatar={selectedAvatar} mood={previewMood} />
             <div className="character-profile-copy">
-              <span className="eyebrow">{character.title}</span>
+              <span className="eyebrow">{t(`char.${character.id}.title`)}</span>
               <h3>
                 {character.name}
-                <span> / {MOOD_LABELS[previewMood]}</span>
+                <span> / {t(`mood.${previewMood}`)}</span>
               </h3>
-              <p>“{character.quote}”</p>
-              <div className="mood-switch" aria-label="Xem biểu cảm">
-                {(Object.keys(MOOD_LABELS) as CharacterMood[]).map((mood) => (
+              <p>“{t(`char.${character.id}.quote`)}”</p>
+              <div className="mood-switch" aria-label={t('lobby.moods')}>
+                {MOODS.map((mood) => (
                   <button
                     key={mood}
                     type="button"
@@ -142,7 +143,7 @@ export const Lobby: React.FC = () => {
                     className={previewMood === mood ? 'active' : ''}
                     onClick={() => setPreviewMood(mood)}
                   >
-                    {MOOD_LABELS[mood]}
+                    {t(`mood.${mood}`)}
                   </button>
                 ))}
               </div>
@@ -153,19 +154,19 @@ export const Lobby: React.FC = () => {
           </div>
           <div className="lobby-footnote">
             <Icon name="shield" size={14} />
-            <span>Mọi nhân vật có cùng luật chơi. Chiến thuật là của bạn.</span>
+            <span>{t('lobby.footnote')}</span>
           </div>
         </section>
         <aside className="entry-panel" id="join-table">
           <div className="entry-panel-top">
-            <span className="eyebrow">CHIẾC GHẾ ĐANG CHỜ</span>
+            <span className="eyebrow">{t('lobby.seat.eyebrow')}</span>
             <span className="suit-mark">♠</span>
           </div>
-          <h2>Vào bàn.</h2>
-          <p>Mang theo bản lĩnh. Để lại sự do dự.</p>
+          <h2>{t('lobby.seat.title')}</h2>
+          <p>{t('lobby.seat.p')}</p>
           <form onSubmit={submit}>
             <label className="field-label" htmlFor="player-name">
-              BIỆT DANH CỦA BẠN <span>{playerName.length}/20</span>
+              {t('lobby.nick')} <span>{playerName.length}/20</span>
             </label>
             <div className="nickname-field">
               <input
@@ -173,7 +174,7 @@ export const Lobby: React.FC = () => {
                 className="lobby-input"
                 maxLength={20}
                 autoComplete="nickname"
-                placeholder={`Ví dụ: ${character.name}`}
+                placeholder={t('lobby.nick.ph', { name: character.name })}
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 disabled={pending}
@@ -181,16 +182,10 @@ export const Lobby: React.FC = () => {
               <button
                 type="button"
                 className="nickname-random"
-                aria-label="Gợi ý biệt danh"
+                aria-label={t('lobby.nick.random')}
                 disabled={pending}
                 onClick={() => {
-                  const names = [
-                    'Kẻ Giấu Bài',
-                    'Tay Cược Đêm',
-                    'Mặt Lạnh',
-                    'Bóng Đêm',
-                    'Át Chủ Bài',
-                  ];
+                  const names = t('lobby.names').split('|');
                   setPlayerName(
                     names[Math.floor(Math.random() * names.length)]
                   );
@@ -199,13 +194,13 @@ export const Lobby: React.FC = () => {
                 <Icon name="dice" />
               </button>
             </div>
-            <span className="field-label">CHỌN CÁCH CHƠI</span>
-            <div className="mode-tabs" role="group" aria-label="Chế độ chơi">
+            <span className="field-label">{t('lobby.mode')}</span>
+            <div className="mode-tabs" role="group" aria-label={t('lobby.mode.group')}>
               {(
                 [
-                  { id: 'bot', label: 'Với Bot', icon: 'bot' },
-                  { id: 'host', label: 'Tạo phòng', icon: 'plus' },
-                  { id: 'join', label: 'Vào phòng', icon: 'exit' },
+                  { id: 'bot', icon: 'bot' },
+                  { id: 'host', icon: 'plus' },
+                  { id: 'join', icon: 'exit' },
                 ] as const
               ).map((item) => (
                 <button
@@ -220,33 +215,21 @@ export const Lobby: React.FC = () => {
                   }}
                 >
                   <Icon name={item.icon} size={22} />
-                  <span>{item.label}</span>
+                  <span>{t(`lobby.mode.${item.id}`)}</span>
                 </button>
               ))}
             </div>
             <div className="mode-description">
               <Icon name={mode === 'bot' ? 'crown' : 'users'} size={26} />
               <div>
-                <strong>
-                  {mode === 'bot'
-                    ? 'Luyện bản lĩnh cùng Bot'
-                    : mode === 'host'
-                      ? 'Một bàn riêng cho hội bạn'
-                      : 'Bạn bè đang đợi bạn'}
-                </strong>
-                <p>
-                  {mode === 'bot'
-                    ? 'Bắt đầu ngay. Các ghế còn lại dành cho Bot.'
-                    : mode === 'host'
-                      ? 'Chia sẻ mã phòng để mời bạn bè vào bàn.'
-                      : 'Nhập mã phòng được chủ bàn chia sẻ.'}
-                </p>
+                <strong>{t(`lobby.mode.${mode}.t`)}</strong>
+                <p>{t(`lobby.mode.${mode}.p`)}</p>
               </div>
             </div>
             {mode === 'join' ? (
               <>
                 <label className="field-label" htmlFor="room-code">
-                  MÃ PHÒNG
+                  {t('lobby.code')}
                 </label>
                 <input
                   id="room-code"
@@ -254,7 +237,7 @@ export const Lobby: React.FC = () => {
                   placeholder="LB0000"
                   required
                   pattern="[Ll][Bb][0-9]{4}"
-                  title="Mã phòng gồm LB và 4 chữ số"
+                  title={t('lobby.code.title')}
                   maxLength={6}
                   value={roomCode}
                   onChange={(e) =>
@@ -265,7 +248,7 @@ export const Lobby: React.FC = () => {
               </>
             ) : (
               <>
-                <span className="field-label">SỐ NGƯỜI TRÊN BÀN</span>
+                <span className="field-label">{t('lobby.players')}</span>
                 <div className="player-select-row">
                   {[2, 3, 4].map((n) => (
                     <button
@@ -277,7 +260,7 @@ export const Lobby: React.FC = () => {
                       onClick={() => setMaxPlayers(n)}
                     >
                       <Icon name="users" size={17} />
-                      {n} người
+                      {t('lobby.players.n', { n })}
                     </button>
                   ))}
                 </div>
@@ -294,13 +277,7 @@ export const Lobby: React.FC = () => {
               type="submit"
             >
               <span>
-                {pending
-                  ? 'Đang chuẩn bị bàn…'
-                  : mode === 'bot'
-                    ? 'BẮT ĐẦU VÁN BÀI'
-                    : mode === 'host'
-                      ? 'TẠO BÀN CHƠI'
-                      : 'VÀO PHÒNG'}
+                {pending ? t('lobby.submit.pending') : t(`lobby.submit.${mode}`)}
                 <small>POKER · RUSSIAN ROULETTE</small>
               </span>
               <Icon name="arrow" />
@@ -310,17 +287,15 @@ export const Lobby: React.FC = () => {
               role="status"
             >
               <i />
-              {isConnected
-                ? 'Máy chủ sẵn sàng · Kết nối trực tuyến'
-                : 'Đang kết nối máy chủ…'}
+              {isConnected ? t('lobby.online') : t('lobby.connecting')}
             </div>
           </form>
           <div className="entry-rule">
             <Icon name="crown" size={15} />
             <p>
-              “Ở đây, bài xấu chưa đáng sợ.
+              {waitingA}
               <br />
-              Hết may mắn mới đáng sợ.”
+              {waitingB}
             </p>
             <span className="rule-suits">♠ &nbsp; ♥ &nbsp; ♣ &nbsp; ♦</span>
           </div>
@@ -331,7 +306,8 @@ export const Lobby: React.FC = () => {
           LIAR'S BAR <b> / </b> TRUST NO ONE. PLAY YOUR HAND.
         </span>
         <span>
-          2–4 NGƯỜI CHƠI <b>·</b> 30 GIÂY MỖI LƯỢT
+          {t('lobby.footer')} <b>·</b>{' '}
+          {t('lobby.footer.turn', { turn: TIMING.TURN_TIME_LIMIT })}
         </span>
       </footer>
     </main>

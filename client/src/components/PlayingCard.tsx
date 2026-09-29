@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Card } from '@liars-bar/shared';
+import { t, type Key } from '../i18n';
 interface PlayingCardProps {
   card?: Card | null;
   hidden?: boolean;
@@ -8,12 +9,6 @@ interface PlayingCardProps {
   onClick?: () => void;
   delay?: number;
 }
-const suitNames: Record<string, string> = {
-  '♠': 'bích',
-  '♣': 'tép',
-  '♦': 'rô',
-  '♥': 'cơ',
-};
 export const PlayingCard: React.FC<PlayingCardProps> = ({
   card,
   hidden = false,
@@ -23,7 +18,7 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
   delay = 0,
 }) => {
   const faceUp = !!card && !hidden;
-  const label = faceUp ? `${card.val} ${suitNames[card.suit]}` : 'Bài úp';
+  const label = faceUp ? `${card.val} ${t(`suit.${card.suit}` as Key)}` : t('card.back');
   const content = (
     <span
       className={`card-motion ${faceUp ? 'face-up' : ''}`}

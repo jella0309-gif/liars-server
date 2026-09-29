@@ -209,6 +209,8 @@
 }
 .character-profile h3 {
   font: 400 34px/1.15 var(--font-brush);
+  /* The brush face is Latin-only; the localized mood label uses the display face. */
+  & > span { font: italic 15px/1.2 var(--font-display); }
   color: #e44b38;
   margin: 2px 0 8px;
 }

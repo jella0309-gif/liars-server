@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { socket } from './socket';
+import { socket, rememberSeat, rememberedSeat, forgetSeat } from './socket';
 import { useGameStore } from './store/gameStore';
 import { Header } from './components/Header';
 import { TavernAtmosphere } from './components/TavernAtmosphere';
@@ -15,6 +15,7 @@ import {
   playActionSound,
 } from './utils/audio';
 import { handName } from './utils/handNames';
+import { t, useT } from './i18n';
 import {
   SOCKET_EVENTS,
   type GameEvent,
@@ -26,19 +27,26 @@ export const App: React.FC = () => {
   const isLobbyOpen = useGameStore((s) => s.isLobbyOpen);
   const connected = useGameStore((s) => s.isConnected);
   const errorMessage = useGameStore((s) => s.errorMessage);
+  const tr = useT();
   useEffect(() => {
     const store = useGameStore.getState();
     const onConnect = () => {
       store.setConnected(true);
+      // A reload loses the in-memory room; the remembered seat rejoins it.
       const roomId = useGameStore.getState().currentRoomId;
-      const token = sessionStorage.getItem('liars_token');
-      if (roomId && token)
-        socket.emit(SOCKET_EVENTS.RECONNECT_ATTEMPT, { roomId, token });
+      const remembered = rememberedSeat();
+      if (roomId && remembered)
+        socket.emit(SOCKET_EVENTS.RECONNECT_ATTEMPT, {
+          roomId,
+          token: remembered.token,
+        });
+      else if (remembered)
+        socket.emit(SOCKET_EVENTS.RECONNECT_ATTEMPT, remembered);
     };
     const onDisconnect = () => store.setConnected(false);
     const onJoined = (p: JoinedSuccessPayload) => {
       store.setJoinedSuccess(p.roomId, p.seatIndex, p.maxPlayers);
-      sessionStorage.setItem('liars_token', p.token);
+      rememberSeat(p.roomId, p.token);
     };
     const onRoom = (p: RoomUpdatePayload) =>
       store.setRoomUpdate(p.players, p.maxPlayers);
@@ -46,32 +54,33 @@ export const App: React.FC = () => {
       store.setWinner(p.winnerName, p.winnerSeatIndex);
       store.setRoundOver(true);
     };
-    const onRound = (p: { message: string }) => {
-      store.setRoundOver(true, p.message);
-      store.setTableLog(p.message);
+    const onRound = () => {
+      store.setRoundOver(true, t('log.roundOver'));
+      store.setTableLog(t('log.roundOver'));
     };
     const onEvent = (event: GameEvent) => {
       const playerName = (seat: number) => {
         const state = useGameStore.getState();
         return (
           state.playersInfo.find((player) => player.seatIndex === seat)?.name ||
-          `Người chơi ${seat + 1}`
+          t('seat.playerN', { n: seat + 1 })
         );
       };
       switch (event.type) {
         case 'action_bubble': {
-          const labels: Record<string, string> = {
-            call: 'THEO BÀI',
-            fold: 'BỎ BÀI',
-            allin: 'TẤT TAY',
-          };
+          const bubbleKey = `bubble.${event.action}` as const;
+          const logKey = `log.${event.action}` as const;
+          const isKnown = ['call', 'fold', 'allin'].includes(event.action);
           store.showActionBubble(
             event.seatIndex,
-            labels[event.action] || event.action.toUpperCase(),
+            isKnown ? t(bubbleKey as 'bubble.call') : event.action.toUpperCase(),
             `bubble-${event.action}`
           );
           store.setTableLog(
-            `${playerName(event.seatIndex)} ${(labels[event.action] || event.action).toLocaleLowerCase('vi')}.`
+            t('log.action', {
+              name: playerName(event.seatIndex),
+              action: isKnown ? t(logKey as 'log.call') : event.action,
+            })
           );
           speakActionVoice(event.action);
           playActionSound(event.action);
@@ -84,33 +93,44 @@ export const App: React.FC = () => {
           store.setShowdownResults(event.results);
           store.setTableLog(
             event.winnerHand === 'Invalid'
-              ? `${event.winnerName} thắng do các đối thủ bỏ bài.`
-              : `${event.winnerName} thắng với ${handName(event.winnerHand)}.`
+              ? t('log.winFold', { name: event.winnerName })
+              : t('log.winHand', {
+                  name: event.winnerName,
+                  hand: handName(event.winnerHand),
+                })
           );
           break;
         case 'match_over':
           onMatch(event);
           break;
         case 'round_over':
-          onRound(event);
+          onRound();
           break;
         case 'swap_available':
           store.setSwapPool(event.drawnCards);
           break;
         case 'swap_used':
           store.setSwapPool(null);
-          store.showActionBubble(event.seatIndex, 'ĐÃ ĐỔI BÀI', 'bubble-swap');
-          store.setTableLog(
-            `${playerName(event.seatIndex)} đã đổi một lá tẩy.`
-          );
+          store.showActionBubble(event.seatIndex, t('bubble.swap'), 'bubble-swap');
+          store.setTableLog(t('log.swapUsed', { name: playerName(event.seatIndex) }));
           playActionSound('swap');
           break;
+        case 'player_left':
+          store.setTableLog(t('log.left', { name: event.name }));
+          break;
         case 'log':
-          store.setTableLog(event.message);
+          store.setTableLog(
+            event.key === 'roulette_turn' && event.name
+              ? t('log.roulette', { name: event.name })
+              : event.message
+          );
           break;
         case 'stage_change':
           store.setTableLog(
-            `Vòng ${event.stageName} — ${event.newCommunityCards.length} lá bài chung.`
+            t('log.stage', {
+              stage: event.stageName,
+              n: event.newCommunityCards.length,
+            })
           );
           break;
         case 'round_start':
@@ -118,17 +138,23 @@ export const App: React.FC = () => {
           break;
       }
     };
-    const onMissing = () =>
-      store.setError('Không tìm thấy phòng. Kiểm tra lại mã phòng nhé.');
-    const onFull = () =>
-      store.setError('Bàn này đã đủ người. Hãy thử một phòng khác.');
-    const onError = (p: { message?: string }) =>
+    const onMissing = () => store.setError(t('err.notFound'));
+    const onFull = () => store.setError(t('err.full'));
+    const onError = (p: { message?: string }) => {
+      if (p.message === 'Reconnect failed') {
+        // The seat is gone (grace period passed or room closed): stay in the lobby.
+        forgetSeat();
+        if (!useGameStore.getState().isLobbyOpen) store.setError(t('err.reconnect'));
+        return;
+      }
       store.setError(
         p.message === 'Invalid payload'
-          ? 'Thông tin chưa hợp lệ. Hãy kiểm tra lại.'
-          : p.message || 'Có lỗi kết nối. Hãy thử lại.'
+          ? t('err.payload')
+          : p.message || t('err.generic')
       );
+    };
     store.setConnected(socket.connected);
+    if (socket.connected) onConnect();
     window.addEventListener('pointerdown', unlockAudioContext);
     socket.on('connect', onConnect).on('disconnect', onDisconnect);
     socket
@@ -172,14 +198,14 @@ export const App: React.FC = () => {
         <>
           {!connected && (
             <div className="connection-banner" role="status">
-              Mất kết nối. Đang kết nối lại với bàn chơi…
+              {tr('conn.lost')}
             </div>
           )}
           {errorMessage && (
             <div className="connection-banner" role="alert">
               {errorMessage}
               <button onClick={() => useGameStore.getState().setError(null)}>
-                Đóng
+                {tr('dialog.close')}
               </button>
             </div>
           )}

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Card } from '@liars-bar/shared';
 import { PlayingCard } from './PlayingCard';
+import { useT } from '../i18n';
 
 export function CommunityCards({
   cards,
@@ -9,10 +10,11 @@ export function CommunityCards({
   cards: Card[];
   roundNumber: number;
 }) {
+  const t = useT();
   return (
     <>
       <div className="board-label">
-        <span />BÀI CHUNG<span />
+        <span />{t('table.board')}<span />
       </div>
       <div className="comm-cards" key={roundNumber}>
         {Array.from({ length: 5 }, (_, i) => (
