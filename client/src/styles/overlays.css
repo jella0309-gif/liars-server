@@ -297,3 +297,11 @@
   color: #d6bc9a;
   margin-top: 4px;
 }
+
+/* Swap dialog: the community cards stay visible while choosing. */
+.swap-board .section-heading h3 span {
+  color: #d5b876;
+}
+.swap-board-row .card {
+  --card-width: 44px;
+}

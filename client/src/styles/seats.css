@@ -1018,3 +1018,29 @@
     top: calc(var(--cards-y) - 10px);
   }
 }
+
+/* Showdown: the hand names are the result; make them read at a glance. */
+.hand-eval-row strong {
+  font-size: 14px;
+  letter-spacing: 0.2px;
+}
+.hand-eval.winning-hand .hand-eval-row strong {
+  font-size: 16px;
+  color: #ffe2a8;
+  text-shadow: 0 0 10px #e9a54f55;
+}
+@media (min-width: 1051px) {
+  .game-table-scene .opponent-seat .hand-eval {
+    width: 190px;
+    padding: 7px 8px;
+    border: 1px solid #b98b5540;
+  }
+  .game-table-scene .opponent-seat .hand-eval.winning-hand {
+    border-color: #e6c084aa;
+    background: #2a1a10d9;
+  }
+  .game-table-scene .local-player-area .hand-eval {
+    width: 200px;
+    padding: 7px 8px;
+  }
+}

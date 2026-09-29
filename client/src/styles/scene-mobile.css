@@ -1264,3 +1264,41 @@
     mask-image: linear-gradient(#000 80%, transparent 98%);
   }
 }
+
+/* Mobile portrait, 4 players: narrower side figures pushed to the edges so
+   the three opponents never overlap each other or the top seat's HUD. */
+@media (max-width: 599px) {
+  .game-table-scene .seats-4 .seat-position:not(.local-seat) {
+    --fig-w: clamp(118px, 36vw, 150px);
+    --fig-h: clamp(118px, 36vw, 150px);
+  }
+  .game-table-scene .seats-4 .pos-top {
+    top: 0;
+  }
+  .game-table-scene .seats-4 .pos-left {
+    top: 13%;
+    left: 16%;
+  }
+  .game-table-scene .seats-4 .pos-right {
+    top: 13%;
+    left: 84%;
+  }
+  .game-table-scene .seats-4 .pos-left .character-figure,
+  .game-table-scene .seats-4 .pos-right .character-figure {
+    z-index: 21; /* side faces stay in front of the top seat's shoulders */
+  }
+  .game-table-scene .opponent-seat .hand-eval {
+    max-width: 130px;
+    font-size: 8px;
+  }
+  .game-table-scene .hand-eval-row strong {
+    font-size: 11px;
+  }
+  .game-table-scene .hand-eval.winning-hand .hand-eval-row strong {
+    font-size: 12px;
+  }
+}
+/* Offline opponents read as such without colour alone. */
+.game-table-scene .opponent-seat.offline .character-art {
+  filter: saturate(0.4) brightness(0.7);
+}
