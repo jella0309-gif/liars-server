@@ -540,3 +540,13 @@
     box-shadow: 0 0 16px #f456374f;
   }
 }
+
+/* The hero character exists for the phone dashboard only. */
+.hero-figure {
+  display: none;
+}
+@media (max-width: 767px) {
+  .hero-figure {
+    display: block;
+  }
+}

@@ -10,6 +10,7 @@ import {
 import { TIMING } from '@liars-bar/shared';
 import { useT } from '../i18n';
 import { Icon } from './Icon';
+import { CharacterFigure } from './CharacterFigure';
 
 export const Lobby: React.FC = () => {
   const { isConnected, isLobbyOpen, errorMessage, setError } = useGameStore();
@@ -73,6 +74,9 @@ export const Lobby: React.FC = () => {
               <em>PLAY YOUR HAND.</em>
             </h1>
             <p>{t('lobby.hero.p')}</p>
+            <div className="hero-figure" aria-hidden="true">
+              <CharacterFigure avatar={selectedAvatar} mood={previewMood} label="" />
+            </div>
           </div>
           <div className="section-heading" id="character-selection">
             <h2>
