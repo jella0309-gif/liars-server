@@ -966,7 +966,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  *,
+  /* The roulette cylinder communicates the shared server timeline. Keep its
+     one-shot spin visible while reducing decorative motion everywhere else. */
+  *:not(.revolver-svg),
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
