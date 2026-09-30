@@ -74,22 +74,109 @@ export function playEmptyClick() {
   }
 }
 
+let rouletteSpinTimer: ReturnType<typeof setInterval> | null = null;
+
+export function playBulletLoadSound() {
+  unlockAudioContext();
+
+  if (!audioCtx || !sfxMasterGain) return;
+
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(
+      180,
+      audioCtx.currentTime + 0.07
+    );
+
+    gain.gain.setValueAtTime(0.22, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(
+      0.01,
+      audioCtx.currentTime + 0.08
+    );
+
+    osc.connect(gain);
+    gain.connect(sfxMasterGain);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.09);
+  } catch {
+    // Ignore audio playback errors
+  }
+}
+
+function playCylinderTick() {
+  unlockAudioContext();
+
+  if (!audioCtx || !sfxMasterGain) return;
+
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(260, audioCtx.currentTime);
+
+    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(
+      0.01,
+      audioCtx.currentTime + 0.06
+    );
+
+    osc.connect(gain);
+    gain.connect(sfxMasterGain);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.07);
+  } catch {
+    // Ignore audio playback errors
+  }
+}
+
+export function playCylinderSpinSound() {
+  stopCylinderSpinSound();
+  playCylinderTick();
+
+  rouletteSpinTimer = setInterval(() => {
+    playCylinderTick();
+  }, 95);
+}
+
+export function stopCylinderSpinSound() {
+  if (rouletteSpinTimer) {
+    clearInterval(rouletteSpinTimer);
+    rouletteSpinTimer = null;
+  }
+}
+
 export function playGunshot() {
   unlockAudioContext();
+
   if (!audioCtx || !sfxMasterGain) return;
+
   try {
     const osc = audioCtx.createOscillator();
     const oscGain = audioCtx.createGain();
+
     osc.type = 'sine';
     osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + 0.35);
+    osc.frequency.exponentialRampToValueAtTime(
+      35,
+      audioCtx.currentTime + 0.35
+    );
+
     oscGain.gain.setValueAtTime(0.9, audioCtx.currentTime);
     oscGain.gain.exponentialRampToValueAtTime(
       0.01,
       audioCtx.currentTime + 0.35
     );
+
     osc.connect(oscGain);
     oscGain.connect(sfxMasterGain);
+
     osc.start();
     osc.stop(audioCtx.currentTime + 0.38);
 
@@ -98,8 +185,13 @@ export function playGunshot() {
       Math.floor(audioCtx.sampleRate * 0.4),
       audioCtx.sampleRate
     );
+
     const data = buffer.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+
+    for (let i = 0; i < data.length; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
     const noise = audioCtx.createBufferSource();
     noise.buffer = buffer;
 
@@ -121,10 +213,11 @@ export function playGunshot() {
     noise.connect(filter);
     filter.connect(noiseGain);
     noiseGain.connect(sfxMasterGain);
+
     noise.start();
     noise.stop(audioCtx.currentTime + 0.38);
   } catch {
-    // Ignore
+    // Ignore audio playback errors
   }
 }
 
@@ -152,20 +245,66 @@ export function playGodSaveSound() {
   }
 }
 
-export function speakActionVoice(text: string) {
-  unlockAudioContext();
-  if (!('speechSynthesis' in window)) return;
+const actionVoiceFiles: Record<string, string> = {
+  call: '/call.mp3',
+  fold: '/fold.mp3',
+  allin: '/allin.mp3',
+};
+
+const actionVoiceBuffers = new Map<string, AudioBuffer>();
+let currentVoiceSource: AudioBufferSourceNode | null = null;
+
+async function loadActionVoice(type: string) {
+  if (!audioCtx) return null;
+
+  const cached = actionVoiceBuffers.get(type);
+  if (cached) return cached;
+
+  const file = actionVoiceFiles[type];
+  if (!file) return null;
+
   try {
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    utter.rate = 1.15;
-    utter.pitch = 0.95;
-    utter.volume = sfxVolume;
-    window.speechSynthesis.speak(utter);
+    const response = await fetch(file);
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+    actionVoiceBuffers.set(type, buffer);
+    return buffer;
   } catch {
-    // Ignore
+    return null;
   }
+}
+
+export function speakActionVoice(type: string) {
+  unlockAudioContext();
+
+  if (!audioCtx || !sfxMasterGain) return;
+
+  const ctx = audioCtx;
+  const master = sfxMasterGain;
+
+  void loadActionVoice(type).then((buffer) => {
+    if (!buffer || audioCtx !== ctx) return;
+
+    try {
+      currentVoiceSource?.stop();
+    } catch {
+      // Ignore
+    }
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(master);
+    source.start();
+
+    currentVoiceSource = source;
+
+    source.onended = () => {
+      if (currentVoiceSource === source) {
+        currentVoiceSource = null;
+      }
+    };
+  });
 }
 
 export function setSfxVolume(vol: number) {
