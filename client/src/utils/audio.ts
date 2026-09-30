@@ -253,6 +253,7 @@ const actionVoiceFiles: Record<string, string> = {
 
 const actionVoiceBuffers = new Map<string, AudioBuffer>();
 let currentVoiceSource: AudioBufferSourceNode | null = null;
+let currentVoiceDone: (() => void) | null = null;
 
 async function loadActionVoice(type: string) {
   if (!audioCtx) return null;
@@ -275,42 +276,60 @@ async function loadActionVoice(type: string) {
   }
 }
 
-export function speakActionVoice(type: string) {
+export function speakActionVoice(type: string): Promise<void> {
   unlockAudioContext();
 
-  if (!audioCtx || !sfxMasterGain) return;
+  if (!audioCtx || !sfxMasterGain) {
+    return Promise.resolve();
+  }
 
   const ctx = audioCtx;
   const master = sfxMasterGain;
 
-  void loadActionVoice(type).then((buffer) => {
-    if (!buffer || audioCtx !== ctx) return;
+  return new Promise((resolve) => {
+    void loadActionVoice(type)
+      .then((buffer) => {
+        if (!buffer || audioCtx !== ctx) {
+          resolve();
+          return;
+        }
 
-    try {
-      currentVoiceSource?.stop();
-    } catch {
-      // Ignore
-    }
+        currentVoiceDone?.();
 
-    const source = ctx.createBufferSource();
-const voiceGain = ctx.createGain();
+        try {
+          currentVoiceSource?.stop();
+        } catch {
+          // Ignore
+        }
 
-source.buffer = buffer;
+        const source = ctx.createBufferSource();
+        const voiceGain = ctx.createGain();
 
-// Tăng giọng đọc lên khoảng 2,2 lần
-voiceGain.gain.setValueAtTime(2.2, ctx.currentTime);
+        source.buffer = buffer;
 
-source.connect(voiceGain);
-voiceGain.connect(master);
-source.start();
+        // Tăng giọng đọc lên 2,2 lần
+        voiceGain.gain.setValueAtTime(2.2, ctx.currentTime);
 
-    currentVoiceSource = source;
+        source.connect(voiceGain);
+        voiceGain.connect(master);
 
-    source.onended = () => {
-      if (currentVoiceSource === source) {
-        currentVoiceSource = null;
-      }
-    };
+        currentVoiceSource = source;
+        currentVoiceDone = resolve;
+
+        source.onended = () => {
+          if (currentVoiceSource === source) {
+            currentVoiceSource = null;
+            currentVoiceDone = null;
+          }
+
+          resolve();
+        };
+
+        source.start();
+      })
+      .catch(() => {
+        resolve();
+      });
   });
 }
 
