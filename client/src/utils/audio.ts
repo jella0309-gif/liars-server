@@ -293,9 +293,16 @@ export function speakActionVoice(type: string) {
     }
 
     const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(master);
-    source.start();
+const voiceGain = ctx.createGain();
+
+source.buffer = buffer;
+
+// Tăng giọng đọc lên khoảng 2,2 lần
+voiceGain.gain.setValueAtTime(2.2, ctx.currentTime);
+
+source.connect(voiceGain);
+voiceGain.connect(master);
+source.start();
 
     currentVoiceSource = source;
 
