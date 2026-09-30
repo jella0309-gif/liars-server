@@ -30,6 +30,7 @@ export const App: React.FC = () => {
   const tr = useT();
   useEffect(() => {
     const store = useGameStore.getState();
+    let pendingFoldVoice: Promise<void> | null = null;
     const onConnect = () => {
       store.setConnected(true);
       // A reload loses the in-memory room; the remembered seat rejoins it.
@@ -82,13 +83,28 @@ export const App: React.FC = () => {
               action: isKnown ? t(logKey as 'log.call') : event.action,
             })
           );
-          speakActionVoice(event.action);
-          playActionSound(event.action);
+          const voiceDone = speakActionVoice(event.action);
+
+pendingFoldVoice =
+  event.action === 'fold' ? voiceDone : null;
+
+playActionSound(event.action);
           break;
         }
-        case 'roulette':
-          store.setRouletteResult(event.result);
-          break;
+        case 'roulette': {
+  const foldVoice = pendingFoldVoice;
+  pendingFoldVoice = null;
+
+  if (foldVoice) {
+    void foldVoice.then(() => {
+      store.setRouletteResult(event.result);
+    });
+  } else {
+    store.setRouletteResult(event.result);
+  }
+
+  break;
+}
         case 'showdown':
           store.setShowdownResults(event.results);
           store.setTableLog(
