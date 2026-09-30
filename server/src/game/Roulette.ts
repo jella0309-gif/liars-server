@@ -3,16 +3,16 @@ import { RouletteResult, REVOLVER } from '@liars-bar/shared';
 const NORMAL_VIRTUAL_CHAMBER_COUNT = 8;
 
 export function resolveRoulette(bullets: number): Partial<RouletteResult> {
-  // Cò quay trên giao diện vẫn chỉ có 6 vị trí
-  const stopIndex = Math.floor(
-    Math.random() * REVOLVER.CHAMBER_COUNT
-  );
-
+  let stopIndex = 0;
   let isDead = false;
   let isGodSave = false;
 
   // All-in: giữ nguyên luật cũ
   if (bullets >= REVOLVER.CHAMBER_COUNT) {
+    stopIndex = Math.floor(
+      Math.random() * REVOLVER.CHAMBER_COUNT
+    );
+
     if (Math.random() < REVOLVER.GOD_SAVE_CHANCE) {
       isDead = false;
       isGodSave = true;
@@ -20,12 +20,24 @@ export function resolveRoulette(bullets: number): Partial<RouletteResult> {
       isDead = true;
     }
   } else {
-    // Người thường: tính xác suất như thể có 8 vị trí
-    const virtualChamberIndex = Math.floor(
+    // Người thường: tính như ổ có 8 vị trí
+    const virtualIndex = Math.floor(
       Math.random() * NORMAL_VIRTUAL_CHAMBER_COUNT
     );
 
-    isDead = virtualChamberIndex < bullets;
+    if (virtualIndex < bullets) {
+      // Trúng đạn: vị trí hiển thị chắc chắn là một ô đạn
+      isDead = true;
+      stopIndex = virtualIndex;
+    } else {
+      // Không trúng: vị trí hiển thị chắc chắn là ô trống
+      const visibleEmptyCount = REVOLVER.CHAMBER_COUNT - bullets;
+      const emptyIndex = Math.floor(
+        Math.random() * visibleEmptyCount
+      );
+
+      stopIndex = bullets + emptyIndex;
+    }
   }
 
   return {
