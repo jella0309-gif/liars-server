@@ -26,7 +26,8 @@ export const Seat: React.FC<{ seatIndex: number }> = ({ seatIndex }) => {
     winnerSeatIndex,
     rouletteResult,
     rouletteRevealed,
-    roundNumber,
+foldVoicePending,
+roundNumber,
   } = useGameStore();
   const t = useT();
   const seconds = useTurnClock();
@@ -48,9 +49,15 @@ export const Seat: React.FC<{ seatIndex: number }> = ({ seatIndex }) => {
   const matchRank = player?.matchRank;
   const offline = !isMe && fallback ? fallback.connected === false : false;
   const shooting = rouletteResult?.seatIndex === seatIndex;
-  // Keep the outcome hidden until the cylinder finishes spinning.
-  const isDead = shooting
+
+// Ẩn trạng thái chết trong lúc tiếng Fold đang đọc
+// và trong lúc bảng roulette chưa lộ kết quả.
+const isDead = rouletteResult
+  ? shooting
     ? rouletteRevealed && rouletteResult.isDead
+    : !!player?.isDead
+  : foldVoicePending && player?.folded
+    ? false
     : !!player?.isDead;
   const folded = !!player?.folded;
   const showdown = showdownResults?.find((r) => r.seatIndex === seatIndex);
