@@ -35,6 +35,7 @@ interface GameStore {
   rouletteResult: RouletteResult | null;
   rouletteStartedAt: number | null;
   rouletteRevealed: boolean;
+  foldVoicePending: boolean;
   godSavePlayerName: string | null;
   winnerName: string | null;
   winnerSeatIndex: number | null;
@@ -50,6 +51,7 @@ interface GameStore {
   setTableLog: (log: string) => void;
   showActionBubble: (seat: number, text: string, cls?: string) => void;
   setRouletteResult: (result: RouletteResult | null) => void;
+  setFoldVoicePending: (value: boolean) => void;
   revealRoulette: () => void;
   setGodSave: (name: string | null) => void;
   setWinner: (name: string | null, seat?: number) => void;
@@ -76,6 +78,7 @@ export const useGameStore = create<GameStore>((set) => ({
   rouletteResult: null,
   rouletteStartedAt: null,
   rouletteRevealed: false,
+  foldVoicePending: false,
   godSavePlayerName: null,
   winnerName: null,
   winnerSeatIndex: null,
@@ -124,11 +127,13 @@ export const useGameStore = create<GameStore>((set) => ({
         ? Math.max(0, gameState.serverTime - activeRoulette.startedAt)
         : 0;
       const shouldRecoverRoulette =
-        !!activeRoulette &&
+  !state.foldVoicePending &&
+  !!activeRoulette &&
         activeRouletteAge < TIMING.ROULETTE_ANIMATION_DURATION * 1000 &&
         state.rouletteResult?.startedAt !== activeRoulette.startedAt;
       const shouldSyncRouletteClock =
-        !!activeRoulette &&
+  !state.foldVoicePending &&
+  !!activeRoulette &&
         activeRouletteAge < TIMING.ROULETTE_ANIMATION_DURATION * 1000;
       return {
         gameState,
@@ -175,6 +180,9 @@ export const useGameStore = create<GameStore>((set) => ({
       : null,
     ...(rouletteResult ? { swapPoolCards: null } : {}),
   }),
+
+    setFoldVoicePending: (foldVoicePending) =>
+    set({ foldVoicePending }),
   revealRoulette: () => set({ rouletteRevealed: true }),
   setGodSave: (godSavePlayerName) => set({ godSavePlayerName }),
   setWinner: (winnerName, winnerSeatIndex) =>
@@ -209,6 +217,7 @@ export const useGameStore = create<GameStore>((set) => ({
       rouletteResult: null,
       rouletteStartedAt: null,
       rouletteRevealed: false,
+      foldVoicePending: false,
       godSavePlayerName: null,
       activeBubble: null,
       tableLog: t('log.newRound'),
