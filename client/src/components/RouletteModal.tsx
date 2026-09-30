@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { playGunshot, playEmptyClick, playGodSaveSound } from '../utils/audio';
+import {
+  playGunshot,
+  playEmptyClick,
+  playGodSaveSound,
+  playBulletLoadSound,
+  playCylinderSpinSound,
+  stopCylinderSpinSound,
+} from '../utils/audio';
 import { CharacterPortrait } from './CharacterPortrait';
 import { TIMING } from '@liars-bar/shared';
 import { useT } from '../i18n';
@@ -47,15 +54,22 @@ export const RouletteModal: React.FC = () => {
     );
     setLoaded(elapsed >= LOAD_END_MS ? bullets : Math.min(bullets, Math.floor(elapsed / 65)));
     setSpinDuration(Math.max(0, SPIN_END_MS - Math.max(LOAD_END_MS, elapsed)));
+    playCylinderSpinSound();
 
     for (let i = 1; i <= bullets; i++) {
-      if (i * 65 > elapsed) schedule(i * 65, () => setLoaded(i));
-    }
+  if (i * 65 > elapsed) {
+    schedule(i * 65, () => {
+      setLoaded(i);
+      playBulletLoadSound();
+    });
+  }
+}
     if (elapsed < LOAD_END_MS) schedule(LOAD_END_MS, () => setPhase('spin'));
     timers.push(
       setTimeout(() => {
         setPhase('result');
-        revealRoulette();
+stopCylinderSpinSound();
+revealRoulette();
         if (result.isGodSave) {
           playGodSaveSound();
           setGodSave(result.name);
@@ -72,7 +86,10 @@ export const RouletteModal: React.FC = () => {
         Math.max(0, dismissAt - elapsed)
       )
     );
-    return () => timers.forEach(clearTimeout);
+    return () => {
+  timers.forEach(clearTimeout);
+  stopCylinderSpinSound();
+};
   }, [result, rouletteStartedAt, setRouletteResult, setGodSave, revealRoulette]);
   if (!result) return null;
   const revealed = phase === 'result';
