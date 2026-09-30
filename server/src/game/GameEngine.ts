@@ -26,6 +26,7 @@ export class GameEngine {
   private currentTurnSeat: number = -1;
   private roundActionsCount: number = 0;
   private allInRespondedSeats: Set<number> = new Set();
+  private previousRoundWinnerSeats: number[] = [];
   private isProcessingRoulette: boolean = false;
   private activeRoulette: RouletteResult | null = null;
   private activeSeats: number[] = [];
@@ -64,7 +65,19 @@ export class GameEngine {
     this.activeSeats = this.players
       .filter((p) => !p.isDead)
       .map((p) => p.seatIndex);
-    this.currentTurnSeat = this.activeSeats[0];
+        const previousWinners = this.previousRoundWinnerSeats.filter(
+      (seat) => this.activeSeats.includes(seat)
+    );
+
+    const startingSeats =
+      previousWinners.length > 0
+        ? previousWinners
+        : this.activeSeats;
+
+    this.currentTurnSeat =
+      startingSeats.length > 0
+        ? startingSeats[Math.floor(Math.random() * startingSeats.length)]
+        : -1;
   }
 
   public handleAction(
@@ -312,6 +325,10 @@ export class GameEngine {
           ? previous.rank
           : index + 1;
     });
+
+        this.previousRoundWinnerSeats = nonFolded
+      .filter((result) => result.rank === 1)
+      .map((result) => result.seatIndex);
 
     if (nonFolded.length > 0) {
       winner = nonFolded[0];
