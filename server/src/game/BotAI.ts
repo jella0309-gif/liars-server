@@ -100,6 +100,11 @@ export function decideBotAction(
   bot: ServerPlayer,
   gameState: ClientGameState
 ): PlayerActionType {
+   // Luot dau: Call de xem 3 la bai chung.
+  if (gameState.stage === 0 && !gameState.hasAnyAllIn) {
+    return 'call';
+  }
+
   const winChance = estimateWinChance(bot, gameState);
 
   // Fold phai co quay ngay voi so dan hien tai.
