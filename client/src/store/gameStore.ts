@@ -167,12 +167,14 @@ export const useGameStore = create<GameStore>((set) => ({
     );
   },
   setRouletteResult: (rouletteResult) =>
-    set({
-      rouletteResult,
-      rouletteRevealed: false,
-      rouletteStartedAt: rouletteResult ? Date.now() : null,
-      ...(rouletteResult ? { swapPoolCards: null } : {}),
-    }),
+  set({
+    rouletteResult,
+    rouletteRevealed: false,
+    rouletteStartedAt: rouletteResult
+      ? rouletteResult.startedAt
+      : null,
+    ...(rouletteResult ? { swapPoolCards: null } : {}),
+  }),
   revealRoulette: () => set({ rouletteRevealed: true }),
   setGodSave: (godSavePlayerName) => set({ godSavePlayerName }),
   setWinner: (winnerName, winnerSeatIndex) =>
