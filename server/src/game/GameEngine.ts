@@ -187,10 +187,12 @@ export class GameEngine {
       return this.fastForwardAllIn();
     }
 
-    if (this.roundActionsCount >= aliveNonFolded.length) {
+        if (
+      allInCount === 0 &&
+      this.roundActionsCount >= aliveNonFolded.length
+    ) {
       return this.finishStage();
     }
-
     // Find next seat
     let nextIdx = this.activeSeats.indexOf(this.currentTurnSeat) + 1;
     while (true) {
