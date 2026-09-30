@@ -85,8 +85,13 @@ export const App: React.FC = () => {
           );
           const voiceDone = speakActionVoice(event.action);
 
-pendingFoldVoice =
-  event.action === 'fold' ? voiceDone : null;
+if (event.action === 'fold') {
+  pendingFoldVoice = voiceDone;
+  store.setFoldVoicePending(true);
+} else {
+  pendingFoldVoice = null;
+  store.setFoldVoicePending(false);
+}
 
 playActionSound(event.action);
           break;
@@ -95,12 +100,15 @@ playActionSound(event.action);
   const foldVoice = pendingFoldVoice;
   pendingFoldVoice = null;
 
-  if (foldVoice) {
-    void foldVoice.then(() => {
-      store.setRouletteResult(event.result);
-    });
-  } else {
+  const showRoulette = () => {
+    store.setFoldVoicePending(false);
     store.setRouletteResult(event.result);
+  };
+
+  if (foldVoice) {
+    void foldVoice.then(showRoulette);
+  } else {
+    showRoulette();
   }
 
   break;
