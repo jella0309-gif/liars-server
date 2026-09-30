@@ -13,7 +13,7 @@ export const Header: React.FC = () => {
   const [panel, setPanel] = useState<'sound' | 'rules' | 'leave' | null>(null);
   const [bgm, setBgm] = useState(20),
     [sfx, setSfx] = useState(80),
-    [musicOn, setMusicOn] = useState(false);
+    [musicOn, setMusicOn] = useState(true);
   const [rulesTitleA, rulesTitleB] = t('rules.title').split('\n');
   return (
     <>
