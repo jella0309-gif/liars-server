@@ -131,8 +131,9 @@ export const useGameStore = create<GameStore>((set) => ({
   !!activeRoulette &&
         activeRouletteAge < TIMING.ROULETTE_ANIMATION_DURATION * 1000 &&
         state.rouletteResult?.startedAt !== activeRoulette.startedAt;
-      const shouldSyncRouletteClock =
+     const shouldSyncRouletteClock =
   !state.foldVoicePending &&
+  !state.rouletteResult &&
   !!activeRoulette &&
         activeRouletteAge < TIMING.ROULETTE_ANIMATION_DURATION * 1000;
       return {
@@ -176,8 +177,8 @@ export const useGameStore = create<GameStore>((set) => ({
     rouletteResult,
     rouletteRevealed: false,
     rouletteStartedAt: rouletteResult
-      ? rouletteResult.startedAt
-      : null,
+  ? Date.now()
+  : null,
     ...(rouletteResult ? { swapPoolCards: null } : {}),
   }),
 
