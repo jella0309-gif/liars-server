@@ -1,7 +1,5 @@
 import { RouletteResult, REVOLVER } from '@liars-bar/shared';
 
-const NORMAL_VIRTUAL_CHAMBER_COUNT = 8;
-
 export function resolveRoulette(bullets: number): Partial<RouletteResult> {
   let stopIndex = 0;
   let isDead = false;
@@ -20,9 +18,9 @@ export function resolveRoulette(bullets: number): Partial<RouletteResult> {
       isDead = true;
     }
   } else {
-    // Người thường: tính như ổ có 8 vị trí
+    // Người thường: tính như ổ có 8 vị trí ảo
     const virtualIndex = Math.floor(
-      Math.random() * NORMAL_VIRTUAL_CHAMBER_COUNT
+      Math.random() * REVOLVER.VIRTUAL_CHAMBER_COUNT
     );
 
     if (virtualIndex < bullets) {

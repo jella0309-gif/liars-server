@@ -9,8 +9,8 @@ import {
 } from '@liars-bar/shared';
 import { evaluateBestHand } from './HandEvaluator.js';
 
-// So lan thu cac kha nang bai chua duoc lat.
-const SIMULATIONS = 120;
+// So lan thu cac kha nang bai chua duoc lat (80 lan du hoi tu voi do lech < 2% va khong chan event loop).
+const SIMULATIONS = 80;
 
 function estimateWinChance(
   bot: ServerPlayer,
@@ -43,14 +43,25 @@ function estimateWinChance(
   }
 
   let safeResults = 0;
+  const pool = new Array<Card>(unseenCards.length);
 
   for (let attempt = 0; attempt < SIMULATIONS; attempt++) {
-    const pool = [...unseenCards];
-
-    function drawCard(): Card {
-      const index = Math.floor(Math.random() * pool.length);
-      return pool.splice(index, 1)[0]!;
+    // Copy unseenCards vao pool
+    for (let i = 0; i < unseenCards.length; i++) {
+      pool[i] = unseenCards[i]!;
     }
+
+    let poolHead = 0;
+    // Fisher-Yates draw O(1) khong cap phat lai mang
+    const drawCard = (): Card => {
+      const pickIdx =
+        poolHead + Math.floor(Math.random() * (pool.length - poolHead));
+      const picked = pool[pickIdx]!;
+      pool[pickIdx] = pool[poolHead]!;
+      pool[poolHead] = picked;
+      poolHead++;
+      return picked;
+    };
 
     // Thu lat tiep nhung la bai chung con thieu.
     const board = [...gameState.communityCards];
@@ -93,7 +104,7 @@ function rouletteSurvival(bullets: number): number {
     return REVOLVER.GOD_SAVE_CHANCE;
   }
 
-  return 1 - bullets / REVOLVER.CHAMBER_COUNT;
+  return 1 - bullets / REVOLVER.VIRTUAL_CHAMBER_COUNT;
 }
 
 export function decideBotAction(

@@ -51,9 +51,10 @@ export const TIMING = {
 /** Revolver configuration */
 export const REVOLVER = {
   CHAMBER_COUNT: 6,
+  /** Virtual chamber count used for survival probability calculation for normal rounds */
+  VIRTUAL_CHAMBER_COUNT: 8,
   INITIAL_BULLETS: 1,
-  /** Calling never loads past this many chambers: a loser who only called
-   * faces at most a 4-in-6 shot. Only all-in fills the cylinder. */
+  /** Calling never loads past this many chambers. Only all-in fills the cylinder. */
   CALL_BULLET_CAP: 5,
   /** Chance a full cylinder still misfires (all-in only). */
   GOD_SAVE_CHANCE: 0.05,

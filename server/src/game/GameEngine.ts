@@ -69,15 +69,13 @@ export class GameEngine {
       (seat) => this.activeSeats.includes(seat)
     );
 
-    const startingSeats =
-      previousWinners.length > 0
-        ? previousWinners
-        : this.activeSeats;
-
-    this.currentTurnSeat =
-      startingSeats.length > 0
-        ? startingSeats[Math.floor(Math.random() * startingSeats.length)]
-        : -1;
+    if (previousWinners.length > 0) {
+      this.currentTurnSeat =
+        previousWinners[Math.floor(Math.random() * previousWinners.length)];
+    } else {
+      this.currentTurnSeat =
+        this.activeSeats.length > 0 ? this.activeSeats[0] : -1;
+    }
   }
 
   public handleAction(
