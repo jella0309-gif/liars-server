@@ -20,6 +20,7 @@ export function unlockAudioContext() {
     sfxMasterGain = audioCtx.createGain();
     sfxMasterGain.gain.setValueAtTime(sfxVolume, audioCtx.currentTime);
     sfxMasterGain.connect(audioCtx.destination);
+    preloadActionVoices();
   }
   if (audioCtx.state === 'suspended') {
     audioCtx.resume();
@@ -276,6 +277,13 @@ async function loadActionVoice(type: string) {
   }
 }
 
+export function preloadActionVoices() {
+  if (!audioCtx) return;
+  Object.keys(actionVoiceFiles).forEach((type) => {
+    void loadActionVoice(type);
+  });
+}
+
 export function speakActionVoice(type: string): Promise<void> {
   unlockAudioContext();
 
@@ -351,6 +359,8 @@ function initBgm() {
   }
 }
 
+let lastAutoStartTimestamp = 0;
+
 export function autoStartBgmOnFirstInteraction() {
   if (bgmInitialized) return;
   const startAudio = () => {
@@ -358,6 +368,7 @@ export function autoStartBgmOnFirstInteraction() {
     initBgm();
     if (!isLofiOn) {
       isLofiOn = true;
+      lastAutoStartTimestamp = Date.now();
       bgmAudio?.play().catch(() => {});
     }
     bgmInitialized = true;
@@ -383,6 +394,15 @@ export function setBgmVolume(vol: number) {
 export function toggleBgm(): boolean {
   unlockAudioContext();
   initBgm();
+
+  // Neu vua kich hoat tu auto-start tren cung cu click/pointer interaction, giu nguyen trang thai bat
+  if (Date.now() - lastAutoStartTimestamp < 350) {
+    if (!isLofiOn) {
+      isLofiOn = true;
+      bgmAudio?.play().catch(() => {});
+    }
+    return isLofiOn;
+  }
 
   isLofiOn = !isLofiOn;
 
