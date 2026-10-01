@@ -59,6 +59,9 @@ input {
 input[type='range'] {
   width: 100%;
   accent-color: var(--gold);
+  touch-action: none;
+  height: 28px;
+  cursor: pointer;
 }
 ::selection {
   background: #903527;

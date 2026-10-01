@@ -151,11 +151,16 @@ export const Header: React.FC = () => {
                 min="0"
                 max="100"
                 value={bgm}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setBgm(value);
+                  setBgmVolume(value);
+                }}
                 onInput={(e) => {
-  const value = Number(e.currentTarget.value);
-  setBgm(value);
-  setBgmVolume(value);
-}}
+                  const value = Number(e.currentTarget.value);
+                  setBgm(value);
+                  setBgmVolume(value);
+                }}
               />
               <label className="sound-setting" htmlFor="sfx-volume">
                 {t('sound.sfxVolume')} <span>{sfx}%</span>
@@ -166,11 +171,16 @@ export const Header: React.FC = () => {
                 min="0"
                 max="100"
                 value={sfx}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setSfx(value);
+                  setSfxVolume(value);
+                }}
                 onInput={(e) => {
-  const value = Number(e.currentTarget.value);
-  setSfx(value);
-  setSfxVolume(value);
-}}
+                  const value = Number(e.currentTarget.value);
+                  setSfx(value);
+                  setSfxVolume(value);
+                }}
               />
             </>
           ) : (

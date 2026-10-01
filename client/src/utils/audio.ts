@@ -349,6 +349,7 @@ export function setSfxVolume(vol: number) {
 }
 
 let bgmAudio: HTMLAudioElement | null = null;
+let bgmGain: GainNode | null = null;
 let bgmInitialized = false;
 
 function initBgm() {
@@ -356,6 +357,18 @@ function initBgm() {
     bgmAudio = new Audio('/bgm.mp3');
     bgmAudio.loop = true;
     bgmAudio.volume = bgmVolume;
+
+    if (audioCtx) {
+      try {
+        bgmGain = audioCtx.createGain();
+        bgmGain.gain.setValueAtTime(bgmVolume, audioCtx.currentTime);
+        const source = audioCtx.createMediaElementSource(bgmAudio);
+        source.connect(bgmGain);
+        bgmGain.connect(audioCtx.destination);
+      } catch {
+        // Fallback to HTMLAudioElement volume control
+      }
+    }
   }
 }
 
@@ -388,6 +401,9 @@ export function setBgmVolume(vol: number) {
   bgmVolume = vol / 100;
   if (bgmAudio) {
     bgmAudio.volume = bgmVolume;
+  }
+  if (bgmGain && audioCtx) {
+    bgmGain.gain.setValueAtTime(bgmVolume, audioCtx.currentTime);
   }
 }
 
