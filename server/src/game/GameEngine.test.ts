@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GameEngine } from './GameEngine.js';
-import { AVATARS, TIMING, type ServerPlayer } from '@liars-bar/shared';
+import { GameEngine, getOrderedShowdownLosers } from './GameEngine.js';
+import { AVATARS, TIMING, type ServerPlayer, type ShowdownResult } from '@liars-bar/shared';
 
 function table(count = 2) {
   const players: ServerPlayer[] = Array.from(
@@ -172,4 +172,90 @@ test('new rounds reset swap eligibility and survivor expressions can return to i
   assert.equal(players[0].folded, false);
   assert.equal(players[0].bullets, 1);
   assert.equal(players[1].isDead, true);
+});
+
+test('showdown losers shoot starting from the lowest score, not the room host', () => {
+  // Scenario: Host is Seat 0 (rank 2, score 2,000,000). Seat 1 is winner (rank 1, score 5,000,000).
+  // Seat 2 is rank 3 with the lowest score (50,000).
+  const results: ShowdownResult[] = [
+    {
+      seatIndex: 0,
+      name: 'Host',
+      avatar: AVATARS[0],
+      cards: [],
+      handName: 'Two Pair',
+      rank: 2,
+      score: 2000000,
+    },
+    {
+      seatIndex: 1,
+      name: 'Player 1',
+      avatar: AVATARS[1],
+      cards: [],
+      handName: 'Flush',
+      rank: 1,
+      score: 5000000,
+    },
+    {
+      seatIndex: 2,
+      name: 'Player 2',
+      avatar: AVATARS[2],
+      cards: [],
+      handName: 'High Card',
+      rank: 3,
+      score: 50000,
+    },
+  ];
+
+  const orderedLosers = getOrderedShowdownLosers(results);
+  // Lowest score (Seat 2) MUST shoot first, followed by Seat 0 (Host). Winner (Seat 1) must not shoot.
+  assert.equal(orderedLosers.length, 2);
+  assert.equal(orderedLosers[0].seatIndex, 2);
+  assert.equal(orderedLosers[0].score, 50000);
+  assert.equal(orderedLosers[1].seatIndex, 0);
+  assert.equal(orderedLosers[1].score, 2000000);
+});
+
+test('showdown losers order multiple players strictly by ascending score', () => {
+  const results: ShowdownResult[] = [
+    { seatIndex: 0, name: 'Host', avatar: AVATARS[0], cards: [], handName: 'Three of a Kind', rank: 2, score: 3000000 },
+    { seatIndex: 1, name: 'P1', avatar: AVATARS[1], cards: [], handName: 'Full House', rank: 1, score: 6000000 },
+    { seatIndex: 2, name: 'P2', avatar: AVATARS[2], cards: [], handName: 'High Card', rank: 4, score: 30000 },
+    { seatIndex: 3, name: 'P3', avatar: AVATARS[3], cards: [], handName: 'One Pair', rank: 3, score: 1000000 },
+  ];
+
+  const orderedLosers = getOrderedShowdownLosers(results);
+  assert.deepEqual(
+    orderedLosers.map((l) => l.seatIndex),
+    [2, 3, 0] // P2 (score 30k) -> P3 (score 1M) -> Host (score 3M)
+  );
+});
+
+test('folded players are excluded from showdown roulette', () => {
+  const results: ShowdownResult[] = [
+    { seatIndex: 0, name: 'Host', avatar: AVATARS[0], cards: [], handName: 'Folded', rank: -1, score: -1 },
+    { seatIndex: 1, name: 'P1', avatar: AVATARS[1], cards: [], handName: 'Pair', rank: 1, score: 1000000 },
+    { seatIndex: 2, name: 'P2', avatar: AVATARS[2], cards: [], handName: 'High Card', rank: 2, score: 80000 },
+  ];
+
+  const orderedLosers = getOrderedShowdownLosers(results);
+  assert.equal(orderedLosers.length, 1);
+  assert.equal(orderedLosers[0].seatIndex, 2);
+});
+
+test('showdown event results include evaluated score for each player', () => {
+  const { engine } = table();
+  flop(engine); // Pre-flop -> Flop
+  // Flop
+  engine.handleAction(0, 'call');
+  engine.handleAction(1, 'call');
+  // Turn
+  engine.handleAction(0, 'call');
+  engine.handleAction(1, 'call');
+  // River
+  engine.handleAction(0, 'call');
+  const events = engine.handleAction(1, 'call');
+  const showdown = events.find((e) => e.type === 'showdown');
+  assert.ok(showdown);
+  assert.ok(showdown.results.every((r) => typeof r.score === 'number' && r.score >= 0));
 });

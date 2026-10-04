@@ -102,7 +102,8 @@ export interface ShowdownResult {
   avatar: string;
   cards: Card[];
   handName: string;
-  rank: number;        // 1 = winner
+  rank: number; // 1 = winner
+  score?: number;
 }
 
 // ---------- Roulette ----------

@@ -7,6 +7,7 @@ import {
   MyPlayerView,
   OpponentView,
   RouletteResult,
+  ShowdownResult,
   STAGES,
   REVOLVER,
   SWAP_DRAW_COUNT,
@@ -345,6 +346,7 @@ export class GameEngine {
         cards: r.cards,
         handName: r.handName,
         rank: r.rank,
+        score: r.score,
       })),
       winnerName: winner ? winner.name : '',
       winnerHand: bestHandName,
@@ -533,4 +535,26 @@ export class GameEngine {
       this.turnTimer = null;
     }
   }
+}
+
+/**
+ * Orders showdown losers so that the player with the lowest hand score pulls
+ * the roulette trigger first. Ties are broken stably by seat index.
+ */
+export function getOrderedShowdownLosers(
+  results: ShowdownResult[]
+): ShowdownResult[] {
+  return results
+    .filter((r) => r.rank > 1)
+    .sort((a, b) => {
+      const scoreA = a.score ?? 0;
+      const scoreB = b.score ?? 0;
+      if (scoreA !== scoreB && a.score !== undefined && b.score !== undefined) {
+        return scoreA - scoreB; // Lowest score first
+      }
+      if (a.rank !== b.rank) {
+        return b.rank - a.rank; // Worst rank (highest rank number) first
+      }
+      return a.seatIndex - b.seatIndex;
+    });
 }
