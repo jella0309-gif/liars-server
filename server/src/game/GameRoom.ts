@@ -10,7 +10,7 @@ import {
   TIMING,
   AVATARS,
 } from '@liars-bar/shared';
-import { GameEngine } from './GameEngine.js';
+import { GameEngine, getOrderedShowdownLosers } from './GameEngine.js';
 import { logger } from '../utils/logger.js';
 import { decideBotAction } from './BotAI.js';
 
@@ -317,8 +317,8 @@ export class GameRoom {
   }
 
   private handleShowdownResolution(results: ShowdownResult[]) {
-    // Determine losers and let them pull the trigger
-    const losers = results.filter((r) => r.rank > 1);
+    // Determine losers and let them pull the trigger, starting from the player with the lowest score
+    const losers = getOrderedShowdownLosers(results);
     const aliveLosers = losers
       .map((l) => this.players.find((p) => p.seatIndex === l.seatIndex))
       .filter((p): p is ServerPlayer => !!p && !p.isDead && !p.folded);
